@@ -1,0 +1,28 @@
+{
+  "sources": [
+    {
+      "name": "petrinex_vol",
+      "format": "csv",
+      "folder": "raw/petrinex",
+      "file_pattern": "Vol_*-AB.CSV",
+      "target_table": "bronze_petrinex_vol",
+      "load_mode": "append_by_file"
+    },
+    {
+      "name": "st37_production_string",
+      "format": "xlsx",
+      "folder": "raw/aer_st37",
+      "file_pattern": "*Production_Strings*.xlsx",
+      "target_table": "bronze_st37_production_string",
+      "load_mode": "overwrite"
+    },
+    {
+      "name": "st37_bh",
+      "format": "xlsx",
+      "folder": "raw/aer_st37",
+      "file_pattern": "*BH*.xlsx",
+      "target_table": "bronze_st37_bh",
+      "load_mode": "overwrite"
+    }
+  ]
+}
