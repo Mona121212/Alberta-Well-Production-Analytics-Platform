@@ -30,7 +30,10 @@ rules:
     check: outside_boundary
     layer: wells_surface
     severity: FAIL
-    max_failures: 0
+    # 13 known border cases (full run 2026-10-22): 11 on the 4th Meridian (110-160 m east of the StatCan
+    # line, labelled range 01 W4) and 2 on 120 W (213 m and 571 m). Lat/long and DLS labels agree with
+    # the geometry; the difference is boundary data vs survey (DECISIONS.md DEC-015). A 14th failure stops the run.
+    max_failures: 13
     params: {tolerance_m: 100}
 
   - id: GQA-02

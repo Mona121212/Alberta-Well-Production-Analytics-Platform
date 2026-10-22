@@ -32,7 +32,7 @@ def test_well_activity_applies_gold_rules():
         ("100090600101W400", "2026-06", "SHUTIN", "OIL", "0", "0"),      # reported, no volume
         ("100100600101W400", "2026-06", "PROD", "OIL", "***", "100"),    # masked volume
     ])
-    act = L.well_activity(pet, LCFG).set_index("well_key")
+    act = L.well_activity(pet, LCFG, AS_OF - 11).set_index("well_key")
     assert act.loc["100060600101W400", "last_prod_month"] == AS_OF
     assert pd.isna(act.loc["100070600101W400", "last_prod_month"])
     assert pd.isna(act.loc["100080600101W400", "last_prod_month"])
@@ -45,10 +45,10 @@ def test_well_activity_applies_gold_rules():
 def test_match_reasons():
     activity = pd.DataFrame({
         "well_key": ["100060600101W400", "100060600101W402", "100990600101W400", "100070600101W400"],
-        "last_prod_month": [AS_OF] * 4, "key_valid": True, "prod_volume_oil": 1.0})
+        "last_prod_month": [AS_OF] * 4, "key_valid": True, "oil_m3_12m": 1.0})
     key_map = pd.DataFrame({"well_key": ["100060600101W400", "100070600101W400"], "uwi": ["a", "b"],
                             "licence_number": ["L1", "L2"]})
-    producing, summary = L.match_petrinex(activity, key_map, {"L1"}, AS_OF - 11)
+    producing, summary = L.match_petrinex(activity, key_map, {"L1"}, AS_OF - 11, ["oil_m3_12m"])
     status = producing.set_index("well_key")["match_status"]
     assert status["100060600101W400"].startswith("matched")
     assert status["100060600101W402"] == "unmatched: location found, different event sequence"
@@ -77,6 +77,30 @@ def test_classify(group, spud, last_activity, expected):
                         "last_prod_month": pd.array([None], dtype="period[M]"),
                         "last_activity_month": pd.array([pd.Period(last_activity, "M") if last_activity else None],
                                                         dtype="period[M]")})
-    result = L.classify(wells, lic, LCFG, AS_OF)
+    result = L.classify(wells, lic, LCFG, AS_OF, pad_distance=50)
     assert result["well_class"].iloc[0] == expected
     assert result["township"].iloc[0] == "051-25W4"
+
+
+def test_pad_review_class_only_for_large_never_reported_pads():
+    n = 12
+    xs = [i * 5 for i in range(n)] + [10_000] + [50_000 + i * 5 for i in range(n)]
+    wells = gpd.GeoDataFrame({
+        "licence_number": [f"B{i:02d}" for i in range(n)] + ["S1"] + [f"C{i:02d}" for i in range(n)],
+        "licence_status_group": "Active",
+        "well_class": "active_no_activity_12m",
+        "in_petrinex": [False] * (2 * n) + [True],
+    }, geometry=gpd.points_from_xy(xs, [0] * len(xs)), crs="EPSG:3400")
+    review = LCFG["pad_review"]
+    out = L.apply_pad_review(wells, 50, review).set_index("licence_number")
+    assert (out.loc[[f"B{i:02d}" for i in range(n)], "well_class"] == review["well_class"]).all()
+    assert out.loc["S1", "well_class"] == "active_no_activity_12m"      # single-well pad
+    assert (out.loc[[f"C{i:02d}" for i in range(n - 1)], "well_class"] == "active_no_activity_12m").all()  # pad reported
+    assert out.loc["B00", "pad_licences"] == n
+
+
+def test_cluster_points_chains_within_distance():
+    import shapely
+    from gis.spatial import cluster_points
+    labels = cluster_points(shapely.points([(0, 0), (40, 0), (80, 0), (500, 0)]), 50)
+    assert labels[0] == labels[1] == labels[2] != labels[3]

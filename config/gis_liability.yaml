@@ -18,6 +18,9 @@ petrinex:
   # Same reject rules as Gold (notebooks/02_silver_transform): PROD rows with missing or
   # negative volume, or hours above the month maximum, do not count.
   masked_value: "***"
+  # 12-month production volume per product, carried to each well. Units as reported to Petrinex:
+  # gas in thousand cubic metres (e3m3), liquids in cubic metres (m3).
+  volume_products: {OIL: oil_m3, GAS: gas_e3m3, COND: cond_m3, WATER: water_m3}
   key_pattern: '^1[0-9A-Z]{2}\d{9}W\d\d{2}$'   # 16-character Petrinex well key, e.g. 100060600101W400
 
 # ST37 UWI -> Petrinex well key, same rule as Silver add_well_key():
@@ -36,12 +39,22 @@ status_classes:
 # a well drilled last month cannot have 12 months without production.
 require_spud_before_window: true
 
+# Multi-licence pads that never reported: many licences on one surface pad (surface holes
+# within pads.distance_m of each other, config/gis.yaml) and no Petrinex record for any of them.
+# Typical of wells that are not production wells; they get their own review class instead of
+# being counted as ordinary inactive candidates (DECISIONS.md DEC-014).
+pad_review:
+  min_licences: 10
+  count_excludes_groups: [Cancelled]   # cancelled licences were never drilled
+  well_class: review_multi_licence_pad_never_reported
+
 # Licensee profile: which well classes count as active / inactive.
 profile:
   active: [active_reporting, active_no_activity_6m]
   inactive: [active_no_activity_12m, suspended]
   abandoned: [abandoned]
   reclaimed: [reclaimed]
+  review: [review_multi_licence_pad_never_reported]
   top_n: 20
   min_wells_for_ratio: 10   # ratios for smaller licensees are left blank
 
