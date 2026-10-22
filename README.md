@@ -12,6 +12,7 @@ python -m gis.stage   --mode sample   # GDB + boundary -> GeoParquet (once per m
 python -m gis.convert --mode sample   # -> alberta_wells.gpkg, wells_shp/alberta_wells.shp, alberta_wells.csv
 python -m gis.qa      --mode sample   # -> qa/ (defect log, rule summary, examples, scorecard, qa_results.gpkg)
 python -m gis.liability --mode sample # -> liability/ (abandoned, inactive candidates, licensee profile)
+python -m gis.analysis --mode sample  # -> analysis/ (townships, 5 km hexagons, pads, laterals)
 python -m gis.pipeline --mode sample  # all steps; a FAIL QA rule or failed reconciliation stops it (exit 1)
 python -m pytest tests/gis            # rule tests with constructed rows
 ```

@@ -1,0 +1,39 @@
+# Spatial analysis (gis/analysis.py): townships, hexagon grid, multi-well pads, lateral length.
+# Inputs are the liability wells layer (well class, pad, 12-month volumes) and the standardized layers.
+
+# Wells counted as physical wells: not cancelled and spudded (a licence alone is not a well).
+drilled_filter:
+  exclude_status_groups: [Cancelled]
+  require_spud_date: true
+
+# Volume columns from the liability step (gas e3m3, liquids m3, last 12 months).
+volume_columns: [oil_m3_12m, gas_e3m3_12m, cond_m3_12m, water_m3_12m]
+
+# Well classes summarized as counts on townships and hexagons.
+class_counts:
+  active: [active_reporting, active_no_activity_6m]
+  inactive: [active_no_activity_12m, suspended]
+  abandoned_not_reclaimed: [abandoned]
+  reclaimed: [reclaimed]
+
+township:
+  # Polygon = convex hull of the township's surface holes (not the surveyed ATS township).
+  # Townships with fewer than min_wells_for_hull wells (or collinear wells) get a buffer instead.
+  min_wells_for_hull: 3
+  point_buffer_m: 250
+
+hexagons:
+  # Pointy-top hexagons; width_m is the distance between centres of neighbouring cells
+  # (flat-to-flat width). 5 km -> about 21.7 km2 per cell.
+  width_m: 5000
+  keep: intersecting_boundary   # every cell that touches Alberta, including empty ones
+
+pads:
+  top_n: 25
+  size_bins: [1, 2, 3, 5, 10, 20, 50, 100000]   # wells per pad, left-closed bins
+
+laterals:
+  # Surface-to-bottom-hole horizontal offset classes (project working definition, not an AER term).
+  vertical_max_m: 50
+  horizontal_min_m: 500
+  first_spud_year: 1950

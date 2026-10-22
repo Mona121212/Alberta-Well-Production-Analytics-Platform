@@ -1,4 +1,4 @@
-"""Run the GIS pipeline end to end: stage -> convert -> qa -> liability.
+"""Run the GIS pipeline end to end: stage -> convert -> qa -> liability -> analysis.
 
 A FAIL-level QA rule or a failed reconciliation test stops the run with exit code 1;
 later steps do not run.
@@ -8,7 +8,7 @@ Usage:
 """
 import sys
 
-from gis import convert, liability, qa, stage
+from gis import analysis, convert, liability, qa, stage
 from gis.common import base_arg_parser, get_logger, load_config
 
 log = get_logger("gis.pipeline")
@@ -26,6 +26,7 @@ def main():
     try:
         qa.run(cfg, qa.load_qa_config(args.qa_config))
         liability.run(cfg, liability.load_liability_config())
+        analysis.run(cfg, analysis.load_analysis_config())
     except (qa.QAFailed, liability.ReconciliationFailed) as exc:
         log.error("Pipeline stopped: %s", exc)
         sys.exit(1)
