@@ -36,10 +36,13 @@ wells_layer: surface_holes
 # Source GDB layers. "rename" lists every field to keep (source -> standard name).
 # "dates" gives the source format per standard column; "datetime" means the
 # GDB already stores a real datetime.
+# "reference_columns" are staged for the whole province (no geometry, in every
+# mode) so key lookups in QA never depend on the sample bbox.
 layers:
   surface_holes:
     source_layer: ST37_Surface_Hole_NAD83_10TM_AEP_Forest
     output_layer: wells_surface
+    reference_columns: [Well_Licence_Number]
     rename:
       Well_Licence_Number: licence_number
       Licensee: licensee
@@ -60,6 +63,7 @@ layers:
   bottom_holes:
     source_layer: ST37_Bottom_Hole_NAD83_10TM_AEP_Forest
     output_layer: bottom_holes
+    reference_columns: [Well_UWI, Well_Licence_Number]
     rename:
       Well_UWI: uwi
       Well_Licence_Number: licence_number
@@ -84,6 +88,8 @@ layers:
   production_strings:
     source_layer: ST37_Production_String_NAD83_10TM_AEP_Forest
     output_layer: production_strings
+    reference_columns: [Well_UWI, Well_Licence_Number, Licensee, Licence_Status,
+                        Status_Fluid, Status_Mode, Status_Type, Status_Structure]
     rename:
       Prod_String_UWI: prod_string_uwi
       Well_UWI: uwi
@@ -118,6 +124,7 @@ layers:
   well_trajectories:
     source_layer: ST37_Well_Geometry_NAD83_10TM_AEP_Forest
     output_layer: well_trajectories
+    reference_columns: [UWI_Label, Well_Licence_Number]
     rename:
       Well_Licence_Number: licence_number
       UWI_Label: uwi
@@ -127,6 +134,13 @@ layers:
       Kelly_Bushing_Elevation: kb_elevation_m
       SHAPE_Length: length_m
     dates: {}
+
+# First rows of an Excel extract, staged to compare against the GDB (QA rule GQA-15).
+excel_sample:
+  file: "data/raw/aer_st37/ST_37_Excel/ST37_ Production_Strings.xlsx"
+  sheet: Production_String
+  layer: production_strings
+  rows: 5000
 
 exports:
   geopackage: alberta_wells.gpkg

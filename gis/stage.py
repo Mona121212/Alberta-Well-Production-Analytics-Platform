@@ -1,13 +1,18 @@
-"""Stage raw inputs as GeoParquet: one file per GDB layer plus the Alberta boundary.
+"""Stage raw inputs as (Geo)Parquet, once per mode. Values are kept exactly as in the source.
 
-Reading the 1.7 GB File Geodatabase is slow, so it happens once per mode.
-Later steps read the Parquet files only. Values are kept exactly as in the source.
+- <layer>.parquet: each GDB layer (sample bbox or full)
+- <layer>_reference.parquet: key and status columns for the whole province, no geometry
+- boundary.parquet: the Alberta polygon
+- excel_sample.parquet: first rows of an Excel extract, for the GDB vs Excel comparison
+
+Reading the 1.7 GB File Geodatabase is slow, so later steps read Parquet only.
 
 Usage:
     python -m gis.stage [--mode sample|full] [--force]
 """
 import time
 
+import pandas as pd
 import pyogrio
 from pyproj import Transformer
 
@@ -42,6 +47,22 @@ def stage_layer(cfg, key, layer_cfg, out_path):
     log.info("%s: %s rows (source total %s) -> %s", key, f"{len(gdf):,}", f"{info['features']:,}", out_path.name)
 
 
+def stage_reference(cfg, key, layer_cfg, out_path):
+    """Selected attribute columns for the whole province, without geometry (always full)."""
+    gdb = repo_path(cfg["paths"]["gdb"])
+    df = pyogrio.read_dataframe(gdb, layer=layer_cfg["source_layer"], columns=layer_cfg["reference_columns"],
+                                read_geometry=False, use_arrow=True)
+    df.to_parquet(out_path, index=False)
+    log.info("%s reference: %s rows x %d columns -> %s", key, f"{len(df):,}", df.shape[1], out_path.name)
+
+
+def stage_excel_sample(cfg, out_path):
+    excel = cfg["excel_sample"]
+    df = pd.read_excel(repo_path(excel["file"]), sheet_name=excel["sheet"], nrows=excel["rows"], dtype=str)
+    df.to_parquet(out_path, index=False)
+    log.info("Excel sample: first %s rows of %s -> %s", f"{len(df):,}", excel["sheet"], out_path.name)
+
+
 def stage_boundary(cfg, out_path):
     # The boundary is never sample-filtered: QA needs the whole province.
     path = repo_path(cfg["paths"]["boundary"])
@@ -52,26 +73,32 @@ def stage_boundary(cfg, out_path):
     log.info("boundary: 1 polygon (%s) -> %s", gdf.crs.to_string(), out_path.name)
 
 
+def run(cfg, force=False):
+    out = staging_dir(cfg)
+    log.info("Mode: %s, staging folder: %s", cfg["run"]["mode"], out)
+
+    jobs = []
+    for key, layer_cfg in cfg["layers"].items():
+        jobs.append((key, out / f"{key}.parquet", lambda p, k=key, c=layer_cfg: stage_layer(cfg, k, c, p)))
+        jobs.append((f"{key} reference", out / f"{key}_reference.parquet",
+                     lambda p, k=key, c=layer_cfg: stage_reference(cfg, k, c, p)))
+    jobs.append(("boundary", out / "boundary.parquet", lambda p: stage_boundary(cfg, p)))
+    jobs.append(("excel sample", out / "excel_sample.parquet", lambda p: stage_excel_sample(cfg, p)))
+
+    for name, out_path, stage_fn in jobs:
+        if out_path.exists() and not force:
+            log.info("%s: already staged, skipping (use --force to rebuild)", name)
+            continue
+        started = time.time()
+        stage_fn(out_path)
+        log.info("%s: %.1fs", name, time.time() - started)
+
+
 def main():
     parser = base_arg_parser(__doc__)
     parser.add_argument("--force", action="store_true", help="Re-stage even if Parquet files exist")
     args = parser.parse_args()
-    cfg = load_config(args.config, args.mode)
-    out = staging_dir(cfg)
-    log.info("Mode: %s, staging folder: %s", cfg["run"]["mode"], out)
-
-    jobs = [(key, out / f"{key}.parquet", layer_cfg) for key, layer_cfg in cfg["layers"].items()]
-    jobs.append(("boundary", out / "boundary.parquet", None))
-    for key, out_path, layer_cfg in jobs:
-        if out_path.exists() and not args.force:
-            log.info("%s: already staged, skipping (use --force to rebuild)", key)
-            continue
-        started = time.time()
-        if layer_cfg is None:
-            stage_boundary(cfg, out_path)
-        else:
-            stage_layer(cfg, key, layer_cfg, out_path)
-        log.info("%s: %.1fs", key, time.time() - started)
+    run(load_config(args.config, args.mode), force=args.force)
 
 
 if __name__ == "__main__":

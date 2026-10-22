@@ -10,7 +10,16 @@ and builds client data packages. Configuration: `config/gis.yaml`. Outputs: `gis
 pip install -r requirements.txt
 python -m gis.stage   --mode sample   # GDB + boundary -> GeoParquet (once per mode)
 python -m gis.convert --mode sample   # -> alberta_wells.gpkg, wells_shp/alberta_wells.shp, alberta_wells.csv
+python -m gis.qa      --mode sample   # -> qa/ (defect log, rule summary, examples, scorecard, qa_results.gpkg)
+python -m gis.pipeline --mode sample  # all three; a FAIL-level QA rule stops it with exit code 1
+python -m pytest tests/gis            # rule tests with constructed rows
 ```
+
+QA rules (`config/gis_qa.yaml`, 22 rules): location inside Alberta (100 m tolerance), geometry vs NAD83 lat/long,
+DLS label vs location (approximate township grid, DECISIONS.md DEC-010), referential integrity between surface holes,
+bottom holes and production strings, trajectory start/end vs surface/bottom hole, status consistency, GDB vs Excel,
+duplicates, missing and accepted values. Results use the `defect_log` columns; a scorecard gives the share of wells
+passing all FAIL/WARN rules by licensee.
 
 `sample` uses a Calgary-region bbox for fast development; use `--mode full` for the whole province.
 Inputs (not in Git): `data/raw/aer_st37/ST_37_Wells.gdb` and the Statistics Canada 2021 province boundary

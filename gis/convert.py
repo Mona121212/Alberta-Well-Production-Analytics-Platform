@@ -17,7 +17,7 @@ import pandas as pd
 import pyarrow as pa
 import pyogrio
 
-from gis.common import base_arg_parser, get_logger, load_config, output_dir, repo_path, staging_dir
+from gis.common import base_arg_parser, get_logger, load_config, output_dir, repo_path, reset_gpkg, staging_dir
 
 log = get_logger("gis.convert")
 DATE_DTYPE = pd.ArrowDtype(pa.date32())
@@ -104,9 +104,13 @@ def export_wells(wells, cfg, out):
     return shp_path
 
 
-def main():
-    args = base_arg_parser(__doc__).parse_args()
-    cfg = load_config(args.config, args.mode)
+def standardize_attributes(df, rename):
+    """Rename and trim a non-spatial table (reference keys, Excel sample) like its GDB layer."""
+    df = df.rename(columns={src: dst for src, dst in rename.items() if src in df.columns})
+    return clean_text(df)
+
+
+def run(cfg):
     stage, out = staging_dir(cfg), output_dir(cfg)
     target_crs = cfg["target_crs"]
     status_map = pd.read_csv(repo_path(cfg["paths"]["licence_status_map"]), dtype=str)
@@ -114,7 +118,7 @@ def main():
         raise ValueError("Duplicate raw_value in the licence status mapping table")
 
     gpkg_path = out / cfg["exports"]["geopackage"]
-    gpkg_path.unlink(missing_ok=True)  # rebuilt from scratch on every run
+    reset_gpkg(gpkg_path, log)
     manifest = {"mode": cfg["run"]["mode"], "target_crs": target_crs, "layers": {}}
 
     for key, layer_cfg in cfg["layers"].items():
@@ -138,6 +142,11 @@ def main():
     (out / "convert_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     log.info("GeoPackage: %s", gpkg_path)
     log.info("Wells exports: %s, %s", shp_path, out / cfg["exports"]["wells_csv"])
+
+
+def main():
+    args = base_arg_parser(__doc__).parse_args()
+    run(load_config(args.config, args.mode))
 
 
 if __name__ == "__main__":
