@@ -1,0 +1,233 @@
+# GIS QA rules. Each rule names a check function in gis/qa_checks.py, the GeoPackage layer
+# it runs on, a severity and the check parameters.
+#
+# severity:
+#   FAIL - more than max_failures failed rows stops the pipeline (exit code 1)
+#   WARN - reported, counts against a well in the scorecard
+#   INFO - reported only (known source characteristics, approximate checks)
+# Layer names are the output_layer names in config/gis.yaml.
+
+# Column that identifies a record in each layer (used in failure rows and examples).
+record_keys:
+  wells_surface: licence_number
+  bottom_holes: uwi
+  production_strings: uwi
+  well_trajectories: uwi
+
+examples_per_rule: 5
+defect_log:
+  area_prefix: gis
+  severity_labels: {FAIL: high, WARN: medium, INFO: low}
+scorecard:
+  # A well passes when no rule of these severities flags its licence number.
+  severities: [FAIL, WARN]
+
+rules:
+  # --- 1. Location inside Alberta -------------------------------------------------
+  - id: GQA-01
+    name: surface_hole_outside_alberta
+    description: Surface hole lies more than tolerance_m outside the Alberta boundary.
+    check: outside_boundary
+    layer: wells_surface
+    severity: FAIL
+    max_failures: 0
+    params: {tolerance_m: 100}
+
+  - id: GQA-02
+    name: bottom_hole_outside_alberta
+    description: Bottom hole lies more than tolerance_m outside the Alberta boundary.
+    check: outside_boundary
+    layer: bottom_holes
+    severity: WARN
+    params: {tolerance_m: 100}
+
+  # --- 2. Geometry vs attribute lat/long (NAD83, EPSG:4269) ----------------------------
+  - id: GQA-03
+    name: surface_latlong_mismatch
+    description: Surface hole geometry and SH_Actual_Latitude/Longitude differ by more than tolerance_m.
+    check: latlong_mismatch
+    layer: wells_surface
+    severity: FAIL
+    max_failures: 0
+    params: {lat_column: latitude_nad83, lon_column: longitude_nad83, latlong_crs: "EPSG:4269", tolerance_m: 1.0}
+
+  - id: GQA-04
+    name: bottom_hole_latlong_mismatch
+    description: Bottom hole geometry and BH_Latitude/Longitude differ by more than tolerance_m.
+    check: latlong_mismatch
+    layer: bottom_holes
+    severity: WARN
+    params: {lat_column: latitude_nad83, lon_column: longitude_nad83, latlong_crs: "EPSG:4269", tolerance_m: 1.0}
+
+  # --- 3. DLS label vs location (approximate grid, see DECISIONS.md DEC-010) -----------
+  - id: GQA-05
+    name: dls_township_range_mismatch
+    description: Surface point is more than tolerance_cells outside the township/range/meridian in its DLS label.
+    check: dls_township_range
+    layer: wells_surface
+    severity: WARN
+    params: &dls
+      label_column: surface_location_dls
+      label_pattern: '^(\d{2})-(\d{2})-(\d{3})-(\d{2})W(\d)$'  # LSD-SEC-TWP-RGE W MER
+      base_latitude: 49.0
+      meridian_longitudes: {4: -110.0, 5: -114.0, 6: -118.0}
+      township_height_deg: 0.0873   # calibrated on all 539,890 surface holes
+      range_width_m: 9790
+      tolerance_cells: 0.25
+
+  - id: GQA-06
+    name: dls_section_mismatch
+    description: Surface point is more than tolerance_sections outside the section in its DLS label (approximate).
+    check: dls_section
+    layer: wells_surface
+    severity: INFO
+    params:
+      <<: *dls
+      tolerance_sections: 0.5
+
+  # --- 4. Referential integrity (lookups use the full-province key tables) -------------
+  - id: GQA-07
+    name: bottom_hole_without_surface_licence
+    description: Bottom hole licence number has no surface hole.
+    check: missing_reference
+    layer: bottom_holes
+    severity: WARN
+    params: {key: licence_number, reference_layers: [wells_surface]}
+
+  - id: GQA-08
+    name: production_string_without_surface_licence
+    description: Production string licence number has no surface hole.
+    check: missing_reference
+    layer: production_strings
+    severity: WARN
+    params: {key: licence_number, reference_layers: [wells_surface]}
+
+  - id: GQA-09
+    name: surface_licence_without_wellbore
+    description: Surface licence has no bottom hole and no production string (cancelled licences excluded - never drilled).
+    check: missing_reference
+    layer: wells_surface
+    severity: WARN
+    params:
+      key: licence_number
+      reference_layers: [bottom_holes, production_strings]
+      exclude: {column: licence_status_group, values: [Cancelled]}
+
+  # --- 5. Trajectory consistency ----------------------------------------------------
+  - id: GQA-10
+    name: trajectory_start_far_from_surface_hole
+    description: First vertex of the trajectory is more than tolerance_m from the surface hole of its licence.
+    check: trajectory_endpoint
+    layer: well_trajectories
+    severity: WARN
+    params: {endpoint: start, target_layer: wells_surface, join_key: licence_number, tolerance_m: 50}
+
+  - id: GQA-11
+    name: trajectory_end_far_from_bottom_hole
+    description: Last vertex of the trajectory is more than tolerance_m from the bottom hole of its UWI.
+    check: trajectory_endpoint
+    layer: well_trajectories
+    severity: WARN
+    params: {endpoint: end, target_layer: bottom_holes, join_key: uwi, tolerance_m: 50}
+
+  - id: GQA-12
+    name: zero_length_trajectory
+    description: Trajectory has zero 3D length (all vertices identical), so it carries no geometry.
+    check: zero_length
+    layer: well_trajectories
+    severity: WARN
+    params: {dimension: 3d}
+
+  # --- 6. Status consistency --------------------------------------------------------
+  - id: GQA-13
+    name: status_mode_text_instead_of_code
+    description: Status_Mode holds text while most rows hold numeric codes (mixed encoding).
+    check: pattern_mismatch
+    layer: production_strings
+    severity: INFO
+    params: {column: status_mode, pattern: '^\d+$'}
+
+  - id: GQA-14
+    name: producing_mode_on_closed_licence
+    description: Status_Mode says the zone is producing or being tested while the licence is abandoned, reclaimed or cancelled.
+    check: status_conflict
+    layer: production_strings
+    severity: WARN
+    params:
+      mode_column: status_mode
+      producing_modes: [FLOWING, PUMPING, GAS LIFT, TESTING, DRILLING AND COMPLETING]
+      licence_group_column: licence_status_group
+      closed_groups: [Abandoned, Reclaimed, Cancelled]
+
+  - id: GQA-15
+    name: gdb_vs_excel_difference
+    description: A production string attribute differs between the GDB and the Excel extract (first rows of the Excel file).
+    check: source_compare
+    layer: production_strings
+    severity: INFO
+    params:
+      key: uwi
+      columns: [licence_number, licensee, licence_status_raw, status_fluid, status_mode, status_type, status_structure]
+
+  # --- 7. Duplicates, missing values, accepted values --------------------------------
+  - id: GQA-16
+    name: duplicate_licence_number
+    description: Licence number appears more than once in the surface-hole layer (whole province).
+    check: duplicate_key
+    layer: wells_surface
+    severity: FAIL
+    max_failures: 0
+    params: {key: licence_number, reference_layer: wells_surface}
+
+  - id: GQA-17
+    name: duplicate_bottom_hole_uwi
+    description: UWI appears more than once in the bottom-hole layer (whole province).
+    check: duplicate_key
+    layer: bottom_holes
+    severity: FAIL
+    max_failures: 0
+    params: {key: uwi, reference_layer: bottom_holes}
+
+  - id: GQA-18
+    name: duplicate_production_string_uwi
+    description: UWI appears more than once in the production-string layer (whole province).
+    check: duplicate_key
+    layer: production_strings
+    severity: FAIL
+    max_failures: 0
+    params: {key: uwi, reference_layer: production_strings}
+
+  - id: GQA-19
+    name: missing_key_or_geometry
+    description: Surface hole has no licence number or no geometry.
+    check: missing_values
+    layer: wells_surface
+    severity: FAIL
+    max_failures: 0
+    params: {columns: [licence_number, geometry]}
+
+  - id: GQA-20
+    name: missing_required_attributes
+    description: Surface hole is missing a required attribute.
+    check: missing_values
+    layer: wells_surface
+    severity: WARN
+    params:
+      columns: [licensee, licence_status, licence_status_date, surface_location_dls, latitude_nad83, longitude_nad83]
+
+  - id: GQA-21
+    name: licence_status_not_accepted
+    description: Standardized licence status is not in the mapping table (new or unmapped AER value).
+    check: accepted_values
+    layer: wells_surface
+    severity: WARN
+    params: {column: licence_status, values_file: config/gis_licence_status_map.csv, values_column: licence_status}
+
+  # --- Trajectory shape (added after profiling: SHAPE_Length is 2D) ----------------------
+  - id: GQA-22
+    name: vertical_only_trajectory
+    description: Trajectory has zero 2D length - a vertical line from surface to total depth, no lateral survey.
+    check: zero_length
+    layer: well_trajectories
+    severity: INFO
+    params: {dimension: 2d}

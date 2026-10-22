@@ -154,3 +154,72 @@ Unmapped values become `Unmapped` and are logged.
 **Alternatives.** Case-insensitive matching in code: hides the source defect and is less transparent.
 
 **Consequences.** A new AER status value shows up as `Unmapped` instead of failing the run; the QA step reports it.
+
+---
+
+## DEC-009 GIS QA framework: config-driven rules, three severities, FAIL stops the pipeline
+
+**Date:** 2026-10-22
+
+**Context.** The GIS track needs repeatable spatial QA with results that match the Lakehouse `defect_log`
+schema, examples a reviewer can follow, and a hard stop when the deliverable would be wrong.
+
+**Decision.** Rules live in `config/gis_qa.yaml` (id, check function, layer, severity, params);
+`gis/qa_checks.py` holds one generic function per check type, so a new rule on another layer is config only.
+Severities: FAIL (stops the pipeline when failures exceed `max_failures`, after all outputs are written),
+WARN (counts against a well in the scorecard), INFO (known source characteristics or approximate checks).
+FAIL is reserved for problems that make the GIS deliverable wrong: surface hole outside Alberta, geometry vs
+lat/long mismatch, duplicate keys, missing key or geometry. Key lookups (referential integrity, duplicates)
+use full-province key tables staged without geometry, so the sample bbox never creates false orphans.
+A well's QA result is licence-level: a flag on its bottom hole or production string counts against it.
+`surface_licence_without_wellbore` excludes Cancelled licences (all 264 sample cases were cancelled and never spudded).
+
+**Alternatives.** Hard-coded checks in one script (the A-06 problem in Silver); Great Expectations
+(heavy for 22 rules and weak on geometry).
+
+**Consequences.** `max_failures` thresholds for FAIL rules may need tuning after the first full run.
+Rule tests with constructed rows are in `tests/gis/`.
+
+---
+
+## DEC-010 DLS check uses an approximate township grid, not an ATS layer
+
+**Date:** 2026-10-22
+
+**Context.** Checking `Licence_Surface_Location_Label` (LSD-SEC-TWP-RGE W MER) against the point needs the
+Alberta Township System grid. No ATS polygon layer is in the repo (AltaLIS ATS is a separate licensed download).
+
+**Decision.** Compute a continuous grid position from the point's NAD83 lat/long:
+township = (lat - 49) / 0.0873 deg; range = ground distance west of the labelled meridian (110/114/118 W,
+measured along the parallel on GRS80) / 9,790 m. Report how far the point lies outside the labelled cell, in
+cell units. Section: position inside the labelled township in sixths, with DLS boustrophedon numbering
+(1-6 east to west on the south row, 7-12 back east, ...). Constants were fitted on all 539,890 surface holes:
+at 0.25-cell tolerance only 1 well fails township/range; at 0.5-section tolerance 853 fail the section check.
+
+**Alternatives.** Download the AltaLIS ATS grid and do a point-in-polygon join (exact, adds a licensed
+dependency); compare against the median position of all wells with the same label (circular).
+
+**Consequences.** Township/range is reliable enough for WARN. Section is INFO only: correction-line jogs and
+road allowances make the approximation off by up to about half a section. LSD is not checked.
+Replacing the grid with ATS polygons later only changes `dls_positions` in `gis/qa_checks.py`.
+
+---
+
+## DEC-011 Trajectory and status findings that shaped the QA rules
+
+**Date:** 2026-10-22
+
+**Context.** Earlier exploration (GIS-04) read `SHAPE_Length = 0` as degenerate trajectories. Profiling showed
+`SHAPE_Length` is 2D: every zero-length trajectory sampled is a two-vertex vertical line whose Z range equals total
+depth. `Status_Mode` mixes numeric codes (495,586 rows) and text (162,680); `Status_Fluid` and `Status_Type` are
+always codes. The Excel extract stores text for all three, and the code-to-text pairs are not one-to-one
+(GDB mode `2` = `ABANDONED` 2,598 times but `ABANDONED ZONE` 13 times in the first 5,000 rows).
+
+**Decision.** Two trajectory rules: zero 3D length (WARN, truly degenerate) and zero 2D length (INFO, vertical,
+no lateral survey). Status consistency is checked only where `Status_Mode` is text (producing mode on an abandoned,
+reclaimed or cancelled licence). GDB vs Excel differences are INFO, with every value pair written to
+`gdb_vs_excel_value_pairs.csv`.
+
+**Alternatives.** Derive a code lookup from the Excel pairs: rejected, the pairs conflict.
+
+**Consequences.** Numeric status codes stay undecoded until an official AER code table is added to `config/`.

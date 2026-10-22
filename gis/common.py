@@ -43,6 +43,15 @@ def output_dir(cfg):
     return path
 
 
+def reset_gpkg(path, log):
+    """Start a GeoPackage from scratch. If QGIS holds the file open (Windows lock),
+    keep it: every layer is overwritten by name on write anyway."""
+    try:
+        path.unlink(missing_ok=True)
+    except PermissionError:
+        log.warning("%s is open in another program; layers will be replaced in place", path.name)
+
+
 def staging_dir(cfg):
     path = output_dir(cfg) / "staging"
     path.mkdir(parents=True, exist_ok=True)
