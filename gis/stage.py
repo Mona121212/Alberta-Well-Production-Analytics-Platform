@@ -4,6 +4,7 @@
 - <layer>_reference.parquet: key and status columns for the whole province, no geometry
 - boundary.parquet: the Alberta polygon
 - excel_sample.parquet: first rows of an Excel extract, for the GDB vs Excel comparison
+- petrinex_wells.parquet: well rows (WI) of all monthly Petrinex volume files, whole province
 
 Reading the 1.7 GB File Geodatabase is slow, so later steps read Parquet only.
 
@@ -13,6 +14,10 @@ Usage:
 import time
 
 import pandas as pd
+import pyarrow as pa
+import pyarrow.compute as pc
+import pyarrow.csv as pa_csv
+import pyarrow.parquet as pq
 import pyogrio
 from pyproj import Transformer
 
@@ -63,6 +68,24 @@ def stage_excel_sample(cfg, out_path):
     log.info("Excel sample: first %s rows of %s -> %s", f"{len(df):,}", excel["sheet"], out_path.name)
 
 
+def stage_petrinex(cfg, out_path):
+    """Well rows of every monthly Petrinex file, as text (casting happens in the analysis step)."""
+    pet = cfg["petrinex"]
+    files = sorted(repo_path(pet["folder"]).glob(pet["file_pattern"]))
+    if not files:
+        raise FileNotFoundError(f"No Petrinex files match {pet['folder']}/{pet['file_pattern']}")
+    convert = pa_csv.ConvertOptions(include_columns=pet["columns"],
+                                    column_types={c: pa.string() for c in pet["columns"]})
+    tables = []
+    for path in files:
+        table = pa_csv.read_csv(path, convert_options=convert)
+        table = table.filter(pc.equal(table["FromToIDType"], pet["id_type"]))
+        tables.append(table.append_column("source_file", pa.array([path.name] * table.num_rows)))
+    combined = pa.concat_tables(tables)
+    pq.write_table(combined, out_path)
+    log.info("Petrinex: %d files, %s %s rows -> %s", len(files), f"{combined.num_rows:,}", pet["id_type"], out_path.name)
+
+
 def stage_boundary(cfg, out_path):
     # The boundary is never sample-filtered: QA needs the whole province.
     path = repo_path(cfg["paths"]["boundary"])
@@ -84,6 +107,7 @@ def run(cfg, force=False):
                      lambda p, k=key, c=layer_cfg: stage_reference(cfg, k, c, p)))
     jobs.append(("boundary", out / "boundary.parquet", lambda p: stage_boundary(cfg, p)))
     jobs.append(("excel sample", out / "excel_sample.parquet", lambda p: stage_excel_sample(cfg, p)))
+    jobs.append(("petrinex", out / "petrinex_wells.parquet", lambda p: stage_petrinex(cfg, p)))
 
     for name, out_path, stage_fn in jobs:
         if out_path.exists() and not force:

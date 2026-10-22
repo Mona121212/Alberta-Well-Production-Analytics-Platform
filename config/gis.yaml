@@ -135,6 +135,14 @@ layers:
       SHAPE_Length: length_m
     dates: {}
 
+# Petrinex monthly volumes (same files as the Fabric Bronze layer). Only well rows
+# (FromToIDType = WI) and the columns below are staged, always for the whole province.
+petrinex:
+  folder: data/raw/petrinex
+  file_pattern: "Vol_*-AB.CSV"
+  id_type: WI
+  columns: [ProductionMonth, ActivityID, ProductID, FromToIDType, FromToIDIdentifier, Volume, Hours]
+
 # First rows of an Excel extract, staged to compare against the GDB (QA rule GQA-15).
 excel_sample:
   file: "data/raw/aer_st37/ST_37_Excel/ST37_ Production_Strings.xlsx"
