@@ -24,10 +24,10 @@ import yaml
 
 from gis.common import REPO_ROOT, base_arg_parser, get_logger, load_config, output_dir, reset_gpkg, staging_dir
 from gis.convert import standardize_attributes
+from gis.spatial import assign_pads
 
 log = get_logger("gis.liability")
 DEFAULT_LIABILITY_CONFIG = REPO_ROOT / "config" / "gis_liability.yaml"
-PRODUCTS = ["OIL", "GAS", "COND", "WATER"]
 
 
 class ReconciliationFailed(Exception):
@@ -59,8 +59,15 @@ def load_petrinex(cfg, lcfg):
 
 # --- Petrinex well activity ---------------------------------------------------------------
 
-def well_activity(pet, lcfg):
-    """One row per Petrinex well key: last month with production / activity / any report."""
+def volume_columns(lcfg):
+    """Product -> output column, e.g. OIL -> oil_m3_12m (production volume in the longest window)."""
+    n = max(lcfg["windows_months"])
+    return {product: f"{unit}_{n}m" for product, unit in lcfg["petrinex"]["volume_products"].items()}
+
+
+def well_activity(pet, lcfg, window_start):
+    """One row per Petrinex well key: last month with production / activity / any report,
+    and production volume per product inside the window."""
     max_hours = pet["month"].dt.days_in_month * 24
     gold_reject = (pet["ActivityID"] == "PROD") & (pet["hours"] > max_hours)  # same as Silver hours rule
     positive = (pet["volume"] > 0) & ~gold_reject
@@ -74,10 +81,10 @@ def well_activity(pet, lcfg):
         "last_activity_month": pet[is_active].groupby("well_key")["month"].max(),
         "prod_months": pet[is_prod].groupby("well_key")["month"].nunique(),
     })
-    volumes = (pet[is_prod & pet["ProductID"].isin(PRODUCTS)]
-               .pivot_table(index="well_key", columns="ProductID", values="volume", aggfunc="sum"))
-    volumes = volumes.reindex(columns=PRODUCTS)
-    volumes.columns = [f"prod_volume_{c.lower()}" for c in volumes.columns]
+    vol_cols = volume_columns(lcfg)
+    in_window = is_prod & (pet["month"] >= window_start) & pet["ProductID"].isin(list(vol_cols))
+    volumes = (pet[in_window].pivot_table(index="well_key", columns="ProductID", values="volume", aggfunc="sum")
+               .reindex(columns=list(vol_cols)).rename(columns=vol_cols))
     activity = activity.join(volumes)
     activity["prod_months"] = activity["prod_months"].fillna(0).astype(int)
     activity["key_valid"] = activity.index.str.fullmatch(lcfg["petrinex"]["key_pattern"].strip("^$"))
@@ -104,7 +111,7 @@ def well_key_map(cfg, lcfg):
 
 # --- Petrinex -> ST37 match rate ----------------------------------------------------------
 
-def match_petrinex(activity, key_map, surface_licences, window_start):
+def match_petrinex(activity, key_map, surface_licences, window_start, volume_cols):
     """Classify every Petrinex well with production in the window by how it joins to ST37."""
     producing = activity[activity["last_prod_month"] >= window_start].merge(key_map, on="well_key", how="left")
     location_keys = set(key_map["well_key"].str[:-2])
@@ -120,7 +127,6 @@ def match_petrinex(activity, key_map, surface_licences, window_start):
          "unmatched: location found, different event sequence"],
         default="unmatched: not in ST37 production strings or bottom holes")
 
-    volume_cols = [c for c in producing.columns if c.startswith("prod_volume_")]
     summary = producing.groupby("match_status").agg(wells=("well_key", "size"), **{
         c: (c, "sum") for c in volume_cols})
     summary["pct_wells"] = (100 * summary["wells"] / summary["wells"].sum()).round(3)
@@ -132,17 +138,30 @@ def match_petrinex(activity, key_map, surface_licences, window_start):
 
 # --- Well classification ------------------------------------------------------------------
 
-def licence_activity(key_map, activity):
+def licence_activity(key_map, activity, volume_cols):
     joined = key_map.merge(activity, on="well_key", how="inner")
     return joined.groupby("licence_number").agg(
         petrinex_well_keys=("well_key", "nunique"),
         last_report_month=("last_report_month", "max"),
         last_prod_month=("last_prod_month", "max"),
         last_activity_month=("last_activity_month", "max"),
+        **{c: (c, "sum") for c in volume_cols},
     ).reset_index()
 
 
-def classify(wells, lic_activity, lcfg, as_of):
+def apply_pad_review(w, pad_distance, review_cfg):
+    """Move no-activity wells on large never-reported pads to their own review class."""
+    w["pad_id"], _ = assign_pads(w, pad_distance)
+    counted = ~w["licence_status_group"].isin(review_cfg["count_excludes_groups"])
+    w["pad_licences"] = counted.groupby(w["pad_id"]).transform("sum").fillna(0).astype(int)
+    pad_reported = w["in_petrinex"].groupby(w["pad_id"]).transform("any").astype(bool)
+    review = (w["well_class"].isin(["active_no_activity_6m", "active_no_activity_12m"]) & ~w["in_petrinex"]
+              & ~pad_reported & (w["pad_licences"] >= review_cfg["min_licences"]))
+    w.loc[review, "well_class"] = review_cfg["well_class"]
+    return w
+
+
+def classify(wells, lic_activity, lcfg, as_of, pad_distance):
     start_6 = as_of - (min(lcfg["windows_months"]) - 1)
     start_12 = as_of - (max(lcfg["windows_months"]) - 1)
     w = wells.merge(lic_activity, on="licence_number", how="left")
@@ -164,9 +183,10 @@ def classify(wells, lic_activity, lcfg, as_of):
         [base, "active_not_spudded", "active_reporting", "active_recently_spudded",
          "active_no_activity_6m", "active_no_activity_6m"],
         default="active_no_activity_12m")
+    w["in_petrinex"] = w["petrinex_well_keys"].notna()
+    w = apply_pad_review(w, pad_distance, lcfg["pad_review"])
     w["inactive_candidate_6m"] = w["well_class"].isin(["active_no_activity_6m", "active_no_activity_12m"])
     w["inactive_candidate_12m"] = w["well_class"] == "active_no_activity_12m"
-    w["in_petrinex"] = w["petrinex_well_keys"].notna()
     w["petrinex_evidence"] = np.select(
         [last >= start_12, w["last_report_month"] >= start_12],
         ["volume reported", "reported without volume (e.g. SHUTIN)"],
@@ -211,9 +231,10 @@ def licensee_profile(classified, lcfg):
                            aggfunc="count", fill_value=0))
     out = pd.DataFrame(index=counts.index)
     out["wells"] = counts.sum(axis=1)
-    for group in ("active", "inactive", "abandoned", "reclaimed"):
+    groups = ["active", "inactive", "abandoned", "reclaimed", "review"]
+    for group in groups:
         out[group] = counts.reindex(columns=prof[group], fill_value=0).sum(axis=1)
-    out["other"] = out["wells"] - out[["active", "inactive", "abandoned", "reclaimed"]].sum(axis=1)
+    out["other"] = out["wells"] - out[groups].sum(axis=1)
     big = out["wells"] >= prof["min_wells_for_ratio"]
     out["inactive_ratio"] = (out["inactive"] / (out["active"] + out["inactive"])).where(big).round(3)
     out["unreclaimed_ratio"] = (out["abandoned"] / (out["abandoned"] + out["reclaimed"])).where(big).round(3)
@@ -250,14 +271,16 @@ def run(cfg, lcfg):
     as_of = pet["month"].max() if lcfg["as_of_month"] == "latest" else pd.Period(lcfg["as_of_month"], freq="M")
     log.info("Petrinex months %s to %s; as-of month %s", pet["month"].min(), pet["month"].max(), as_of)
 
-    activity = well_activity(pet, lcfg)
+    window_start = as_of - (max(lcfg["windows_months"]) - 1)
+    vol_cols = list(volume_columns(lcfg).values())
+    activity = well_activity(pet, lcfg, window_start)
     key_map = well_key_map(cfg, lcfg)
     surface_licences = set(load_reference(cfg, "surface_holes")["licence_number"].dropna())
-    window_start = as_of - (max(lcfg["windows_months"]) - 1)
-    producing, match_summary = match_petrinex(activity, key_map, surface_licences, window_start)
+    producing, match_summary = match_petrinex(activity, key_map, surface_licences, window_start, vol_cols)
 
     wells = load_wells(cfg)
-    classified = classify(wells, licence_activity(key_map, activity), lcfg, as_of)
+    classified = classify(wells, licence_activity(key_map, activity, vol_cols), lcfg, as_of,
+                          cfg["pads"]["distance_m"])
     abandoned = classified[classified["well_class"] == "abandoned"]
     inactive = classified[classified["inactive_candidate_6m"]]
     by_licensee = abandoned_summary(abandoned, "licensee")

@@ -135,6 +135,10 @@ layers:
       SHAPE_Length: length_m
     dates: {}
 
+# Multi-well pads: surface holes closer than distance_m are chained into one pad (single linkage).
+pads:
+  distance_m: 50
+
 # Petrinex monthly volumes (same files as the Fabric Bronze layer). Only well rows
 # (FromToIDType = WI) and the columns below are staged, always for the whole province.
 petrinex:

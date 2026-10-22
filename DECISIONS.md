@@ -278,3 +278,46 @@ query the SQL endpoint (adds credentials to a local tool).
 
 **Consequences.** No Fabric dependency for the GIS track. If the Silver/Gold reject rules change, the local copy
 must change too; the reconciliation test will catch a drift in well counts.
+
+---
+
+## DEC-014 Review class for large multi-licence pads that never reported
+
+**Date:** 2026-10-22
+
+**Context.** The first liability run flagged 74 licences of one non-oil-company licensee on a single pad
+(same spud date, never in Petrinex) as inactive candidates. Wells that are not production wells never report to
+Petrinex, so they inflate the inactive list and distort the licensee ranking.
+
+**Decision.** Surface holes within `pads.distance_m` (50 m, single linkage) form a pad. A well that would be an
+inactive candidate becomes `review_multi_licence_pad_never_reported` when its pad has at least
+`pad_review.min_licences` (10) non-cancelled licences and no licence on the pad has any Petrinex record.
+The class is reported separately (`review` in the licensee profile) and is not an inactive candidate.
+
+**Alternatives.** Exclude by licensee name (not reproducible); exclude every well never in Petrinex
+(would hide real long-inactive wells).
+
+**Consequences.** Full province: 421 licences move to review (sample: exactly the 74-licence pad). Small
+never-reported pads stay ordinary candidates. The threshold is a project choice, not a regulatory number.
+
+---
+
+## DEC-015 GQA-01 tolerates 13 known border cases on the meridian borders
+
+**Date:** 2026-10-22
+
+**Context.** The first full run stopped on GQA-01: 13 surface holes are more than 100 m outside the StatCan 2021
+cartographic boundary. 11 lie at about 110.0057 W, labelled range 01 W4, 110-160 m east of the StatCan line; 2 lie
+west of 120 W (213 m, a suspended well, and 571 m, a cancelled licence). Their lat/long attributes match the geometry
+(GQA-03 passes) and their DLS labels are border ranges. The StatCan line itself is not on 110 W: it runs at
+110.0076 W at 50.23 N and 110.0033 W at 55 N, consistent with a boundary that follows a surveyed meridian; this was
+not checked against an authoritative legal boundary.
+
+**Decision.** Keep GQA-01 at FAIL with the 100 m tolerance and set `max_failures: 13`, so any new outlier stops the
+pipeline. The 13 stay listed in the QA outputs.
+
+**Alternatives.** Raise the tolerance to 600 m (would hide real errors anywhere in the province); downgrade to WARN
+(loses the stop); use a different boundary (AltaLIS provincial boundary, not downloaded).
+
+**Consequences.** The count is tied to the current ST37 snapshot: a refresh that adds a border well will stop the run
+and need a review. Next step: compare against an authoritative Alberta boundary.
