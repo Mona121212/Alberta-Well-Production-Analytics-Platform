@@ -16,6 +16,12 @@ One line per finished item, with key numbers. Newest at the bottom of each secti
 - A.2 Abandoned not reclaimed: 95,971 wells; most by Canadian Natural (25,661), Cenovus (6,712), Suncor (2,192); top townships 040-01W4 (596), 041-12W4 (592), 066-05W4 (576).
 
 ## Phase B - Spatial analysis
+- B.0 Full analysis runtime: 464 s first version -> 169 s after vectorizing pad and township geometry (grouped multipoints, no dissolve/lambdas). Sample: 7 s.
+- B.1 Townships: 5,756 (5,286 convex hulls, 470 buffers). Top 12-month oil: 076-06W4 10.06 million m3, 095-06W4 8.77 million m3, 083-06W4 6.53 million m3.
+- B.2 Hexagons (5 km): 31,093 cells touching Alberta, 21,994 with wells; densest cell 1,455 wells; 13 cells with 500+ wells.
+- B.3 Pads (50 m): 382,090 pads; 42,537 multi-well pads hold 141,794 wells (29.5% of drilled wells); largest 137 licences (E-T Energy, 09-13-090-10W4).
+- B.4 Laterals: 534,515 wellbores - 352,676 vertical, 65,924 deviated, 115,915 horizontal (offset >= 500 m). Horizontal share by spud year: 1980 0.5%, 2000 11.9%, 2012 51.7%, 2020 79.5%, 2024 91.5%; median horizontal offset 646 m (1960) -> 1,858 m (2024).
+- B.5 Reconciliation: township, hexagon and pad well counts = 481,347 drilled wells; hexagon oil = well oil (146,464,009 m3).
 
 ## Phase C - Client delivery and change management
 

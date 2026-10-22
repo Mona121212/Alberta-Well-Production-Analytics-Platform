@@ -321,3 +321,29 @@ pipeline. The 13 stay listed in the QA outputs.
 
 **Consequences.** The count is tied to the current ST37 snapshot: a refresh that adds a border well will stop the run
 and need a review. Next step: compare against an authoritative Alberta boundary.
+
+---
+
+## DEC-016 Spatial analysis units: approximate townships, 5 km hexagons, pads, lateral classes
+
+**Date:** 2026-10-22
+
+**Context.** Phase B summarizes wells by area without an ATS township layer and without a licensed grid product.
+
+**Decision.**
+- **Wells counted** = drilled licences (not cancelled, spud date present): 481,347 of 539,890.
+- **Township polygon** = convex hull of the township's surface holes (key from the DLS label); townships with
+  fewer than 3 wells or collinear wells get a 250 m buffer. This is the footprint of the wells, not the surveyed
+  township (about 93 km2); `polygon_method` records which method was used.
+- **Hexagons** = pointy-top cells, 5 km between neighbouring centres (21.65 km2), every cell touching Alberta,
+  computed with axial coordinates (no spatial join). Volumes are 12-month Petrinex production of the wells in the cell.
+- **Pads** = surface holes within 50 m, single linkage (`gis/spatial.py`); pad point = mean position; spread = twice the
+  largest distance from that point.
+- **Lateral class** per bottom hole (wellbore): surface-to-bottom-hole offset < 50 m vertical, >= 500 m horizontal,
+  otherwise deviated. Project working definition, not an AER classification. Trajectory 2D length is reported next to it.
+
+**Alternatives.** AltaLIS ATS polygons (licensed, not downloaded); H3 hexagons (extra dependency, cells not aligned to
+the projected CRS); DBSCAN for pads (needs scikit-learn and a min-samples choice).
+
+**Consequences.** Township areas and densities are indicative only. All four layers reconcile to the drilled-well count
+and to total 12-month oil volume.
