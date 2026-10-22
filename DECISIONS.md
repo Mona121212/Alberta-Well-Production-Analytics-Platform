@@ -98,3 +98,59 @@ dimension. The report needs MoM and rolling 3-month measures and must not sum vo
 **Alternatives.** Keep a flat wide table for Power BI; snowflake facility -> operator.
 
 **Consequences.** More tables to reconcile, but standard star schema for Direct Lake and clean time-intelligence measures.
+
+---
+
+## DEC-006 GIS track: GDB as source, surface holes as "the wells" layer
+
+**Date:** 2026-10-22
+
+**Context.** The GIS track (local Python under `gis/`) needs one wells layer for exports, QA and client packages.
+ST37 ships the same data as a File Geodatabase, Shapefiles and Excel. The Shapefile DBF truncates field names
+to 10 characters and drops `Licence_Surface_Location_Label` (the DLS text) from the surface-hole layer.
+
+**Decision.** Read the GDB (all 4 layers). "Wells" = `ST37_Surface_Hole` (one row per licence, surface
+location, DLS label, licensee, licence status). Bottom holes, production strings and trajectories go into the
+same GeoPackage as supporting layers. Fields are renamed to snake_case through `config/gis.yaml`.
+
+**Alternatives.**
+- Shapefiles: no DLS label, truncated names, trajectories split into 4 files.
+- Bottom hole as the wells layer: per UWI, so licence-level duplicate and DLS checks would not apply.
+
+**Consequences.** One well per licence; multi-leg wells share one point. The Shapefile export renames fields
+again (`exports.shp_field_names`) to fit the 10-character limit.
+
+---
+
+## DEC-007 Stage the GDB to GeoParquet once; sample mode for development
+
+**Date:** 2026-10-22
+
+**Context.** The GDB is 1.7 GB (mostly trajectories). Reading it on every development run is slow.
+
+**Decision.** `gis.stage` copies each GDB layer and the Alberta boundary to GeoParquet, untouched, once per mode;
+later steps read only Parquet. `run.mode: sample` reads a Calgary-region bbox (capped at `max_rows` per layer);
+`full` reads everything. Outputs go to `gis/output/<mode>/` so the two never mix. The boundary is never filtered.
+
+**Alternatives.** Read the GDB in every step; sample by first N rows (would cluster in township 1, far from Calgary,
+and break joins between layers).
+
+**Consequences.** A bbox sample keeps the layers consistent with each other (same wells in every layer).
+Staging must be re-run with `--force` when the raw ST37 files are refreshed.
+
+---
+
+## DEC-008 Licence status standardization through a mapping table
+
+**Date:** 2026-10-22
+
+**Context.** ST37 `Licence_Status` has 9 raw values, including the case variant `Re-entered` (2 rows) next to
+`Re-Entered`, and abbreviations such as `RecCertified` and `RecExempt`.
+
+**Decision.** `config/gis_licence_status_map.csv` maps each exact raw value to a display value and a status group
+(Active, Inactive, Abandoned, Reclaimed, Cancelled). The raw value is kept as `licence_status_raw`.
+Unmapped values become `Unmapped` and are logged.
+
+**Alternatives.** Case-insensitive matching in code: hides the source defect and is less transparent.
+
+**Consequences.** A new AER status value shows up as `Unmapped` instead of failing the run; the QA step reports it.
