@@ -1,0 +1,149 @@
+# GIS track configuration (local Python, geopandas/pyogrio).
+# Every path is relative to the repository root.
+
+run:
+  # sample: small extract for development. full: every row (run at the end).
+  # Override on the command line with --mode sample|full.
+  mode: sample
+  sample:
+    # Lon/lat box around the Calgary region, in the CRS below.
+    bbox_lonlat: [-114.6, 50.7, -113.6, 51.4]
+    bbox_crs: EPSG:4269
+    # Cap per layer after the bbox filter.
+    max_rows: 10000
+
+paths:
+  gdb: data/raw/aer_st37/ST_37_Wells.gdb
+  boundary: data/raw/boundaries/lpr_000b21a_e.shp
+  licence_status_map: config/gis_licence_status_map.csv
+  # Outputs land in <output_root>/<mode>/
+  output_root: gis/output
+
+target_crs: EPSG:3400  # NAD83 / Alberta 10-TM (Forest)
+
+boundary:
+  where: "PRUID = '48'"
+  output_layer: alberta_boundary
+  rename:
+    PRUID: province_uid
+    PRENAME: province_name
+    LANDAREA: land_area_km2
+
+# Layer used as "the wells" for exports, QA and packages:
+# one row per licence, surface location (see DECISIONS.md DEC-006).
+wells_layer: surface_holes
+
+# Source GDB layers. "rename" lists every field to keep (source -> standard name).
+# "dates" gives the source format per standard column; "datetime" means the
+# GDB already stores a real datetime.
+layers:
+  surface_holes:
+    source_layer: ST37_Surface_Hole_NAD83_10TM_AEP_Forest
+    output_layer: wells_surface
+    rename:
+      Well_Licence_Number: licence_number
+      Licensee: licensee
+      Licence_Status: licence_status_raw
+      Licence_Status_Date: licence_status_date
+      Ground_Elevation: ground_elevation_m
+      Spud_Date: spud_date
+      Most_Recent_Final_Drill_Date: final_drill_date
+      Energy_Devlpmt_Category_Type: energy_dev_category
+      Licence_Surface_Location_Label: surface_location_dls
+      SH_Actual_Latitude: latitude_nad83
+      SH_Actual_Longitude: longitude_nad83
+    dates:
+      licence_status_date: "%m/%d/%Y"
+      spud_date: "%Y%m%d"
+      final_drill_date: "%Y%m%d"
+
+  bottom_holes:
+    source_layer: ST37_Bottom_Hole_NAD83_10TM_AEP_Forest
+    output_layer: bottom_holes
+    rename:
+      Well_UWI: uwi
+      Well_Licence_Number: licence_number
+      Well_Name: well_name
+      Final_Drill_Date: final_drill_date
+      Kelly_Bushing_Elevation: kb_elevation_m
+      Final_Total_Depth: total_depth_m
+      Max_True_Vertical_Depth: max_tvd_m
+      Licensee: licensee
+      Licence_Status: licence_status_raw
+      Licence_Status_Date: licence_status_date
+      Ground_Elevation: ground_elevation_m
+      Spud_Date: spud_date
+      Energy_Devlpmt_Category_Type: energy_dev_category
+      BH_Latitude: latitude_nad83
+      BH_Longitude: longitude_nad83
+    dates:
+      final_drill_date: "%Y%m%d"
+      licence_status_date: "%m/%d/%Y"
+      spud_date: "%m/%d/%Y"  # differs from surface holes (YYYYMMDD)
+
+  production_strings:
+    source_layer: ST37_Production_String_NAD83_10TM_AEP_Forest
+    output_layer: production_strings
+    rename:
+      Prod_String_UWI: prod_string_uwi
+      Well_UWI: uwi
+      Field_Code: field_code
+      Pool_Code: pool_code
+      Oil_Sands_Area: oil_sands_area
+      Oil_Sands_Deposit: oil_sands_deposit
+      Status_Fluid: status_fluid
+      Status_Mode: status_mode
+      Status_Type: status_type
+      Status_Structure: status_structure
+      Scheme_Type: scheme_type
+      Scheme_Sub_Type: scheme_sub_type
+      Well_Licence_Number: licence_number
+      Well_Name: well_name
+      Well_Confidential_Type: confidential_type
+      Final_Drill_Date: final_drill_date
+      Kelly_Bushing_Elevation: kb_elevation_m
+      Final_Total_Depth: total_depth_m
+      Max_True_Vertical_Depth: max_tvd_m
+      Licensee: licensee
+      Licence_Status: licence_status_raw
+      Licence_Status_Date: licence_status_date
+      Ground_Elevation: ground_elevation_m
+      Spud_Date: spud_date
+      Energy_Devlpmt_Category_Type: energy_dev_category
+    dates:
+      final_drill_date: datetime
+      licence_status_date: datetime
+      spud_date: datetime
+
+  well_trajectories:
+    source_layer: ST37_Well_Geometry_NAD83_10TM_AEP_Forest
+    output_layer: well_trajectories
+    rename:
+      Well_Licence_Number: licence_number
+      UWI_Label: uwi
+      Well_Geometry_Source: geometry_source
+      Final_Total_Depth: total_depth_m
+      Max_True_Vertical_Depth: max_tvd_m
+      Kelly_Bushing_Elevation: kb_elevation_m
+      SHAPE_Length: length_m
+    dates: {}
+
+exports:
+  geopackage: alberta_wells.gpkg
+  wells_shapefile: wells_shp/alberta_wells.shp
+  wells_csv: alberta_wells.csv
+  # Shapefile (DBF) field names are limited to 10 characters.
+  shp_field_names:
+    licence_number: licence_no
+    licensee: licensee
+    licence_status_raw: lic_stat_r
+    licence_status: lic_status
+    licence_status_group: lic_group
+    licence_status_date: stat_date
+    ground_elevation_m: grnd_elev
+    spud_date: spud_date
+    final_drill_date: fdrill_dt
+    energy_dev_category: edct
+    surface_location_dls: dls_label
+    latitude_nad83: lat_nad83
+    longitude_nad83: lon_nad83

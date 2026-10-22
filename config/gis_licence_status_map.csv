@@ -1,0 +1,10 @@
+raw_value,licence_status,status_group
+Issued,Issued,Active
+Amended,Amended,Active
+Re-Entered,Re-Entered,Active
+Re-entered,Re-Entered,Active
+Suspension,Suspended,Inactive
+Abandoned,Abandoned,Abandoned
+RecCertified,Reclamation Certified,Reclaimed
+RecExempt,Reclamation Exempt,Reclaimed
+Cancelled,Cancelled,Cancelled
