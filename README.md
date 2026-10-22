@@ -11,7 +11,8 @@ pip install -r requirements.txt
 python -m gis.stage   --mode sample   # GDB + boundary -> GeoParquet (once per mode)
 python -m gis.convert --mode sample   # -> alberta_wells.gpkg, wells_shp/alberta_wells.shp, alberta_wells.csv
 python -m gis.qa      --mode sample   # -> qa/ (defect log, rule summary, examples, scorecard, qa_results.gpkg)
-python -m gis.pipeline --mode sample  # all three; a FAIL-level QA rule stops it with exit code 1
+python -m gis.liability --mode sample # -> liability/ (abandoned, inactive candidates, licensee profile)
+python -m gis.pipeline --mode sample  # all steps; a FAIL QA rule or failed reconciliation stops it (exit 1)
 python -m pytest tests/gis            # rule tests with constructed rows
 ```
 
@@ -24,3 +25,8 @@ passing all FAIL/WARN rules by licensee.
 `sample` uses a Calgary-region bbox for fast development; use `--mode full` for the whole province.
 Inputs (not in Git): `data/raw/aer_st37/ST_37_Wells.gdb` and the Statistics Canada 2021 province boundary
 `data/raw/boundaries/lpr_000b21a_e.shp`.
+
+Liability screening (`config/gis_liability.yaml`, DECISIONS.md DEC-012/013): abandoned-but-not-reclaimed wells by
+licensee and township, active licences with no Petrinex activity in the last 6/12 months, Petrinex -> ST37 match
+rate with unmatched reasons, and a licensee profile (active / inactive / abandoned / reclaimed). These are project
+working definitions for screening, not AER regulatory criteria.

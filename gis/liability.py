@@ -167,6 +167,10 @@ def classify(wells, lic_activity, lcfg, as_of):
     w["inactive_candidate_6m"] = w["well_class"].isin(["active_no_activity_6m", "active_no_activity_12m"])
     w["inactive_candidate_12m"] = w["well_class"] == "active_no_activity_12m"
     w["in_petrinex"] = w["petrinex_well_keys"].notna()
+    w["petrinex_evidence"] = np.select(
+        [last >= start_12, w["last_report_month"] >= start_12],
+        ["volume reported", "reported without volume (e.g. SHUTIN)"],
+        default="no Petrinex record in window")
 
     as_of_date = as_of.to_timestamp(how="end").normalize()
     w["years_since_spud"] = ((as_of_date - spud).dt.days / 365.25).round(1)

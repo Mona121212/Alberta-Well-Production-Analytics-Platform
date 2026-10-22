@@ -223,3 +223,58 @@ reclaimed or cancelled licence). GDB vs Excel differences are INFO, with every v
 **Alternatives.** Derive a code lookup from the Excel pairs: rejected, the pairs conflict.
 
 **Consequences.** Numeric status codes stay undecoded until an official AER code table is added to `config/`.
+
+---
+
+## DEC-012 Liability screening: working definitions, not AER regulatory definitions
+
+**Date:** 2026-10-22
+
+**Context.** Wave 3 screens for abandoned-not-reclaimed wells, inactive candidates and a licensee profile.
+AER defines inactive wells, suspension and closure requirements in its own directives (for example
+Directive 013 and Directive 020), with criteria that depend on well type and risk. Those criteria were not
+sourced for this project, so none of their thresholds are used or claimed.
+
+**Decision.** Working definitions, all in `config/gis_liability.yaml`, at licence grain (one surface hole):
+- Status group comes from the licence status mapping (DEC-008): Active, Inactive (Suspension), Abandoned,
+  Reclaimed (RecCertified, RecExempt), Cancelled.
+- **Abandoned not reclaimed** = licence status `Abandoned`. Age = years from spud to the end of the as-of month;
+  years in status = years since `Licence_Status_Date` (assumed to be the date the current status was set).
+- **Activity** = a Petrinex well row with PROD, INJ or DISP and volume > 0, applying the Gold reject rules
+  (masked or negative volume, hours above the month maximum). INJ and DISP are included because service wells
+  never report PROD. A licence is active in a month if any of its UWIs (production strings or bottom holes,
+  mapped with the Silver UWI -> well key rule) has activity.
+- **Inactive candidate** = Active licence group, spudded, no activity in the last 6 (or 12) months up to the
+  latest Petrinex month. Wells spudded inside a window are not flagged for that window. `petrinex_evidence`
+  separates "no Petrinex record" from "reported without volume (e.g. SHUTIN)".
+- **Licensee profile:** active = reporting or no activity for 6 months only; inactive = no activity for 12 months
+  plus Suspension; inactive_ratio = inactive / (active + inactive); unreclaimed_ratio = abandoned /
+  (abandoned + reclaimed). Ratios are blank under 10 wells. Licensee = ST37 licensee (the licence holder),
+  not the Petrinex operator.
+
+**Alternatives.** Use AER inactive-well criteria: needs sourced, version-dated rules per well type.
+Use Status_Mode codes: undecoded (DEC-011).
+
+**Consequences.** Outputs are a screening list for review, not a compliance finding. Known false positives:
+wells that are non-producing by design and never report to Petrinex (for example 74 licences of one
+non-oil-company licensee on a single pad in the sample), domestic water wells and historic wells held by individuals.
+
+---
+
+## DEC-013 Rebuild Gold-equivalent well activity locally from raw Petrinex files
+
+**Date:** 2026-10-22
+
+**Context.** Wave 3 joins wells to production. Gold (`gold_fact_production`) lives only in the Fabric Lakehouse;
+there is no local copy and the GIS track runs locally.
+
+**Decision.** `gis.stage` stages the WI rows of the 12 raw Petrinex CSVs (the same files Bronze ingests) and
+`gis.liability` applies Gold's filters (PROD, WI, reject rules). A reconciliation test compares June 2026 with the
+Fabric results in `docs/defect_log.md`: 161,098 distinct well keys and 135,154 producing wells; both match exactly.
+A failed reconciliation test stops the pipeline.
+
+**Alternatives.** Export Gold from Fabric with `fab` (needs an interactive login and a sync step on every run);
+query the SQL endpoint (adds credentials to a local tool).
+
+**Consequences.** No Fabric dependency for the GIS track. If the Silver/Gold reject rules change, the local copy
+must change too; the reconciliation test will catch a drift in well counts.
