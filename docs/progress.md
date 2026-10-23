@@ -46,6 +46,8 @@ One line per finished item, with key numbers. Newest at the bottom of each secti
 - 1. GQA-01 `max_failures: 13` replaced by an allowlist of the 13 reviewed border licences, each with a reason (DEC-015 revision); any other surface hole outside Alberta fails. Inject demo now fails GQA-01 and GQA-03 (before: GQA-01 passed as WARN). 2 new tests, 49 passing.
 - 2. QGIS log filter: only the exact `ERROR 6: The PNG driver does not support update access to existing datasets.` line is hidden (config `ignored_qgis_messages`, DEC-020); any other ERROR line is logged as WARNING. Sample maps run: 5 hidden, 0 other errors. 2 new tests, 51 passing.
 - 3. README "Known limitations": approximate township polygons and DLS section check (no ATS layer), undecoded status codes, change detection tested only on a synthetic snapshot, screening classes are project definitions not AER criteria, plus the border allowlist caveat.
+- 4. Phase E refresh: new tests for the DLS parser with project config, township key, GQA-01 allowlist and QGIS log filter (53 passing; QA rules, UWI -> well_key, status mapping, pads and change detection already covered). Sample run 149 s. Final full run 5d4aabb7 on clean commit 06985e8: success in 487 s (convert 119, QA 95, liability 115, analysis 89, packages 39, changes 14, maps 17); GQA-01 WARN with 13 of 13 failures allowlisted, no stale entries; 539,846 of 539,890 wells pass FAIL/WARN; QA 12 PASS / 7 WARN / 4 INFO; all 10 reconciliations PASS; key numbers unchanged. README updated (runtime, tests, limitations).
+- 5. docs/final_report.md: interview talking points mapped to each job requirement (at-a-glance table plus evidence and a short answer per requirement).
 
 ## Blocked
 - None.
