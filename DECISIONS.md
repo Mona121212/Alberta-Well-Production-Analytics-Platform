@@ -347,3 +347,27 @@ the projected CRS); DBSCAN for pads (needs scikit-learn and a min-samples choice
 
 **Consequences.** Township areas and densities are indicative only. All four layers reconcile to the drilled-well count
 and to total 12-month oil volume.
+
+---
+
+## DEC-017 Client data package format
+
+**Date:** 2026-10-22
+
+**Context.** A GIS analyst delivers well data to clients by licensee, township list or area of interest. The package
+must open styled in QGIS, be readable without GIS software, and explain every field and known limitation.
+
+**Decision.** `python -m gis.package` writes `deliverables/<name>/` with `data.gpkg` (wells, pads, qa_flags table,
+package_extent, alberta_boundary), `wells.csv` (with EPSG:3400 x/y), `data_dictionary.md`, `README.md` (as-of dates,
+CRS, contents, class counts, QA summary, sources, known issues) and one `.qml` per spatial layer. Styles are also
+embedded as default styles in the GeoPackage `layer_styles` table (registered in `gpkg_contents`), so QGIS applies them
+on open; verified with PyQGIS 3.44. Field descriptions come from `config/gis_field_dictionary.yaml`, and the build fails
+if a packaged field has no description. Styles are generated as XML (`gis/styles.py`), so packaging does not need QGIS.
+Packages contain derived data only; the data files are git-ignored, while README, dictionary and styles of the three
+example packages are committed.
+
+**Alternatives.** Shapefile + PDF (field-name truncation, no embedded styles); one style file per package without
+embedding (users must load it by hand).
+
+**Consequences.** Packages are reproducible from the pipeline outputs in about 100 s for the three largest licensees.
+A new packaged field needs a dictionary entry first.

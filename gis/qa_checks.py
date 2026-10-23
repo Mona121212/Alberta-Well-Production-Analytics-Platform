@@ -297,8 +297,22 @@ def accepted_values(ctx, layer, params):
     return CheckResult(make_failures(rows, ctx, layer, detail), len(checked))
 
 
+def date_out_of_range(ctx, layer, params):
+    """Dates before min_date or after max_date ("today" = the run date)."""
+    gdf = ctx.layer(layer)
+    low = pd.Timestamp(params["min_date"])
+    high = pd.Timestamp.today().normalize() if params["max_date"] == "today" else pd.Timestamp(params["max_date"])
+    dates = pd.DataFrame({c: pd.to_datetime(gdf[c]) for c in params["columns"]})
+    bad = (dates < low) | (dates > high)
+    failed = bad.any(axis=1)
+    rows = gdf[failed]
+    detail = ["; ".join(f"{c} = {dates.at[i, c].date()}" for c in params["columns"] if bad.at[i, c])
+              + f" (allowed {low.date()} to {high.date()})" for i in rows.index]
+    return CheckResult(make_failures(rows, ctx, layer, detail), int(dates.notna().any(axis=1).sum()))
+
+
 CHECKS = {fn.__name__: fn for fn in [
     outside_boundary, latlong_mismatch, dls_township_range, dls_section, missing_reference,
     trajectory_endpoint, zero_length, pattern_mismatch, status_conflict, source_compare,
-    duplicate_key, missing_values, accepted_values,
+    duplicate_key, missing_values, accepted_values, date_out_of_range,
 ]}

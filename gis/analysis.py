@@ -6,7 +6,7 @@
 4. Laterals: surface-to-bottom-hole offset and trajectory 2D length per wellbore, trend by spud year
 
 Outputs in gis/output/<mode>/analysis/: analysis.gpkg (townships, hexagons, pads, wellbore_laterals)
-and CSV summaries.
+CSV summaries and pad_membership.parquet (licence -> pad, used by client packages).
 
 Usage:
     python -m gis.analysis [--mode sample|full]
@@ -168,14 +168,19 @@ def pads(wells, distance, acfg):
     layer = gpd.GeoDataFrame(table.drop(columns=["x", "y"]).reset_index(),
                              geometry=gpd.points_from_xy(table["x"], table["y"]), crs=wells.crs)
 
-    bins = acfg["pads"]["size_bins"]
-    labels = [f"{a}" if b - a == 1 else f"{a}-{b - 1}" if b < 100000 else f"{a}+" for a, b in zip(bins[:-1], bins[1:])]
-    size_class = pd.cut(table["wells"], bins=bins, right=False, labels=labels)
+    size_class = pad_size_class(table["wells"], acfg["pads"]["size_bins"])
+    layer["size_class"] = size_class.astype(str).to_numpy()
     distribution = table.groupby(size_class, observed=False).agg(pads=("wells", "size"), wells=("wells", "sum"))
     distribution["pct_pads"] = (100 * distribution["pads"] / distribution["pads"].sum()).round(2)
     distribution["pct_wells"] = (100 * distribution["wells"] / distribution["wells"].sum()).round(2)
     largest = layer.drop(columns="geometry").sort_values("wells", ascending=False).head(acfg["pads"]["top_n"])
-    return layer, distribution.rename_axis("wells_per_pad").reset_index(), largest
+    membership = pd.DataFrame(w[["licence_number", "pad_id", "pad_wells"]])
+    return layer, distribution.rename_axis("wells_per_pad").reset_index(), largest, membership
+
+
+def pad_size_class(wells_per_pad, bins):
+    labels = [f"{a}" if b - a == 1 else f"{a}-{b - 1}" if b < 100000 else f"{a}+" for a, b in zip(bins[:-1], bins[1:])]
+    return pd.cut(wells_per_pad, bins=bins, right=False, labels=labels)
 
 
 # --- 4. Laterals --------------------------------------------------------------------------
@@ -225,7 +230,7 @@ def run(cfg, acfg):
 
     town = townships(wells, acfg)
     hexes, unassigned = hexagons(wells, boundary, wells.crs, acfg)
-    pad_layer, pad_dist, pad_top = pads(wells, cfg["pads"]["distance_m"], acfg)
+    pad_layer, pad_dist, pad_top, pad_members = pads(wells, cfg["pads"]["distance_m"], acfg)
     lat_layer, lat_trend = laterals(wells, bottom, traj, acfg)
 
     checks = pd.DataFrame([
@@ -245,6 +250,7 @@ def run(cfg, acfg):
     hexes[hexes["wells"] > 0].drop(columns="geometry").to_csv(out / "hexagon_summary.csv", index=False)
     pad_dist.to_csv(out / "pad_size_distribution.csv", index=False)
     pad_top.to_csv(out / "largest_pads.csv", index=False)
+    pad_members.to_parquet(out / "pad_membership.parquet", index=False)
     lat_trend.to_csv(out / "lateral_trend_by_spud_year.csv", index=False)
     checks.to_csv(out / "analysis_reconciliation.csv", index=False)
 
