@@ -65,7 +65,7 @@ step reads Parquet or the standardized GeoPackage.
 pip install -r requirements.txt
 python -m gis.run --mode sample          # whole track on a Calgary-region sample (about 1-2 minutes)
 python -m gis.run --mode full            # whole province (about 10-12 minutes)
-python -m pytest tests/gis               # 47 tests with constructed rows
+python -m pytest tests/gis               # 53 tests with constructed rows
 ```
 
 `gis.run` writes `gis/output/<mode>/run_log.txt` and `run_manifest.json` (git commit, per-step status and runtime, row
