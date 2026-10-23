@@ -371,3 +371,25 @@ embedding (users must load it by hand).
 
 **Consequences.** Packages are reproducible from the pipeline outputs in about 100 s for the three largest licensees.
 A new packaged field needs a dictionary entry first.
+
+---
+
+## DEC-018 Change detection on licence-level snapshots
+
+**Date:** 2026-10-22
+
+**Context.** Maintaining mapping layers means knowing what changed between ST37 releases. Only one ST37 snapshot exists.
+
+**Decision.** `python -m gis.changes snapshot` saves the standardized surface holes (key attributes + geometry) as
+`gis/output/snapshots/<mode>/wells_<date>.parquet`. `compare --old --new` keys on licence number and reports
+new_licence, removed_licence, status_change, licensee_transfer, dls_label_change and moved_location (> 1 m in EPSG:3400),
+as `changelog.csv`, `change_summary.csv` and `changes.gpkg` (points; moved wells also as old -> new lines). Without a
+second release, `demo` copies the newest snapshot, injects a seeded, known set of changes into disjoint licences and
+fails unless exactly those changes are found.
+
+**Alternatives.** Row hashing of every column (reports noise such as re-formatted dates without saying what changed);
+comparing raw GDBs (1.7 GB each, untyped fields).
+
+**Consequences.** Real use: after downloading a new ST37 release, run the pipeline in full mode, take a snapshot with
+that release date, then compare it with the previous snapshot. Changes in other layers (bottom holes, production
+strings) are not tracked yet.

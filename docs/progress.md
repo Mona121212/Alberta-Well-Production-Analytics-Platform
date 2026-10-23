@@ -26,6 +26,7 @@ One line per finished item, with key numbers. Newest at the bottom of each secti
 ## Phase C - Client delivery and change management
 - C.1 Client package CLI (licensee / townships / AOI; DEC-017): data.gpkg with embedded QGIS styles (verified in PyQGIS 3.44), wells.csv, data_dictionary.md (every field), README.md, .qml per layer. Top 3 by licences: Canadian Natural 119,787 wells / 82,484 pads / 136,446 QA records (112 MB); Cenovus 42,029 / 29,737 / 34,129; Suncor 16,865 / 11,232 / 11,559. Build time 97 s for all three.
 - C.1 Finding: one licence (0159125) has licence_status_date 2030-04-04 -> new QA rule GQA-23 date_out_of_range (WARN, 1 of 539,890); package as-of date now ignores future dates (ST37 latest status date 2026-09-02).
+- C.2 Change detection (DEC-018): snapshot (539,890 wells, 15 s) + compare + synthetic demo. Demo on full and sample: all 17 injected changes found (3 new, 3 removed, 5 status, 4 licensee transfers, 2 moved 250 m), no false positives; 3 constructed-snapshot tests.
 
 ## Phase D - Maps
 
