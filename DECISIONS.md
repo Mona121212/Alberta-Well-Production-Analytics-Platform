@@ -322,6 +322,17 @@ pipeline. The 13 stay listed in the QA outputs.
 **Consequences.** The count is tied to the current ST37 snapshot: a refresh that adds a border well will stop the run
 and need a review. Next step: compare against an authoritative Alberta boundary.
 
+**Revision (2026-10-23): count replaced by an allowlist.** `max_failures: 13` accepted *any* 13 failures, so a new
+error could hide behind a fixed border well, and the injected-bad-row demo passed GQA-01 as WARN. GQA-01 now has an
+`allowlist` in `config/gis_qa.yaml`: the 13 licence numbers, each with a reason (licensee, status, DLS label, distance
+and side of the line). The QA engine marks allowlisted rows in `qa_failures.csv` (`allowlisted` column) and
+`qa_rule_summary.csv` (`rows_allowlisted`); a FAIL rule is FAIL as soon as one failure is not on its allowlist, and
+WARN when all failures are allowlisted. Allowlist entries without a reason are rejected at config load; entries that
+no longer fail are logged (warning in full mode). `max_failures` is removed. Alternatives: keep the count (rejected
+for the reason above); allowlist by UWI or coordinates (licence number is the record key of the surface layer and
+stable across ST37 releases). Consequence: a fixed or removed border well needs its entry deleted, and a new border
+well needs a reviewed entry before the run passes.
+
 ---
 
 ## DEC-016 Spatial analysis units: approximate townships, 5 km hexagons, pads, lateral classes

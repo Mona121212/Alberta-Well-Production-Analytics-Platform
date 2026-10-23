@@ -42,5 +42,8 @@ One line per finished item, with key numbers. Newest at the bottom of each secti
 - E.4 Final full run 68c2fca9: success in 569 s (convert 151, QA 137, liability 143, analysis 100, packages 23, changes 6, maps 9). QA 12 PASS / 7 WARN / 4 INFO; 539,846 of 539,890 wells pass FAIL/WARN; all reconciliations PASS. Manifest records commit 8020f7c as dirty because the run started before the Phase E commit (41761ac); no code changed during the run.
 - E.4 Pushed feature/gis-layer and opened PR #1 to main: https://github.com/Mona121212/Alberta-Well-Production-Analytics-Platform/pull/1
 
+## Autonomous run 2026-10-23
+- 1. GQA-01 `max_failures: 13` replaced by an allowlist of the 13 reviewed border licences, each with a reason (DEC-015 revision); any other surface hole outside Alberta fails. Inject demo now fails GQA-01 and GQA-03 (before: GQA-01 passed as WARN). 2 new tests, 49 passing.
+
 ## Blocked
 - None.
