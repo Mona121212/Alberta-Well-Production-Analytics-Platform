@@ -98,8 +98,7 @@ Maps need a local QGIS (path in `config/gis_maps.yaml`); without it `gis.run` sk
 Rules are data, not code: each entry in `config/gis_qa.yaml` names a generic check, the layer, a severity and
 parameters. FAIL rules stop the run on any failure that is not on the rule's `allowlist` of reviewed exceptions (each
 entry is a licence number with a written reason; GQA-01 lists the 13 known border wells), after all outputs are
-written. WARN rules
-count against a well in the scorecard, INFO rules document known source characteristics. Results use the
+written. WARN rules count against a well in the scorecard, INFO rules document known source characteristics. Results use the
 `defect_log` columns, and every rule has a constructed-row test (a meta-test fails if a check has none).
 
 Inject a bad row and the run stops:
@@ -116,13 +115,15 @@ $ echo $?
 ```
 
 The injected well keeps its lat/long but its geometry is moved 50 km outside Alberta; both GQA-01 (outside Alberta,
-not on the allowlist) and GQA-03 (geometry vs NAD83 lat/long) fail and stop the run, and liability, analysis, packages and maps never run on bad data.
+not on the allowlist) and GQA-03 (geometry vs NAD83 lat/long) fail and stop the run, and liability, analysis,
+packages and maps never run on bad data.
 
 ## Key findings (full province)
 
 **Data quality** (23 rules, 539,890 wells): 539,846 wells (99.99%) pass every FAIL and WARN rule.
 - 13 surface holes along the 110 W / 120 W borders lie 110-571 m outside the StatCan boundary while their lat/long and
-  DLS labels agree; tolerated as a documented boundary-vs-survey difference (DEC-015). Any 14th case stops the run.
+  DLS labels agree; each is allowlisted by licence number with a reason (DEC-015). Any other well outside Alberta
+  stops the run.
 - Geometry matches the NAD83 lat/long attributes for all 1.08 million surface and bottom holes (GQA-03/04).
 - DLS labels: only 2 surface holes fall more than a quarter township/range outside their labelled cell.
 - 28 trajectories end more than 50 m from their bottom hole (up to 4.5 km); 8 production strings report a producing
@@ -149,15 +150,33 @@ not on the allowlist) and GQA-03 (geometry vs NAD83 lat/long) fail and stop the 
 | ![Hexagon well density](docs/maps/hexagon_well_density.png) | ![Abandoned not reclaimed by township](docs/maps/abandoned_not_reclaimed_by_township.png) |
 | ![QA failures](docs/maps/qa_failures.png) | ![Client package overview](docs/maps/client_package_overview.png) |
 
-## Limitations
+## Known limitations
 
-- Screening classes and thresholds are project working definitions; no AER regulatory threshold is claimed.
-- No ATS township layer: the DLS check uses a calibrated approximate grid (DEC-010) and township polygons are convex
-  hulls of wells (DEC-016).
-- One ST37 snapshot: change detection is proven on a synthetic second snapshot (DEC-018).
-- Petrinex covers 12 months; production volumes are not converted between units (gas e3m3, liquids m3).
-- Status codes in production strings are not decoded (no official code table in the repo).
-- Maps need a local QGIS install; packages and all analysis do not.
+- **Approximate townships and DLS check (no ATS layer).** The repository has no Alberta Township System survey layer.
+  The DLS label check (GQA-05/06) compares each well against a calibrated approximate grid built from meridians and a
+  mean township height (DEC-010): the township/range check is reliable to a quarter cell, but the section check is
+  INFO only (1,041 of 539,890 wells flagged): correction-line jogs and road allowances put the approximation off by
+  up to about half a section, and LSD is not checked. Township polygons in the analysis are convex hulls of each
+  township's surface holes, or 250 m buffers where a township has fewer than 3 or collinear wells (DEC-016):
+  they show where wells are, not the legal township boundary, and their areas are not survey areas.
+- **Status codes are not decoded.** `Status_Mode` / `Status_Fluid` in production strings mix 495,586 numeric codes
+  with 162,680 text values, and the code-to-text pairs in the ST37 Excel extract conflict with each other
+  (DEC-011). Without an official AER code table the codes are kept as-is; screening uses the licence status and
+  Petrinex activity instead.
+- **Change detection is tested only on a synthetic snapshot.** Only one ST37 release has been downloaded. `gis.changes`
+  finds all 17 changes injected into a constructed second snapshot (new, removed, status, licensee, moved) with no
+  false positives, but it has not run on two real releases. It tracks surface-hole licences only, not bottom holes or
+  production strings (DEC-018).
+- **Screening classes are project definitions, not AER criteria.** "Abandoned not reclaimed", "no activity 12 months",
+  "pad review" and the other classes are working definitions for this project (DEC-012, DEC-014). They are not the
+  AER's inactive-well, Licensee Capability Assessment or closure-spend criteria and do not state any regulatory status
+  or liability amount.
+- **Border wells checked against a cartographic boundary.** GQA-01 uses the StatCan 2021 cartographic boundary; the 13
+  border wells allowlisted in `config/gis_qa.yaml` are explained by boundary data vs survey but were not checked
+  against an authoritative legal boundary (DEC-015).
+- Petrinex covers 12 months; inactivity cannot look further back, and volumes are not converted between units (gas
+  e3m3, liquids m3).
+- Maps need a local QGIS install; staging, QA, analysis and packages do not.
 
 ## Repository guide
 
