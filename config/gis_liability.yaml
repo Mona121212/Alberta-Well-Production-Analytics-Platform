@@ -1,0 +1,65 @@
+# Liability and compliance analytics (gis/liability.py).
+#
+# These are this project's working definitions for screening, not AER regulatory
+# definitions. AER inactive-well and closure requirements (for example Directive 013
+# and Directive 020) define their own criteria and timelines; none of their thresholds
+# are reproduced here. See DECISIONS.md DEC-012.
+
+# Reference month for "last N months": the latest month in the Petrinex files.
+as_of_month: latest
+windows_months: [6, 12]
+
+petrinex:
+  # A well "produced" in a month when it has a row with one of these activities and volume > 0.
+  production_activities: [PROD]
+  # A well "reported activity" (producing, injecting or disposing). Service wells never report
+  # PROD, so the inactive flag uses this wider list.
+  activity_activities: [PROD, INJ, DISP]
+  # Same reject rules as Gold (notebooks/02_silver_transform): PROD rows with missing or
+  # negative volume, or hours above the month maximum, do not count.
+  masked_value: "***"
+  # 12-month production volume per product, carried to each well. Units as reported to Petrinex:
+  # gas in thousand cubic metres (e3m3), liquids in cubic metres (m3).
+  volume_products: {OIL: oil_m3, GAS: gas_e3m3, COND: cond_m3, WATER: water_m3}
+  key_pattern: '^1[0-9A-Z]{2}\d{9}W\d\d{2}$'   # 16-character Petrinex well key, e.g. 100060600101W400
+
+# ST37 UWI -> Petrinex well key, same rule as Silver add_well_key():
+# 00/06-06-001-01W4/0 -> 1 + 00 + 06 + 06 + 001 + 01 + W + 4 + 00
+uwi_pattern: '^(\w{2})/(\d{2})-(\d{2})-(\d{3})-(\d{2})W(\d)/(\d+)$'
+
+# Licence status group (config/gis_licence_status_map.csv) -> analysis class.
+status_classes:
+  Active: active        # split further by Petrinex activity below
+  Inactive: suspended
+  Abandoned: abandoned
+  Reclaimed: reclaimed
+  Cancelled: cancelled
+
+# A well is an inactive candidate only if it was spudded before the window started:
+# a well drilled last month cannot have 12 months without production.
+require_spud_before_window: true
+
+# Multi-licence pads that never reported: many licences on one surface pad (surface holes
+# within pads.distance_m of each other, config/gis.yaml) and no Petrinex record for any of them.
+# Typical of wells that are not production wells; they get their own review class instead of
+# being counted as ordinary inactive candidates (DECISIONS.md DEC-014).
+pad_review:
+  min_licences: 10
+  count_excludes_groups: [Cancelled]   # cancelled licences were never drilled
+  well_class: review_multi_licence_pad_never_reported
+
+# Licensee profile: which well classes count as active / inactive.
+profile:
+  active: [active_reporting, active_no_activity_6m]
+  inactive: [active_no_activity_12m, suspended]
+  abandoned: [abandoned]
+  reclaimed: [reclaimed]
+  review: [review_multi_licence_pad_never_reported]
+  top_n: 20
+  min_wells_for_ratio: 10   # ratios for smaller licensees are left blank
+
+# Reconciliation against numbers produced by the Fabric pipeline (docs/defect_log.md D-001, D-002).
+reconciliation:
+  month: "2026-06"
+  expected_distinct_well_keys: 161098
+  expected_producing_well_keys: 135154

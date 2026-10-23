@@ -1,0 +1,7 @@
+# Local-only exploration dependencies (not used by the Fabric notebooks).
+# pyogrio wheels bundle GDAL with the OpenFileGDB driver, so no separate GDAL install is needed.
+pyogrio>=0.13
+geopandas>=1.0
+pyproj>=3.6
+pandas>=2.2
+openpyxl>=3.1

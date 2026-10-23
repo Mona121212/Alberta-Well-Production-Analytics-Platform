@@ -1,0 +1,18 @@
+# One-command GIS run (python -m gis.run). Steps run in this order; a QA FAIL rule or a failed
+# reconciliation stops the run (exit code 1). Optional steps log a warning and the run continues.
+
+steps: [stage, convert, qa, liability, analysis, packages, changes, maps]
+optional_steps: [maps]          # needs a local QGIS install (config/gis_maps.yaml)
+
+packages:
+  top_licensees: 3              # sample runs write them under gis/output/sample/deliverables/
+changes:
+  snapshot: true                # save today's surface-hole snapshot
+  demo: true                    # synthetic second snapshot must reproduce the injected changes
+
+# Layers counted in the run manifest: output file (relative to gis/output/<mode>/) -> layers.
+manifest_layers:
+  alberta_wells.gpkg: [wells_surface, bottom_holes, production_strings, well_trajectories, alberta_boundary]
+  qa/qa_results.gpkg: [wells_qa]
+  liability/liability.gpkg: [wells_liability, abandoned_not_reclaimed, inactive_candidates, abandoned_by_township]
+  analysis/analysis.gpkg: [townships, hexagons_5km, pads, wellbore_laterals]
