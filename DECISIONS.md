@@ -427,3 +427,24 @@ others.
 **Consequences.** Map rendering needs a local QGIS install (path in `config/gis_maps.yaml`); `gis.run` skips the maps
 step with a warning when it is missing. The project references outputs under `gis/output/full/` and `deliverables/`,
 so it opens fully only after a full run.
+
+---
+
+## DEC-020 QGIS output: hide one exact known message, surface every other ERROR
+
+**Date:** 2026-10-23
+
+**Context.** Each PNG export prints `ERROR 6: The PNG driver does not support update access to existing datasets.`
+(QGIS tries to write georeferencing back into the finished PNG; the image is complete). The maps step hid it, plus a
+GDAL "Warning 1: Non-conformant" message, by prefix match, so any other `ERROR 6: The PNG driver ...` text would also
+have been hidden.
+
+**Decision.** `config/gis_maps.yaml` lists `ignored_qgis_messages`; a line is hidden only when it matches one entry
+exactly (after trimming whitespace). Any other line starting with `ERROR` is logged at WARNING level; other lines at
+INFO. The number of hidden lines is logged. The Non-conformant warning is no longer hidden.
+
+**Alternatives.** Prefix or regex match (hides variants we have not seen); disable the QGIS world-file/georeference
+export (depends on QGIS version-specific layout settings).
+
+**Consequences.** A new or changed GDAL message shows up in the run log; if it is reviewed as harmless, it is added
+to the config list verbatim.

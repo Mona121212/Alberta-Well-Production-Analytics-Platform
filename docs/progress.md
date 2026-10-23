@@ -44,6 +44,7 @@ One line per finished item, with key numbers. Newest at the bottom of each secti
 
 ## Autonomous run 2026-10-23
 - 1. GQA-01 `max_failures: 13` replaced by an allowlist of the 13 reviewed border licences, each with a reason (DEC-015 revision); any other surface hole outside Alberta fails. Inject demo now fails GQA-01 and GQA-03 (before: GQA-01 passed as WARN). 2 new tests, 49 passing.
+- 2. QGIS log filter: only the exact `ERROR 6: The PNG driver does not support update access to existing datasets.` line is hidden (config `ignored_qgis_messages`, DEC-020); any other ERROR line is logged as WARNING. Sample maps run: 5 hidden, 0 other errors. 2 new tests, 51 passing.
 
 ## Blocked
 - None.
