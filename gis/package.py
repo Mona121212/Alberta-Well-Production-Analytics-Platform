@@ -227,9 +227,14 @@ def readme(src, layers, selection_type, selection_value, pcfg):
 
 # --- Build --------------------------------------------------------------------------------
 
-def build(src, pcfg, style_cfg, dictionary, name=None, **selection):
+def package_root(cfg, pcfg):
+    """Full-province packages go to deliverables/; sample packages stay under gis/output/sample/."""
+    return repo_path(pcfg["output_root"]) if cfg["run"]["mode"] == "full" else output_dir(cfg) / "deliverables"
+
+
+def build(src, pcfg, style_cfg, dictionary, name=None, root=None, **selection):
     chosen, sel_type, sel_value, extent = select(src, buffer_m=pcfg["extent_buffer_m"], **selection)
-    out = repo_path(pcfg["output_root"]) / (name or slug(sel_value))
+    out = (root or package_root(src.cfg, pcfg)) / (name or slug(sel_value))
     out.mkdir(parents=True, exist_ok=True)
     layers = package_layers(src, chosen, sel_type, sel_value, extent, pcfg)
     csv = wells_csv(layers["wells"])
@@ -247,6 +252,13 @@ def build(src, pcfg, style_cfg, dictionary, name=None, **selection):
 
 def top_licensees(src, n):
     return src.wells["licensee"].value_counts().head(n).index.tolist()
+
+
+def run(cfg, top_n):
+    """Packages for the top_n licensees by licence count (used by gis.run)."""
+    src = Sources(cfg)
+    pcfg, style_cfg, dictionary = load_package_config(), styles.load_style_config(), load_dictionary()
+    return [build(src, pcfg, style_cfg, dictionary, licensee=name) for name in top_licensees(src, top_n)]
 
 
 def load_package_config(path=DEFAULT_PACKAGE_CONFIG):

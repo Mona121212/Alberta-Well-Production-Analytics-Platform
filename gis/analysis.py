@@ -26,6 +26,10 @@ DEFAULT_ANALYSIS_CONFIG = REPO_ROOT / "config" / "gis_analysis.yaml"
 SQRT3 = np.sqrt(3.0)
 
 
+class ReconciliationFailed(Exception):
+    """Raised when analysis layers do not reconcile to the drilled-well count or volumes."""
+
+
 def load_inputs(cfg):
     out = output_dir(cfg)
     gpkg = out / cfg["exports"]["geopackage"]
@@ -147,6 +151,11 @@ def pads(wells, distance, acfg):
     w["pad_id"], w["pad_wells"] = assign_pads(w, distance)
     w["x"], w["y"] = w.geometry.x, w.geometry.y
     w["is_active"] = w["well_class"].isin(acfg["class_counts"]["active"])
+    # Arrow date/string columns make groupby min/max/first fall back to a Python loop per group
+    # (382,090 pads); numpy-backed columns keep it vectorized.
+    w["spud_date"] = pd.to_datetime(w["spud_date"])
+    w["surface_location_dls"] = w["surface_location_dls"].astype(object)
+    w["licensee"] = w["licensee"].astype(object)
     grouped = w.groupby("pad_id")
     licensee_counts = w.groupby(["pad_id", "licensee"]).size().sort_values(ascending=False)
     main_licensee = licensee_counts.reset_index().drop_duplicates("pad_id").set_index("pad_id")["licensee"]
@@ -155,8 +164,8 @@ def pads(wells, distance, acfg):
         "licensees": grouped["licensee"].nunique(),
         "main_licensee": main_licensee,
         "surface_location_dls": grouped["surface_location_dls"].first(),
-        "first_spud": grouped["spud_date"].min().astype("string"),
-        "last_spud": grouped["spud_date"].max().astype("string"),
+        "first_spud": grouped["spud_date"].min().dt.strftime("%Y-%m-%d"),
+        "last_spud": grouped["spud_date"].max().dt.strftime("%Y-%m-%d"),
         "active": grouped["is_active"].sum().astype(int),
         "x": grouped["x"].mean(),
         "y": grouped["y"].mean(),
@@ -262,7 +271,7 @@ def run(cfg, acfg):
     for row in checks.itertuples():
         log.info("reconciliation %-40s expected %s actual %s %s", row.test_name, row.expected, row.actual, row.status)
     if (checks["status"] == "FAIL").any():
-        raise AssertionError("Analysis reconciliation failed: " + ", ".join(checks.loc[checks.status == "FAIL", "test_name"]))
+        raise ReconciliationFailed(", ".join(checks.loc[checks.status == "FAIL", "test_name"]))
     return checks
 
 

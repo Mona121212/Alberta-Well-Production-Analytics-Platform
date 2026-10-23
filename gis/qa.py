@@ -40,10 +40,22 @@ class QAFailed(Exception):
     """Raised when at least one FAIL-severity rule exceeds its max_failures."""
 
 
+INJECTED_LICENCE = "INJECTED"
+
+
+def inject_bad_row(wells, east_edge_x, shift_m=50_000):
+    """Demo/test only: copy the first well, move its geometry shift_m east of the province's eastern edge
+    (east_edge_x) and keep its lat/long attributes, so the FAIL rule surface_latlong_mismatch must stop the run."""
+    bad = wells.iloc[[0]].copy()
+    bad["licence_number"] = INJECTED_LICENCE
+    bad["geometry"] = bad.geometry.translate(xoff=east_edge_x + shift_m - bad.geometry.x.iat[0])
+    return gpd.GeoDataFrame(pd.concat([wells, bad], ignore_index=True), crs=wells.crs)
+
+
 class QAContext:
     """Lazy access to everything the checks need. Layers are read once and cached."""
 
-    def __init__(self, cfg, qa_cfg):
+    def __init__(self, cfg, qa_cfg, inject_bad_row=False):
         self.cfg = cfg
         self.crs = cfg["target_crs"]
         self.gpkg = output_dir(cfg) / cfg["exports"]["geopackage"]
@@ -52,6 +64,7 @@ class QAContext:
         self.layer_cfg_by_output = {c["output_layer"]: c for c in cfg["layers"].values()}
         self.layer_key_by_output = {c["output_layer"]: k for k, c in cfg["layers"].items()}
         self.side_outputs = {}
+        self.inject_layer = cfg["layers"][cfg["wells_layer"]]["output_layer"] if inject_bad_row else None
         self._layers, self._references = {}, {}
 
     @staticmethod
@@ -61,6 +74,9 @@ class QAContext:
     def layer(self, name):
         if name not in self._layers:
             self._layers[name] = pyogrio.read_dataframe(self.gpkg, layer=name, use_arrow=True)
+            if name == self.inject_layer:
+                self._layers[name] = inject_bad_row(self._layers[name], self.boundary.bounds[2])
+                log.warning("Injected one bad well (%s) into %s for the stop demo", INJECTED_LICENCE, name)
         return self._layers[name]
 
     def reference(self, name):
@@ -131,11 +147,13 @@ def to_defect_log(summary, qa_cfg):
 
 def wells_with_flags(ctx, failures, qa_cfg):
     wells = ctx.layer(ctx.cfg["layers"][ctx.cfg["wells_layer"]]["output_layer"]).copy()
-    flagged = failures.dropna(subset=["licence_number"])
+    # One row per (licence, rule); object dtype keeps groupby vectorized (Arrow strings fall back to Python).
+    flagged = (failures.loc[failures["licence_number"].notna(), ["licence_number", "rule_id", "severity"]]
+               .astype(object).drop_duplicates().sort_values(["licence_number", "rule_id"]))
     for severity in ("FAIL", "WARN", "INFO"):
-        rules = flagged[flagged["severity"] == severity].groupby("licence_number")["rule_id"].nunique()
+        rules = flagged[flagged["severity"] == severity].groupby("licence_number").size()
         wells[f"n_{severity.lower()}_rules"] = wells["licence_number"].map(rules).fillna(0).astype(int)
-    rule_list = flagged.groupby("licence_number")["rule_id"].agg(lambda s: ", ".join(sorted(set(s))))
+    rule_list = flagged.groupby("licence_number")["rule_id"].agg(", ".join)
     wells["flagged_rules"] = wells["licence_number"].map(rule_list)
     blocking = [f"n_{s.lower()}_rules" for s in qa_cfg["scorecard"]["severities"]]
     wells["qa_pass"] = wells[blocking].sum(axis=1).eq(0)
@@ -202,8 +220,8 @@ def write_outputs(ctx, qa_cfg, summary, failures, wells, card):
     return out
 
 
-def run(cfg, qa_cfg):
-    ctx = QAContext(cfg, qa_cfg)
+def run(cfg, qa_cfg, inject_bad_row=False):
+    ctx = QAContext(cfg, qa_cfg, inject_bad_row)
     summary, failures = run_rules(ctx, qa_cfg)
     wells = wells_with_flags(ctx, failures, qa_cfg)
     card = scorecard(wells)

@@ -162,11 +162,12 @@ def dls_section(ctx, layer, params):
 
 def missing_reference(ctx, layer, params):
     gdf, key = ctx.layer(layer), params["key"]
-    reference_keys = pd.concat([ctx.reference(r)[key] for r in params["reference_layers"]]).dropna().unique()
+    reference_keys = pd.concat([ctx.reference(r)[key] for r in params["reference_layers"]]).dropna()
+    reference_keys = reference_keys.astype(object).unique()  # object dtype: fast hash-based isin
     checked = gdf[gdf[key].notna()]
     if "exclude" in params:  # records where a missing reference is expected
         checked = checked[~checked[params["exclude"]["column"]].isin(params["exclude"]["values"])]
-    rows = checked[~checked[key].isin(reference_keys)]
+    rows = checked[~checked[key].astype(object).isin(reference_keys)]
     targets = " or ".join(params["reference_layers"])
     detail = [f"{key} {k} not found in {targets} (whole province)" for k in rows[key]]
     return CheckResult(make_failures(rows, ctx, layer, detail), len(checked))
