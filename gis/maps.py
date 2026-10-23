@@ -19,7 +19,7 @@ import pyogrio
 import shapely
 import yaml
 
-from gis import analysis, styles
+from gis import analysis, package, styles
 from gis.common import REPO_ROOT, base_arg_parser, get_logger, load_config, output_dir, repo_path, reset_gpkg
 
 log = get_logger("gis.maps")
@@ -51,6 +51,9 @@ def qa_failure_points(out):
                                         "severity": r.severity, "record_key": gdf["record_key"],
                                         "detail": gdf["detail"]},
                                        geometry=shapely.force_2d(geom), crs=gdf.crs))
+    if not frames:  # a clean run: empty layer, the map shows the boundary only
+        return gpd.GeoDataFrame({"rule_id": [], "rule_label": [], "severity": [], "record_key": [], "detail": []},
+                                geometry=gpd.GeoSeries([], crs="EPSG:3400"), crs="EPSG:3400")
     return gpd.GeoDataFrame(pd.concat(frames, ignore_index=True), crs=frames[0].crs)
 
 
@@ -73,6 +76,18 @@ def dominant_class_hexagons(out, hexes):
     return result
 
 
+def destinations(cfg, mcfg):
+    """PNG folder, project file and example package. Sample runs never touch docs/maps or deliverables/."""
+    packages = package.package_root(cfg, package.load_package_config())
+    if cfg["run"]["mode"] == "full":
+        return repo_path(mcfg["png_dir"]), repo_path(mcfg["project"]), packages / mcfg["package_example"]
+    maps_dir = output_dir(cfg) / "maps"
+    built = sorted(p.parent for p in packages.glob("*/data.gpkg"))
+    if not built:
+        raise FileNotFoundError(f"No client package under {packages}; run the packages step first")
+    return maps_dir / "png", maps_dir / "alberta_wells_sample.qgz", built[0]
+
+
 def prepare(cfg, mcfg, style_cfg):
     out = output_dir(cfg)
     maps_dir = out / "maps"
@@ -84,14 +99,15 @@ def prepare(cfg, mcfg, style_cfg):
     hexes = pyogrio.read_dataframe(analysis, layer="hexagons_5km")
     towns = pyogrio.read_dataframe(analysis, layer="townships")
     qa = qa_failure_points(out)
-    package_dir = repo_path(f"deliverables/{mcfg['package_example']}")
+    png_dir, project, package_dir = destinations(cfg, mcfg)
     package_name = pyogrio.read_dataframe(package_dir / "data.gpkg", layer="package_extent")["selection_value"].iat[0]
 
     prepared = {"hexagons": hexes[hexes["wells"] > 0], "townships_abandoned": towns[towns["abandoned_not_reclaimed"] > 0],
                 "hexagons_dominant_class": dominant_class_hexagons(out, hexes[hexes["wells"] > 0]),
                 "context_townships": towns[["township", "geometry"]], "qa_failures": qa}
     for name, gdf in prepared.items():
-        pyogrio.write_dataframe(gdf, layers_gpkg, layer=name, driver="GPKG", use_arrow=True)
+        geometry_type = None if len(gdf) else "Point"  # an empty layer needs an explicit geometry type
+        pyogrio.write_dataframe(gdf, layers_gpkg, layer=name, driver="GPKG", geometry_type=geometry_type)
 
     def entry(path, layer, style_key, legend_name, legend=True, qml=None):
         qml_path = maps_dir / "styles" / f"{style_key}.qml"
@@ -124,13 +140,13 @@ def prepare(cfg, mcfg, style_cfg):
     numbers = {"drilled_wells": f"{int(hexes['wells'].sum()):,}",
                "abandoned": f"{int(towns['abandoned_not_reclaimed'].sum()):,}",
                "licences": f"{pyogrio.read_info(out / 'liability' / 'liability.gpkg', layer='wells_liability')['features']:,}",
-               "qa_points": f"{len(qa):,}", "package": package_name, "folder": mcfg["package_example"]}
+               "qa_points": f"{len(qa):,}", "package": package_name, "folder": package_dir.name}
     maps = []
     for m in mcfg["maps"]:
         maps.append({"name": m["name"], "title": m["title"].format(**numbers), "subtitle": m["subtitle"].format(**numbers),
                      "layers": m["layers"], "extent": m.get("extent", "boundary"),
-                     "png": str(repo_path(mcfg["png_dir"]) / f"{m['name']}.png")})
-    spec = {"prefix": mcfg["qgis_prefix"], "project": str(repo_path(mcfg["project"])), "dpi": mcfg["dpi"],
+                     "png": str(png_dir / f"{m['name']}.png")})
+    spec = {"prefix": mcfg["qgis_prefix"], "project": str(project), "dpi": mcfg["dpi"],
             "note": mcfg["source_note"], "crs": cfg["target_crs"], "layers": registry, "maps": maps}
     spec_path = maps_dir / "map_spec.json"
     spec_path.write_text(json.dumps(spec, indent=2), encoding="utf-8")

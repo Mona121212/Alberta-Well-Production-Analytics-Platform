@@ -60,8 +60,7 @@ class FakeSources:
 
 
 def test_build_licensee_package(tmp_path):
-    cfg = dict(PCFG, output_root=str(tmp_path))
-    out = P.build(FakeSources(), cfg, STYLE_CFG, DICTIONARY, licensee="acme ltd.")  # case-insensitive
+    out = P.build(FakeSources(), PCFG, STYLE_CFG, DICTIONARY, root=tmp_path, licensee="acme ltd.")  # any case
     assert sorted(p.name for p in out.iterdir()) == sorted([
         "README.md", "data.gpkg", "data_dictionary.md", "wells.csv", "wells.qml", "pads.qml",
         "package_extent.qml", "alberta_boundary.qml"])
