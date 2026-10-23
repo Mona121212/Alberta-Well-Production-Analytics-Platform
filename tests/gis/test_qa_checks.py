@@ -10,7 +10,7 @@ import shapely
 from pyproj import Transformer
 
 from gis import qa_checks as checks
-from gis.qa import evaluate
+from gis.qa import evaluate, load_qa_config
 
 CRS = "EPSG:3400"
 TO_3400 = Transformer.from_crs("EPSG:4269", CRS, always_xy=True)
@@ -145,3 +145,16 @@ def test_date_out_of_range():
     result = checks.date_out_of_range(FakeContext({"wells": wells}), "wells", params)
     assert sorted(result.failures["record_key"]) == ["ancient", "future"]
     assert "licence_status_date = 2099-01-01" in result.failures.set_index("record_key").loc["future", "detail"]
+
+
+def test_dls_parser_with_project_config():
+    """dls_positions with the real GQA-05 parameters: parts parsed, point inside its labelled cell, bad labels flagged."""
+    rule = next(r for r in load_qa_config()["rules"] if r["id"] == "GQA-05")
+    labels = ["08-09-051-25W4", "08-09-051-25W7", "8-9-51-25W4"]
+    wells = wells_at([(-113.617905, 53.386619)] * 3, licence_number=["ok", "bad_meridian", "bad_format"],
+                     surface_location_dls=labels)
+    parts = checks.dls_positions(wells, rule["params"])
+    assert parts.loc[0, ["lsd", "sec", "twp", "rge", "mer"]].tolist() == [8, 9, 51, 25, 4]
+    assert parts["parsed"].tolist() == [True, False, False]
+    assert 50 <= parts.loc[0, "twp_pos"] < 51 and 24 <= parts.loc[0, "rge_pos"] < 25
+    assert checks.dls_trm_offset(parts.iloc[[0]]).iat[0] == 0
