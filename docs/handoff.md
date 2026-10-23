@@ -60,7 +60,7 @@ Optimizations already made (each verified with a profiler, same results before a
 
 ## Open issues
 
-1. **13 border wells tolerated in GQA-01** (`max_failures: 13`, DEC-015). Not yet checked against an authoritative
+1. **13 border wells allowlisted in GQA-01** (licence numbers with reasons in `config/gis_qa.yaml`, DEC-015). Not yet checked against an authoritative
    Alberta boundary. The count is tied to this ST37 snapshot: a refresh that adds a border well will stop the run.
 2. **No ATS township layer.** The DLS check uses a calibrated approximate grid (DEC-010; section check is INFO only)
    and township polygons are convex hulls of wells (DEC-016).
@@ -95,8 +95,8 @@ Optimizations already made (each verified with a profiler, same results before a
    and every `reconciliation` row PASS.
 3. **Resolve the border tolerance (issue 1):** download the AltaLIS (or GeoBase) provincial boundary to
    `data/raw/boundaries/`, point `paths.boundary` and `boundary.where` in `config/gis.yaml` at it, re-run
-   `python -m gis.run --mode full --force-stage --steps stage,convert,qa`, and lower `max_failures` in
-   `config/gis_qa.yaml` (GQA-01) to the new count. Record the result in DEC-015.
+   `python -m gis.run --mode full --force-stage --steps stage,convert,qa`, and remove the allowlist entries in
+   `config/gis_qa.yaml` (GQA-01) that no longer fail. Record the result in DEC-015.
 4. **On the next ST37 release (issue 4):** save it under `data/raw/aer_st37/`, then
    ```bash
    python -m gis.run --mode full --force-stage
@@ -104,7 +104,7 @@ Optimizations already made (each verified with a profiler, same results before a
    python -m gis.changes compare --old gis/output/snapshots/full/wells_2026-10-22.parquet \
                                  --new gis/output/snapshots/full/wells_<release-date>.parquet
    ```
-   If GQA-01 stops the run on new border wells, review them before raising `max_failures`.
+   If GQA-01 stops the run on new border wells, review them before adding allowlist entries.
 5. **Optional improvements**, in order of value:
    - Load `liability/wells_liability` coordinates and classes into the Fabric `gold_dim_well` (DEC-001/005) for the
      Power BI map; needs a Bronze source entry in `config/sources.json` and a Silver join.

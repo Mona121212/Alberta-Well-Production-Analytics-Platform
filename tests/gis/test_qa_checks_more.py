@@ -11,7 +11,7 @@ from pyproj import Transformer
 
 from gis import qa_checks as checks
 from gis.common import repo_path
-from gis.qa import INJECTED_LICENCE, evaluate, inject_bad_row
+from gis.qa import INJECTED_LICENCE, evaluate, inject_bad_row, load_qa_config, validate_allowlists
 
 CRS = "EPSG:3400"
 
@@ -105,7 +105,7 @@ def test_injected_bad_row_trips_a_fail_rule():
               "tolerance_m": 1.0}
     result = checks.latlong_mismatch(ctx, "wells", params)
     assert list(result.failures["record_key"]) == [INJECTED_LICENCE]
-    assert evaluate({"severity": "FAIL", "max_failures": 0}, result) == "FAIL"
+    assert evaluate({"severity": "FAIL"}, result) == "FAIL"
     outside = checks.outside_boundary(ctx, "wells", {"tolerance_m": 100})
     assert list(outside.failures["record_key"]) == [INJECTED_LICENCE]
 
@@ -118,3 +118,33 @@ def test_every_check_is_tested_and_every_rule_has_a_check():
     source = "".join(p.read_text(encoding="utf-8") for p in pathlib.Path(repo_path("tests/gis")).glob("test_*.py"))
     untested = [name for name in checks.CHECKS if f"checks.{name}(" not in source]
     assert untested == [], f"QA checks without a test: {untested}"
+
+
+def test_gqa01_allowlist_accepts_only_the_13_reviewed_border_wells():
+    """The 13 reviewed border licences pass as WARN; any other surface hole outside Alberta must FAIL."""
+    rule = next(r for r in load_qa_config()["rules"] if r["id"] == "GQA-01")
+    allowed = [entry["licence_number"] for entry in rule["allowlist"]]
+    assert rule["severity"] == "FAIL" and "max_failures" not in rule
+    assert len(allowed) == len(set(allowed)) == 13
+    assert all(len(entry["reason"]) > 20 for entry in rule["allowlist"])
+
+    boundary = shapely.box(0, 0, 100_000, 100_000)
+    outside = [shapely.Point(100_000 + 150, 50_000)] * 13
+    border = gpd.GeoDataFrame({"licence_number": allowed}, geometry=outside, crs=CRS)
+    inside = gpd.GeoDataFrame({"licence_number": ["inside"]}, geometry=[shapely.Point(50_000, 50_000)], crs=CRS)
+    known = Context({"wells": pd.concat([border, inside], ignore_index=True)}, boundary=boundary)
+    result = checks.outside_boundary(known, "wells", rule["params"])
+    assert len(result.failures) == 13
+    assert evaluate(rule, result) == "WARN"
+
+    new_hole = gpd.GeoDataFrame({"licence_number": ["9999999"]}, geometry=[shapely.Point(-500, 50_000)], crs=CRS)
+    with_new = Context({"wells": pd.concat([border, inside, new_hole], ignore_index=True)}, boundary=boundary)
+    result = checks.outside_boundary(with_new, "wells", rule["params"])
+    assert len(result.failures) == 14
+    assert evaluate(rule, result) == "FAIL"
+
+
+def test_allowlist_entries_need_a_reason():
+    bad = {"rules": [{"id": "GQA-XX", "allowlist": [{"licence_number": "0000001", "reason": " "}]}]}
+    with pytest.raises(ValueError, match="GQA-XX"):
+        validate_allowlists(bad)

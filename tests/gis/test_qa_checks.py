@@ -124,11 +124,14 @@ def test_zero_length_2d_vs_3d():
     assert list(checks.zero_length(ctx, "holes", {"dimension": "2d"}).failures["record_key"]) == ["vertical", "point_like"]
 
 
-def test_fail_severity_respects_max_failures():
-    two_failures = checks.CheckResult(gpd.GeoDataFrame({"record_key": ["a", "b"]}), rows_checked=10)
-    no_failures = checks.CheckResult(gpd.GeoDataFrame({"record_key": []}), rows_checked=10)
-    assert evaluate({"severity": "FAIL", "max_failures": 0}, two_failures) == "FAIL"
-    assert evaluate({"severity": "FAIL", "max_failures": 5}, two_failures) == "WARN"
+def test_fail_severity_respects_allowlist():
+    two_failures = checks.CheckResult(gpd.GeoDataFrame({"record_key": ["a", "b"], "licence_number": ["a", "b"]}),
+                                      rows_checked=10)
+    no_failures = checks.CheckResult(gpd.GeoDataFrame({"record_key": [], "licence_number": []}), rows_checked=10)
+    both = [{"licence_number": "a", "reason": "r"}, {"licence_number": "b", "reason": "r"}]
+    assert evaluate({"severity": "FAIL"}, two_failures) == "FAIL"
+    assert evaluate({"severity": "FAIL", "allowlist": both}, two_failures) == "WARN"
+    assert evaluate({"severity": "FAIL", "allowlist": both[:1]}, two_failures) == "FAIL"
     assert evaluate({"severity": "WARN"}, two_failures) == "WARN"
     assert evaluate({"severity": "FAIL"}, no_failures) == "PASS"
 

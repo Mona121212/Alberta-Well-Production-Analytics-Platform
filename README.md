@@ -35,7 +35,7 @@ flowchart LR
     PQ --> CONV[gis.convert<br/>rename, trim, dates,<br/>status mapping, EPSG:3400]
     CONV --> GPKG[(alberta_wells.gpkg<br/>wells SHP + CSV)]
     GPKG --> QA{gis.qa<br/>23 config rules}
-    QA -- "FAIL > max_failures" --> STOP[run stops, exit 1]
+    QA -- "FAIL not on allowlist" --> STOP[run stops, exit 1]
     QA --> LIAB[gis.liability<br/>well classes, Petrinex match,<br/>licensee profile]
     LIAB --> ANA[gis.analysis<br/>townships, 5 km hexagons,<br/>pads, laterals]
     ANA --> PKG[gis.package<br/>deliverables/&lt;client&gt;/]
@@ -96,7 +96,9 @@ Maps need a local QGIS (path in `config/gis_maps.yaml`); without it `gis.run` sk
 ## Data quality approach
 
 Rules are data, not code: each entry in `config/gis_qa.yaml` names a generic check, the layer, a severity and
-parameters. FAIL rules stop the run when failures exceed `max_failures` (after all outputs are written), WARN rules
+parameters. FAIL rules stop the run on any failure that is not on the rule's `allowlist` of reviewed exceptions (each
+entry is a licence number with a written reason; GQA-01 lists the 13 known border wells), after all outputs are
+written. WARN rules
 count against a well in the scorecard, INFO rules document known source characteristics. Results use the
 `defect_log` columns, and every rule has a constructed-row test (a meta-test fails if a check has none).
 
@@ -105,16 +107,16 @@ Inject a bad row and the run stops:
 ```text
 $ python -m gis.run --mode sample --inject-bad-row
 WARNING gis.qa: Injected one bad well (INJECTED) into wells_surface for the stop demo
-INFO gis.qa: GQA-01 surface_hole_outside_alberta                  WARN  1 of 3,300 failed
+INFO gis.qa: GQA-01 surface_hole_outside_alberta                  FAIL  1 of 3,300 failed
 INFO gis.qa: GQA-03 surface_latlong_mismatch                      FAIL  1 of 3,300 failed
-INFO gis.run: Step qa         stopped      7.3 s
-INFO gis.run: Run c1f71f4c stopped in 7 s; manifest: gis/output/sample/run_manifest.json
+INFO gis.run: Step qa         stopped      8.9 s
+INFO gis.run: Run fab9dd3f stopped in 9 s; manifest: gis/output/sample/run_manifest.json
 $ echo $?
 1
 ```
 
-The injected well keeps its lat/long but its geometry is moved 50 km outside Alberta; GQA-03 (geometry vs NAD83
-lat/long, FAIL, `max_failures: 0`) stops the run, and liability, analysis, packages and maps never run on bad data.
+The injected well keeps its lat/long but its geometry is moved 50 km outside Alberta; both GQA-01 (outside Alberta,
+not on the allowlist) and GQA-03 (geometry vs NAD83 lat/long) fail and stop the run, and liability, analysis, packages and maps never run on bad data.
 
 ## Key findings (full province)
 

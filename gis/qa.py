@@ -9,12 +9,13 @@ Outputs in gis/output/<mode>/qa/:
 - qa_results.gpkg              one layer per rule with failures, plus wells_qa (every well with its QA flags)
 - gdb_vs_excel_value_pairs.csv value pairs that differ between the GDB and the Excel extract
 
-A FAIL rule with more than max_failures failed rows stops the pipeline (exit code 1)
-after all outputs are written.
+A FAIL rule with any failed row that is not on its allowlist (reviewed exceptions, each with a
+reason) stops the pipeline (exit code 1) after all outputs are written.
 
 Usage:
     python -m gis.qa [--mode sample|full] [--qa-config config/gis_qa.yaml]
 """
+import logging
 import sys
 import time
 from datetime import date
@@ -37,7 +38,7 @@ ALL_LICENSEES = "(all licensees)"
 
 
 class QAFailed(Exception):
-    """Raised when at least one FAIL-severity rule exceeds its max_failures."""
+    """Raised when at least one FAIL-severity rule has a failure that is not allowlisted."""
 
 
 INJECTED_LICENCE = "INJECTED"
@@ -99,13 +100,29 @@ class QAContext:
         return standardize_attributes(pd.read_parquet(self.stage / "excel_sample.parquet"), layer["rename"])
 
 
+def allowlisted(rule, failures):
+    """Boolean mask: failed rows whose licence number is on the rule's allowlist."""
+    allowed = {entry["licence_number"] for entry in rule.get("allowlist", [])}
+    if not allowed or "licence_number" not in failures:
+        return pd.Series(False, index=failures.index)
+    return failures["licence_number"].isin(allowed)
+
+
 def evaluate(rule, result):
-    failed = len(result.failures)
-    if failed == 0:
+    """PASS when nothing failed. A FAIL rule is FAIL when any failure is not allowlisted, else WARN."""
+    if len(result.failures) == 0:
         return "PASS"
     if rule["severity"] == "FAIL":
-        return "FAIL" if failed > rule.get("max_failures", 0) else "WARN"
+        return "FAIL" if (~allowlisted(rule, result.failures)).any() else "WARN"
     return rule["severity"]
+
+
+def validate_allowlists(qa_cfg):
+    """Every allowlist entry needs a licence number and a non-empty reason."""
+    for rule in qa_cfg["rules"]:
+        for entry in rule.get("allowlist", []):
+            if not str(entry.get("licence_number", "")).strip() or not str(entry.get("reason", "")).strip():
+                raise ValueError(f"{rule['id']}: allowlist entry needs licence_number and reason: {entry}")
 
 
 def run_rules(ctx, qa_cfg):
@@ -115,15 +132,23 @@ def run_rules(ctx, qa_cfg):
         result = CHECKS[rule["check"]](ctx, rule["layer"], rule.get("params", {}))
         outcome = evaluate(rule, result)
         rows_failed = len(result.failures)
+        is_allowed = allowlisted(rule, result.failures)
+        listed = {entry["licence_number"] for entry in rule.get("allowlist", [])}
+        unused = listed - set(result.failures.loc[is_allowed, "licence_number"])
+        if unused:
+            # Expected in sample mode (the bbox excludes the border wells); in full mode it means a stale entry.
+            level = logging.WARNING if ctx.cfg["run"]["mode"] == "full" else logging.INFO
+            log.log(level, "%s allowlist entries with no failure in this run: %s", rule["id"], ", ".join(sorted(unused)))
         summaries.append({
             "rule_id": rule["id"], "rule_name": rule["name"], "layer": rule["layer"], "check": rule["check"],
             "severity": rule["severity"], "rows_checked": result.rows_checked, "rows_failed": rows_failed,
             "pct_failed": round(100 * rows_failed / result.rows_checked, 3) if result.rows_checked else None,
-            "max_failures": rule.get("max_failures"), "result": outcome, "description": rule["description"],
+            "rows_allowlisted": int(is_allowed.sum()), "result": outcome, "description": rule["description"],
             "seconds": round(time.time() - started, 2),
         })
         failures.append(result.failures.assign(
-            rule_id=rule["id"], rule_name=rule["name"], severity=rule["severity"], layer=rule["layer"]))
+            rule_id=rule["id"], rule_name=rule["name"], severity=rule["severity"], layer=rule["layer"],
+            allowlisted=is_allowed.to_numpy()))
         log.info("%s %-45s %-5s %s of %s failed", rule["id"], rule["name"], outcome,
                  f"{rows_failed:,}", f"{result.rows_checked:,}")
     all_failures = gpd.GeoDataFrame(pd.concat(failures, ignore_index=True), crs=ctx.crs)
@@ -181,7 +206,9 @@ def examples_markdown(summary, failures, n, mode):
     for r in summary.itertuples():
         lines += [f"## {r.rule_id} {r.rule_name} - {r.result}", "",
                   f"{r.description} Layer `{r.layer}`, severity {r.severity}: "
-                  f"{r.rows_failed:,} of {r.rows_checked:,} rows failed.", ""]
+                  f"{r.rows_failed:,} of {r.rows_checked:,} rows failed"
+                  + (f", {r.rows_allowlisted:,} allowlisted (reviewed exceptions in gis_qa.yaml)." if r.rows_allowlisted
+                     else "."), ""]
         rows = failures[failures["rule_id"] == r.rule_id]
         if rows.empty:
             lines += ["No failures.", ""]
@@ -200,7 +227,7 @@ def write_outputs(ctx, qa_cfg, summary, failures, wells, card):
     out.mkdir(parents=True, exist_ok=True)
     summary.to_csv(out / "qa_rule_summary.csv", index=False)
     to_defect_log(summary, qa_cfg).to_csv(out / "qa_defect_log.csv", index=False)
-    columns = ["rule_id", "rule_name", "severity", "layer"] + FAILURE_COLUMNS
+    columns = ["rule_id", "rule_name", "severity", "layer"] + FAILURE_COLUMNS + ["allowlisted"]
     failures[columns].to_csv(out / "qa_failures.csv", index=False)
     card.to_csv(out / "qa_scorecard_by_licensee.csv", index=False)
     (out / "qa_examples.md").write_text(
@@ -233,13 +260,15 @@ def run(cfg, qa_cfg, inject_bad_row=False):
 
     failed_rules = summary.loc[summary["result"] == "FAIL", "rule_id"].tolist()
     if failed_rules:
-        raise QAFailed(f"FAIL rules exceeded max_failures: {', '.join(failed_rules)} (see {out / 'qa_examples.md'})")
+        raise QAFailed(f"FAIL rules with failures not on the allowlist: {', '.join(failed_rules)} (see {out / 'qa_examples.md'})")
     return summary
 
 
 def load_qa_config(path=DEFAULT_QA_CONFIG):
     with open(path, encoding="utf-8") as fh:
-        return yaml.safe_load(fh)
+        qa_cfg = yaml.safe_load(fh)
+    validate_allowlists(qa_cfg)
+    return qa_cfg
 
 
 def main():

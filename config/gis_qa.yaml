@@ -2,10 +2,14 @@
 # it runs on, a severity and the check parameters.
 #
 # severity:
-#   FAIL - more than max_failures failed rows stops the pipeline (exit code 1)
+#   FAIL - any failed row that is not on the rule's allowlist stops the pipeline (exit code 1)
 #   WARN - reported, counts against a well in the scorecard
 #   INFO - reported only (known source characteristics, approximate checks)
 # Layer names are the output_layer names in config/gis.yaml.
+#
+# allowlist (optional, any rule): known, reviewed exceptions, one entry per licence number with
+# the reason it is accepted. Allowlisted rows stay in every QA output (marked allowlisted) but do not
+# stop the run. A FAIL rule whose failures are all allowlisted is reported as WARN.
 
 # Column that identifies a record in each layer (used in failure rows and examples).
 record_keys:
@@ -30,10 +34,23 @@ rules:
     check: outside_boundary
     layer: wells_surface
     severity: FAIL
-    # 13 known border cases (full run 2026-10-22): 11 on the 4th Meridian (110-160 m east of the StatCan
-    # line, labelled range 01 W4) and 2 on 120 W (213 m and 571 m). Lat/long and DLS labels agree with
-    # the geometry; the difference is boundary data vs survey (DECISIONS.md DEC-015). A 14th failure stops the run.
-    max_failures: 13
+    # Reviewed border cases from the full run of 2026-10-22: lat/long attributes match the geometry
+    # (GQA-03 passes) and the DLS labels are border ranges, so the gap is boundary data vs survey, not a
+    # location error (DECISIONS.md DEC-015). Any other surface hole outside Alberta fails the run.
+    allowlist:
+      - {licence_number: "0051670", reason: "Canlin, Issued, 08-12-015-01W4, 148 m east of the StatCan line at 110.0057 W; DLS range 01 W4 and lat/long agree with the geometry (DEC-015)"}
+      - {licence_number: "0055051", reason: "Canlin, Abandoned, 16-12-015-01W4, 154 m east of the StatCan line at 110.0057 W; DLS range 01 W4 and lat/long agree with the geometry (DEC-015)"}
+      - {licence_number: "0249078", reason: "Murphy Oil, Cancelled, 04-10-094-13W6, 571 m west of the StatCan line at 120.0094 W; licence cancelled 2002, never drilled; DLS label is a border range 13 W6 (DEC-015)"}
+      - {licence_number: "0256302", reason: "Longshore, Reclamation Certified, 16-13-015-01W4, 160 m east of the StatCan line at 110.0057 W; DLS range 01 W4 and lat/long agree with the geometry (DEC-015)"}
+      - {licence_number: "0263360", reason: "Canadian Natural, Suspended, 04-23-095-13W6, 213 m west of the StatCan line at 120.0035 W; DLS label is a border range 13 W6 and lat/long agree with the geometry (DEC-015)"}
+      - {licence_number: "0264130", reason: "CNOOC, Cancelled, 01-36-014-01W4, 110 m east of the StatCan line at 110.0057 W; DLS range 01 W4 and lat/long agree with the geometry (DEC-015)"}
+      - {licence_number: "0267497", reason: "CNOOC, Cancelled, 16-01-015-01W4, 138 m east of the StatCan line at 110.0057 W; DLS range 01 W4 and lat/long agree with the geometry (DEC-015)"}
+      - {licence_number: "0267521", reason: "CNOOC, Cancelled, 08-01-015-01W4, 133 m east of the StatCan line at 110.0057 W; DLS range 01 W4 and lat/long agree with the geometry (DEC-015)"}
+      - {licence_number: "0268079", reason: "Pine Cliff, Abandoned, 01-36-014-01W4, 110 m east of the StatCan line at 110.0057 W; DLS range 01 W4 and lat/long agree with the geometry (DEC-015)"}
+      - {licence_number: "0268529", reason: "Pine Cliff, Amended, 08-01-015-01W4, 133 m east of the StatCan line at 110.0057 W; DLS range 01 W4 and lat/long agree with the geometry (DEC-015)"}
+      - {licence_number: "0268854", reason: "Pine Cliff, Issued, 16-01-015-01W4, 138 m east of the StatCan line at 110.0057 W; DLS range 01 W4 and lat/long agree with the geometry (DEC-015)"}
+      - {licence_number: "0326987", reason: "Pine Cliff, Amended, 09-01-015-01W4, 136 m east of the StatCan line at 110.0057 W; DLS range 01 W4 and lat/long agree with the geometry (DEC-015)"}
+      - {licence_number: "0359719", reason: "Pine Cliff, Issued, 08-36-014-01W4, 117 m east of the StatCan line at 110.0057 W; DLS range 01 W4 and lat/long agree with the geometry (DEC-015)"}
     params: {tolerance_m: 100}
 
   - id: GQA-02
@@ -51,7 +68,6 @@ rules:
     check: latlong_mismatch
     layer: wells_surface
     severity: FAIL
-    max_failures: 0
     params: {lat_column: latitude_nad83, lon_column: longitude_nad83, latlong_crs: "EPSG:4269", tolerance_m: 1.0}
 
   - id: GQA-04
@@ -179,7 +195,6 @@ rules:
     check: duplicate_key
     layer: wells_surface
     severity: FAIL
-    max_failures: 0
     params: {key: licence_number, reference_layer: wells_surface}
 
   - id: GQA-17
@@ -188,7 +203,6 @@ rules:
     check: duplicate_key
     layer: bottom_holes
     severity: FAIL
-    max_failures: 0
     params: {key: uwi, reference_layer: bottom_holes}
 
   - id: GQA-18
@@ -197,7 +211,6 @@ rules:
     check: duplicate_key
     layer: production_strings
     severity: FAIL
-    max_failures: 0
     params: {key: uwi, reference_layer: production_strings}
 
   - id: GQA-19
@@ -206,7 +219,6 @@ rules:
     check: missing_values
     layer: wells_surface
     severity: FAIL
-    max_failures: 0
     params: {columns: [licence_number, geometry]}
 
   - id: GQA-20
