@@ -393,3 +393,26 @@ comparing raw GDBs (1.7 GB each, untyped fields).
 **Consequences.** Real use: after downloading a new ST37 release, run the pipeline in full mode, take a snapshot with
 that release date, then compare it with the previous snapshot. Changes in other layers (bottom holes, production
 strings) are not tracked yet.
+
+---
+
+## DEC-019 Maps rendered with PyQGIS print layouts; classes shown per hexagon
+
+**Date:** 2026-10-22
+
+**Context.** Phase D needs a styled QGIS project and five PNG maps with title, legend, scale bar, north arrow and a
+source/CRS note. PyQGIS runs in QGIS's own Python (3.12, no geopandas), separate from the project venv.
+
+**Decision.** `gis/maps.py` (venv) prepares map layers, writes `.qml` styles from `config/gis_styles.yaml` and a JSON
+spec; `gis/qgis_maps.py`, started with QGIS's `python-qgis-ltr.bat`, builds `gis/alberta_wells.qgz` (one print layout per
+map, editable in QGIS) and exports `docs/maps/*.png` at 150 dpi. Styles are applied with `importNamedStyle` because
+`loadNamedStyle` prefers a style embedded in the GeoPackage. The screening-class map shows the most common class among
+drilled wells per 5 km hexagon: plotting 540,000 points at province scale lets whichever class is drawn last hide the
+others.
+
+**Alternatives.** matplotlib/geopandas maps (no editable QGIS project, weaker cartography); points with a draw order
+(tried: abandoned wells hid 148,479 active wells).
+
+**Consequences.** Map rendering needs a local QGIS install (path in `config/gis_maps.yaml`); `gis.run` skips the maps
+step with a warning when it is missing. The project references outputs under `gis/output/full/` and `deliverables/`,
+so it opens fully only after a full run.
