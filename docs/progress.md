@@ -40,5 +40,7 @@ One line per finished item, with key numbers. Newest at the bottom of each secti
 - E.2 Tests: 47 passing (every QA check enforced by a meta-test, DLS parser/sections, UWI -> well_key, status mapping, dates, pads, hexagons, packages, change detection, injection).
 - E.3 README rewritten: goal, mermaid architecture, sources table, how to run, QA approach with the stop example, full-province findings, maps, limitations.
 - E.4 Final full run 68c2fca9: success in 569 s (convert 151, QA 137, liability 143, analysis 100, packages 23, changes 6, maps 9). QA 12 PASS / 7 WARN / 4 INFO; 539,846 of 539,890 wells pass FAIL/WARN; all reconciliations PASS. Manifest records commit 8020f7c as dirty because the run started before the Phase E commit (41761ac); no code changed during the run.
+- E.4 Pushed feature/gis-layer and opened PR #1 to main: https://github.com/Mona121212/Alberta-Well-Production-Analytics-Platform/pull/1
 
 ## Blocked
+- None.
