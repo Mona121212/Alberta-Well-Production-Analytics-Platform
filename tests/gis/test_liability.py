@@ -104,3 +104,9 @@ def test_cluster_points_chains_within_distance():
     from gis.spatial import cluster_points
     labels = cluster_points(shapely.points([(0, 0), (40, 0), (80, 0), (500, 0)]), 50)
     assert labels[0] == labels[1] == labels[2] != labels[3]
+
+
+def test_township_key_from_dls_label():
+    labels = pd.Series(["08-09-051-25W4", "16-36-110-13W6", "8-9-51-25W4", None])
+    assert L.township_key(labels).tolist()[:2] == ["051-25W4", "110-13W6"]
+    assert L.township_key(labels).isna().tolist()[2:] == [True, True]

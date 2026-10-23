@@ -199,9 +199,14 @@ def classify(wells, lic_activity, lcfg, as_of, pad_distance):
     for col in ("last_report_month", "last_prod_month", "last_activity_month"):
         w[col] = w[col].astype("string")
     w["petrinex_well_keys"] = w["petrinex_well_keys"].fillna(0).astype(int)
-    dls = w["surface_location_dls"].str.extract(r"^\d{2}-\d{2}-(\d{3})-(\d{2})(W\d)$")
-    w["township"] = dls[0] + "-" + dls[1] + dls[2]
+    w["township"] = township_key(w["surface_location_dls"])
     return gpd.GeoDataFrame(w, geometry="geometry", crs=wells.crs)
+
+
+def township_key(dls_labels):
+    """Township key TTT-RRWM from a DLS label LL-SS-TTT-RRWM, e.g. 08-09-051-25W4 -> 051-25W4; NA if malformed."""
+    parts = dls_labels.str.extract(r"^\d{2}-\d{2}-(\d{3})-(\d{2})(W\d)$")
+    return parts[0] + "-" + parts[1] + parts[2]
 
 
 # --- Summaries ----------------------------------------------------------------------------
