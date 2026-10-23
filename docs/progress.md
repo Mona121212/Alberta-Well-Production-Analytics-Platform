@@ -29,6 +29,9 @@ One line per finished item, with key numbers. Newest at the bottom of each secti
 - C.2 Change detection (DEC-018): snapshot (539,890 wells, 15 s) + compare + synthetic demo. Demo on full and sample: all 17 injected changes found (3 new, 3 removed, 5 status, 4 licensee transfers, 2 moved 250 m), no false positives; 3 constructed-snapshot tests.
 
 ## Phase D - Maps
+- D.1 PyQGIS works (QGIS 3.44.15, python-qgis-ltr.bat). gis/alberta_wells.qgz built with 10 layers and 5 print layouts (DEC-019); maps step runs in 16-49 s.
+- D.2 docs/maps/: hexagon_well_density, abandoned_not_reclaimed_by_township, liability_classes (most common class per hexagon), qa_failures (63 located FAIL/WARN failures, 7 rules), client_package_overview (Suncor). Each has title, subtitle with computed counts, legend, scale bar, north arrow, source and CRS note.
+- D.2 Fixes found by looking at the PNGs: point overplotting on the class map (switched to hexagons), embedded package style overriding the map style (importNamedStyle), oversized legend.
 
 ## Phase E - Productionize
 

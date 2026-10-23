@@ -31,3 +31,34 @@ layers:
   qa_failures: {type: categorized, field: severity, palette: severity, size: 2.6}
   package_extent: {type: single, colour: "#ffffff", outline: "#e7298a", no_fill: true, outline_width: 0.8}
   alberta_boundary: {type: single, colour: "#ffffff", outline: "#252525", no_fill: true, outline_width: 0.6}
+
+  # --- Map layers (gis/maps.py) ----------------------------------------------------------
+  # Map scale: no outline, no "other" class, liability classes drawn on top of reclaimed/cancelled.
+  wells_map:
+    type: categorized
+    field: well_class
+    palette: well_class
+    size: 0.8
+    outline_width: 0
+    other: false
+    draw_order: [cancelled, active_not_spudded, reclaimed, active_reporting, active_recently_spudded,
+                 active_no_activity_6m, review_multi_licence_pad_never_reported, active_no_activity_12m,
+                 suspended, abandoned]
+  hexagon_dominant_class: {type: categorized, field: dominant_class, palette: well_class, other: false}
+  hexagon_density:
+    type: graduated
+    field: wells
+    breaks: [1, 5, 25, 100, 250, 500, 100000]
+    colours: ["#fff5eb", "#fdd0a2", "#fdae6b", "#f16913", "#d94801", "#7f2704"]
+  township_abandoned:
+    type: graduated
+    field: abandoned_not_reclaimed
+    breaks: [1, 10, 50, 100, 200, 400, 100000]
+    colours: ["#fee5d9", "#fcbba1", "#fc9272", "#fb6a4a", "#de2d26", "#a50f15"]
+  # Categories are the FAIL/WARN rules that have located failures in the run (built in gis/maps.py).
+  qa_failures_map:
+    type: dynamic
+    field: rule_id
+    size: 3.2
+    colours: ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#a65628", "#f781bf", "#999999", "#1b9e77", "#d95f02"]
+  context_townships: {type: single, colour: "#ffffff", outline: "#dddddd", outline_width: 0.05, no_fill: true}

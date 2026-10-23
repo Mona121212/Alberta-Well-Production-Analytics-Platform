@@ -1,0 +1,35 @@
+# Map production (gis/maps.py prepares data and styles; gis/qgis_maps.py renders with PyQGIS).
+
+qgis_python: "C:/Program Files/QGIS 3.44.15/bin/python-qgis-ltr.bat"
+qgis_prefix: "C:/Program Files/QGIS 3.44.15/apps/qgis-ltr"
+project: gis/alberta_wells.qgz
+png_dir: docs/maps
+dpi: 150
+package_example: suncor_energy_inc     # client package shown on the overview map
+source_note: >-
+  Sources: Alberta Energy Regulator ST37 (wells), Petrinex public volumetrics 2025-07 to 2026-06,
+  Statistics Canada 2021 province boundary. CRS: NAD83 / Alberta 10-TM (Forest), EPSG:3400.
+  Screening classes are project definitions, not AER classifications.
+
+maps:
+  - name: hexagon_well_density
+    title: "Well density - drilled wells per 5 km hexagon"
+    subtitle: "{drilled_wells} drilled wells (cancelled and never-spudded licences excluded)"
+    layers: [hexagons, boundary]
+  - name: abandoned_not_reclaimed_by_township
+    title: "Abandoned, not reclaimed - wells per township"
+    subtitle: "{abandoned} drilled wells with licence status Abandoned; polygons are convex hulls of each township's wells"
+    layers: [townships_abandoned, boundary]
+  - name: liability_classes
+    title: "Well screening classes - most common class per 5 km hexagon"
+    subtitle: "{drilled_wells} drilled wells classed by licence status and Petrinex activity in the last 12 months"
+    layers: [hexagons_dominant_class, boundary]
+  - name: qa_failures
+    title: "Data quality - located FAIL and WARN failures"
+    subtitle: "{qa_points} located failures of FAIL/WARN rules; INFO rules (known source characteristics) are not shown"
+    layers: [context_townships, qa_failures, boundary]
+  - name: client_package_overview
+    title: "Client package - {package}"
+    subtitle: "Wells by screening class and package extent; pads and QA flags are in the package (deliverables/{folder})"
+    layers: [context_townships, package_extent, package_wells, boundary]
+    extent: package_extent
