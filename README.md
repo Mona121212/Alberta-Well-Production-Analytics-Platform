@@ -31,3 +31,13 @@ Liability screening (`config/gis_liability.yaml`, DECISIONS.md DEC-012/013): aba
 licensee and township, active licences with no Petrinex activity in the last 6/12 months, Petrinex -> ST37 match
 rate with unmatched reasons, and a licensee profile (active / inactive / abandoned / reclaimed). These are project
 working definitions for screening, not AER regulatory criteria.
+
+Client packages and change detection:
+
+```bash
+python -m gis.package --mode full --licensee "Suncor Energy Inc."      # or --townships 076-06W4,095-06W4 / --aoi aoi.gpkg
+python -m gis.package --mode full --top-licensees 3                     # examples in deliverables/
+python -m gis.changes snapshot --mode full --date 2026-10-22            # after each ST37 refresh
+python -m gis.changes compare --old gis/output/snapshots/full/wells_2026-10-22.parquet                               --new gis/output/snapshots/full/wells_<next-date>.parquet
+python -m gis.changes demo --mode sample                                # synthetic second snapshot with known changes
+```

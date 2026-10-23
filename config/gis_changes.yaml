@@ -1,0 +1,25 @@
+# ST37 change detection (gis/changes.py).
+
+snapshot_dir: gis/output/snapshots     # one GeoParquet per snapshot: wells_<YYYY-MM-DD>.parquet
+key: licence_number
+snapshot_columns: [licence_number, licensee, licence_status, licence_status_group, licence_status_date,
+                   spud_date, surface_location_dls]
+
+# Attribute changes: column -> change type.
+attribute_changes:
+  licence_status: status_change
+  licensee: licensee_transfer
+  surface_location_dls: dls_label_change
+
+# A surface hole that moved more than this (metres, EPSG:3400) is reported as moved_location.
+move_tolerance_m: 1.0
+
+# Synthetic second snapshot for the demo / test: how many records of each change to inject.
+synthetic:
+  seed: 42
+  removed_licence: 3
+  new_licence: 3
+  status_change: 5
+  licensee_transfer: 4
+  moved_location: 2
+  move_distance_m: 250
