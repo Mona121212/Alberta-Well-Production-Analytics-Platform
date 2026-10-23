@@ -10,6 +10,7 @@ Usage:
     python -m gis.maps [--mode full]
 """
 import json
+import logging
 import subprocess
 from pathlib import Path
 
@@ -153,6 +154,20 @@ def prepare(cfg, mcfg, style_cfg):
     return spec_path, spec
 
 
+def classify_qgis_output(text, ignored_messages):
+    """(log level, line) for each non-empty output line; level None for lines that exactly match an ignored
+    message. Any other line starting with ERROR is a warning, everything else info."""
+    ignored = {m.strip() for m in ignored_messages}
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        if line in ignored:
+            yield None, line
+        else:
+            yield (logging.WARNING if line.upper().startswith("ERROR") else logging.INFO), line
+
+
 def render(mcfg, spec_path, spec):
     Path(spec["maps"][0]["png"]).parent.mkdir(parents=True, exist_ok=True)
     qgis_python = Path(mcfg["qgis_python"])
@@ -160,10 +175,14 @@ def render(mcfg, spec_path, spec):
         raise FileNotFoundError(f"QGIS Python launcher not found: {qgis_python} (set qgis_python in gis_maps.yaml)")
     result = subprocess.run([str(qgis_python), str(QGIS_SCRIPT), str(spec_path)], capture_output=True, text=True,
                             timeout=900)
-    for line in (result.stdout + result.stderr).splitlines():
-        # GDAL "PNG driver does not support update access" comes from QGIS's georeferencing pass; harmless.
-        if line.strip() and not line.startswith(("Warning 1: Non-conformant", "ERROR 6: The PNG driver")):
-            log.info("qgis: %s", line)
+    ignored = 0
+    for level, line in classify_qgis_output(result.stdout + result.stderr, mcfg.get("ignored_qgis_messages", [])):
+        if level is None:
+            ignored += 1
+        else:
+            log.log(level, "qgis: %s", line)
+    if ignored:
+        log.info("qgis: %s known harmless message(s) hidden (ignored_qgis_messages in gis_maps.yaml)", ignored)
     missing = [m["png"] for m in spec["maps"] if not Path(m["png"]).exists()]
     if missing or "ERROR Traceback" in result.stdout or result.stdout.startswith("ERROR "):
         raise RuntimeError(f"QGIS rendering failed (exit {result.returncode}); missing: {missing}")
