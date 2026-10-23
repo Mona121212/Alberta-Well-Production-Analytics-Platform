@@ -234,3 +234,15 @@ rules:
     layer: well_trajectories
     severity: INFO
     params: {dimension: 2d}
+
+  # --- Dates (added after the first package README showed a 2030 status date) ----------
+  - id: GQA-23
+    name: date_out_of_range
+    description: Licence status, spud or final drill date is before min_date or after the run date.
+    check: date_out_of_range
+    layer: wells_surface
+    severity: WARN
+    params:
+      columns: [licence_status_date, spud_date, final_drill_date]
+      min_date: "1880-01-01"   # Alberta's earliest recorded wells date from the 1880s
+      max_date: today

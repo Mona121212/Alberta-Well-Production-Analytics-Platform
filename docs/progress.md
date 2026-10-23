@@ -24,6 +24,8 @@ One line per finished item, with key numbers. Newest at the bottom of each secti
 - B.5 Reconciliation: township, hexagon and pad well counts = 481,347 drilled wells; hexagon oil = well oil (146,464,009 m3).
 
 ## Phase C - Client delivery and change management
+- C.1 Client package CLI (licensee / townships / AOI; DEC-017): data.gpkg with embedded QGIS styles (verified in PyQGIS 3.44), wells.csv, data_dictionary.md (every field), README.md, .qml per layer. Top 3 by licences: Canadian Natural 119,787 wells / 82,484 pads / 136,446 QA records (112 MB); Cenovus 42,029 / 29,737 / 34,129; Suncor 16,865 / 11,232 / 11,559. Build time 97 s for all three.
+- C.1 Finding: one licence (0159125) has licence_status_date 2030-04-04 -> new QA rule GQA-23 date_out_of_range (WARN, 1 of 539,890); package as-of date now ignores future dates (ST37 latest status date 2026-09-02).
 
 ## Phase D - Maps
 

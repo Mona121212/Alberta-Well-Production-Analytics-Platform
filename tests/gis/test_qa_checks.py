@@ -131,3 +131,14 @@ def test_fail_severity_respects_max_failures():
     assert evaluate({"severity": "FAIL", "max_failures": 5}, two_failures) == "WARN"
     assert evaluate({"severity": "WARN"}, two_failures) == "WARN"
     assert evaluate({"severity": "FAIL"}, no_failures) == "PASS"
+
+
+def test_date_out_of_range():
+    wells = gpd.GeoDataFrame({"licence_number": ["ok", "future", "ancient"],
+                              "spud_date": pd.to_datetime(["2001-01-01", "2001-01-01", "1850-06-01"]),
+                              "licence_status_date": pd.to_datetime(["2005-01-01", "2099-01-01", "2005-01-01"])},
+                             geometry=gpd.points_from_xy([0, 1, 2], [0, 0, 0]), crs=CRS)
+    params = {"columns": ["spud_date", "licence_status_date"], "min_date": "1880-01-01", "max_date": "today"}
+    result = checks.date_out_of_range(FakeContext({"wells": wells}), "wells", params)
+    assert sorted(result.failures["record_key"]) == ["ancient", "future"]
+    assert "licence_status_date = 2099-01-01" in result.failures.set_index("record_key").loc["future", "detail"]

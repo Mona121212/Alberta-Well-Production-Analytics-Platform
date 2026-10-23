@@ -40,10 +40,12 @@ def test_township_polygon_hull_or_buffer():
 
 def test_pads_distribution_and_sizes():
     wells = wells_frame([(0, 0), (20, 0), (40, 0), (5000, 0)])
-    layer, dist, largest = A.pads(wells, 50, ACFG)
+    layer, dist, largest, members = A.pads(wells, 50, ACFG)
     assert sorted(layer["wells"]) == [1, 3]
     assert dist.set_index("wells_per_pad").loc["1", "pads"] == 1
     assert largest.iloc[0]["wells"] == 3
+    assert set(layer["size_class"]) == {"1", "3-4"}
+    assert members["pad_wells"].tolist() == [3, 3, 3, 1]
 
 
 def test_lateral_classes():

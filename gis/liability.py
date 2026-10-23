@@ -151,10 +151,11 @@ def licence_activity(key_map, activity, volume_cols):
 
 def apply_pad_review(w, pad_distance, review_cfg):
     """Move no-activity wells on large never-reported pads to their own review class."""
-    w["pad_id"], _ = assign_pads(w, pad_distance)
+    # All licences (including cancelled) define the review pads; gis.analysis builds drilled-well pads.
+    w["review_pad_id"], _ = assign_pads(w, pad_distance)
     counted = ~w["licence_status_group"].isin(review_cfg["count_excludes_groups"])
-    w["pad_licences"] = counted.groupby(w["pad_id"]).transform("sum").fillna(0).astype(int)
-    pad_reported = w["in_petrinex"].groupby(w["pad_id"]).transform("any").astype(bool)
+    w["pad_licences"] = counted.groupby(w["review_pad_id"]).transform("sum").fillna(0).astype(int)
+    pad_reported = w["in_petrinex"].groupby(w["review_pad_id"]).transform("any").astype(bool)
     review = (w["well_class"].isin(["active_no_activity_6m", "active_no_activity_12m"]) & ~w["in_petrinex"]
               & ~pad_reported & (w["pad_licences"] >= review_cfg["min_licences"]))
     w.loc[review, "well_class"] = review_cfg["well_class"]
