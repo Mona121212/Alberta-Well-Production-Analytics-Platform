@@ -1,10 +1,10 @@
 # GIS track - handoff
 
-State as of 2026-10-23. Branch `feature/gis-layer`, in sync with `origin`. PR #1 to `main` is open and mergeable:
+State as of 2026-10-23. Branch `feature/gis-layer`, in sync with `origin`. PR #1 to `main` is open:
 https://github.com/Mona121212/Alberta-Well-Production-Analytics-Platform/pull/1
 
 Related docs: [`final_report.md`](final_report.md) (results and talking points), [`progress.md`](progress.md)
-(one line per finished item), [`../DECISIONS.md`](../DECISIONS.md) (DEC-006 to DEC-019).
+(one line per finished item), [`../DECISIONS.md`](../DECISIONS.md) (DEC-006 to DEC-020).
 
 ## State of every phase
 
@@ -18,7 +18,8 @@ Related docs: [`final_report.md`](final_report.md) (results and talking points),
 | C.1 - Client packages | Done, pushed | `7d12a9f` | Licensee / townships / AOI; 3 example packages (docs + styles committed, data git-ignored) |
 | C.2 - Change detection | Done, pushed | `340c66a` | Snapshot + compare + synthetic demo |
 | D - Maps | Done, pushed | `8020f7c` | PyQGIS project `gis/alberta_wells.qgz`, 5 PNGs in `docs/maps/` |
-| E - Productionize | Done, pushed | `41761ac`, `4e1bfa6`, `8f69596` | `gis.run`, 47 tests, README, final report, PR #1 |
+| E - Productionize | Done, pushed | `41761ac`, `4e1bfa6`, `8f69596` | `gis.run`, tests, README, final report, PR #1 |
+| Follow-up 2026-10-23 | Done, pushed | `04eb518`, `014fd52`, `420d714`, `8d277ba` | GQA-01 allowlist, exact QGIS log filter, known limitations, 53 tests, clean full run `5d4aabb7` |
 
 Not committed on purpose:
 - `gis/output/` (all pipeline outputs, git-ignored);
@@ -27,22 +28,23 @@ Not committed on purpose:
 
 ## Measured step timings
 
-The full run takes **about 9.5 minutes**, not 16. About 16 minutes was the estimate before optimization, when analysis
+The full run takes **about 8-10 minutes**, not 16. About 16 minutes was the estimate before optimization, when analysis
 was the slowest step. After the fixes below, **convert** is the slowest step.
 
-Final full run `68c2fca9` (`gis/output/full/run_manifest.json`), 539,890 licences, 12 cores / 16 GB RAM:
+Final full run `5d4aabb7` on commit `06985e8`, clean tree (`gis/output/full/run_manifest.json`), 539,890 licences,
+12 cores / 16 GB RAM. Previous run `68c2fca9` in brackets:
 
 | Step | Seconds | Notes |
 |---|---:|---|
 | stage | 0 | Skipped: already staged. A fresh stage measured 82 s (GDB 4 layers + key tables + Excel sample + Petrinex) |
-| convert | 151 | Slowest step; mostly writing the trajectory layer (533,755 3D lines) to GeoPackage |
-| qa | 137 | Measured between 102 and 213 s across runs |
-| liability | 143 | Measured between 82 and 191 s; reads 4.2 M Petrinex rows |
-| analysis | 100 | Measured between 100 and 169 s |
-| packages | 23 | Top 3 licensees |
-| changes | 6 | Snapshot + synthetic demo |
-| maps | 9 | PyQGIS rendering of 5 layouts |
-| **total** | **569** | Under the 15-minute limit per command |
+| convert | 119 (151) | Slowest step; mostly writing the trajectory layer (533,755 3D lines) to GeoPackage |
+| qa | 95 (137) | Measured between 102 and 213 s across runs |
+| liability | 115 (143) | Measured between 82 and 191 s; reads 4.2 M Petrinex rows |
+| analysis | 89 (100) | Measured between 100 and 169 s |
+| packages | 39 (23) | Top 3 licensees |
+| changes | 14 (6) | Snapshot + synthetic demo |
+| maps | 17 (9) | PyQGIS rendering of 5 layouts |
+| **total** | **487 (569)** | Under the 15-minute limit per command |
 
 Sample run (Calgary bbox, 3,299 wells): about 60-110 s. Liability dominates (about 45 s) because it always reads the
 full Petrinex table.
@@ -68,8 +70,7 @@ Optimizations already made (each verified with a profiler, same results before a
    extract's code-to-text pairs conflict (DEC-011). Needs an official AER code table.
 4. **One ST37 snapshot.** Change detection is proven only on a synthetic second snapshot (DEC-018). Only surface
    holes are tracked, not bottom holes or production strings.
-5. **The final run's manifest records commit `8020f7c` with `dirty: true`**: the run started just before the Phase E
-   code was committed (`41761ac`). No code changed during the run, but the next full run will produce a clean manifest.
+5. ~~Dirty manifest~~ resolved: run `5d4aabb7` records commit `06985e8` with `dirty: false`.
 6. **Not in Fabric yet.** GIS outputs (well classes, coordinates, pads, QA flags) are not loaded into the Lakehouse
    or the Power BI model.
 7. **Maps need a local QGIS install** at the path in `config/gis_maps.yaml`; `gis.run` marks the maps step as a
@@ -118,7 +119,7 @@ Optimizations already made (each verified with a profiler, same results before a
 ```bash
 pip install -r requirements.txt
 python -m gis.run --mode sample          # about 1-2 minutes, outputs in gis/output/sample/
-python -m pytest tests/gis               # 47 tests
+python -m pytest tests/gis               # 53 tests
 ```
 
 Key entry points: `gis/run.py` (step order and manifest), `config/gis_qa.yaml` (rules), `config/gis_liability.yaml`

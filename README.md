@@ -64,7 +64,7 @@ step reads Parquet or the standardized GeoPackage.
 ```bash
 pip install -r requirements.txt
 python -m gis.run --mode sample          # whole track on a Calgary-region sample (about 1-2 minutes)
-python -m gis.run --mode full            # whole province (about 10-12 minutes)
+python -m gis.run --mode full            # whole province (about 8-10 minutes)
 python -m pytest tests/gis               # 53 tests with constructed rows
 ```
 
@@ -185,4 +185,4 @@ packages and maps never run on bad data.
 - `config/` - every setting, rule, mapping table, field dictionary and style
 - `tests/gis/` - rule and module tests
 - `docs/` - `progress.md`, `final_report.md`, `st37_gis_exploration.md`, `defect_log.md`, maps
-- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-019)
+- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-020)
