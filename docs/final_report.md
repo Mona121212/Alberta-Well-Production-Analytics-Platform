@@ -3,7 +3,7 @@
 Branch `feature/gis-layer`, updated 2026-10-23. Detailed log: [`progress.md`](progress.md). Design choices:
 [`DECISIONS.md`](../DECISIONS.md) DEC-006 to DEC-020.
 
-Final full run `5d4aabb7` on commit `06985e8` (clean tree): status success in 487 s (convert 119, QA 95,
+Final full run `5d4aabb7` on commit `8bc661a` (clean tree): status success in 487 s (convert 119, QA 95,
 liability 115, analysis 89, packages 39, changes 14, maps 17); QA 12 PASS / 7 WARN / 4 INFO; all 10 reconciliation
 checks PASS. Manifest: `gis/output/full/run_manifest.json`.
 

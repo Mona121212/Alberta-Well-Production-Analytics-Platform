@@ -10,16 +10,16 @@ Related docs: [`final_report.md`](final_report.md) (results and talking points),
 
 | Phase | State | Commit(s) | Notes |
 |---|---|---|---|
-| Step 1 convert & standardize | Done, pushed | `7486268` | GDB + boundary -> GeoPackage EPSG:3400, wells SHP + CSV, status mapping table |
-| Wave 2 QA | Done, pushed | `e0afb42` | 23 rules now (GQA-23 added later), defect-log format, scorecard, FAIL stops the run |
-| Wave 3 liability | Done, pushed | `882b7e2`, `9e34965` | Petrinex rebuilt locally, reconciles with Fabric for June 2026 |
-| A - Wave 3 follow-up | Done, pushed | `988cda1` | Pad review class (421 licences), first full run, border tolerance (DEC-015) |
-| B - Spatial analysis | Done, pushed | `5858e25` | Townships, 5 km hexagons, pads, laterals |
-| C.1 - Client packages | Done, pushed | `7d12a9f` | Licensee / townships / AOI; 3 example packages (docs + styles committed, data git-ignored) |
-| C.2 - Change detection | Done, pushed | `340c66a` | Snapshot + compare + synthetic demo |
-| D - Maps | Done, pushed | `8020f7c` | PyQGIS project `gis/alberta_wells.qgz`, 5 PNGs in `docs/maps/` |
-| E - Productionize | Done, pushed | `41761ac`, `4e1bfa6`, `8f69596` | `gis.run`, tests, README, final report, PR #1 |
-| Follow-up 2026-10-23 | Done, pushed | `04eb518`, `014fd52`, `420d714`, `8d277ba` | GQA-01 allowlist, exact QGIS log filter, known limitations, 53 tests, clean full run `5d4aabb7` |
+| Step 1 convert & standardize | Done, pushed | `66fad2c` | GDB + boundary -> GeoPackage EPSG:3400, wells SHP + CSV, status mapping table |
+| Wave 2 QA | Done, pushed | `5bc41c5` | 23 rules now (GQA-23 added later), defect-log format, scorecard, FAIL stops the run |
+| Wave 3 liability | Done, pushed | `651c988`, `9467f11` | Petrinex rebuilt locally, reconciles with Fabric for June 2026 |
+| A - Wave 3 follow-up | Done, pushed | `7fde442` | Pad review class (421 licences), first full run, border tolerance (DEC-015) |
+| B - Spatial analysis | Done, pushed | `5f521de` | Townships, 5 km hexagons, pads, laterals |
+| C.1 - Client packages | Done, pushed | `ecf85b0` | Licensee / townships / AOI; 3 example packages (docs + styles committed, data git-ignored) |
+| C.2 - Change detection | Done, pushed | `4d7dde0` | Snapshot + compare + synthetic demo |
+| D - Maps | Done, pushed | `c762211` | PyQGIS project `gis/alberta_wells.qgz`, 5 PNGs in `docs/maps/` |
+| E - Productionize | Done, pushed | `b5f8e34`, `7155fb4`, `bd69071` | `gis.run`, tests, README, final report, PR #1 |
+| Follow-up 2026-10-23 | Done, pushed | `05bff07`, `01a4269`, `e0db523`, `4ea78bc` | GQA-01 allowlist, exact QGIS log filter, known limitations, 53 tests, clean full run `5d4aabb7` |
 
 Not committed on purpose:
 - `gis/output/` (all pipeline outputs, git-ignored);
@@ -31,7 +31,7 @@ Not committed on purpose:
 The full run takes **about 8-10 minutes**, not 16. About 16 minutes was the estimate before optimization, when analysis
 was the slowest step. After the fixes below, **convert** is the slowest step.
 
-Final full run `5d4aabb7` on commit `06985e8`, clean tree (`gis/output/full/run_manifest.json`), 539,890 licences,
+Final full run `5d4aabb7` on commit `8bc661a`, clean tree (`gis/output/full/run_manifest.json`), 539,890 licences,
 12 cores / 16 GB RAM. Previous run `68c2fca9` in brackets:
 
 | Step | Seconds | Notes |
@@ -70,7 +70,7 @@ Optimizations already made (each verified with a profiler, same results before a
    extract's code-to-text pairs conflict (DEC-011). Needs an official AER code table.
 4. **One ST37 snapshot.** Change detection is proven only on a synthetic second snapshot (DEC-018). Only surface
    holes are tracked, not bottom holes or production strings.
-5. ~~Dirty manifest~~ resolved: run `5d4aabb7` records commit `06985e8` with `dirty: false`.
+5. ~~Dirty manifest~~ resolved: run `5d4aabb7` records commit `8bc661a` with `dirty: false`.
 6. **Not in Fabric yet.** GIS outputs (well classes, coordinates, pads, QA flags) are not loaded into the Lakehouse
    or the Power BI model.
 7. **Maps need a local QGIS install** at the path in `config/gis_maps.yaml`; `gis.run` marks the maps step as a
