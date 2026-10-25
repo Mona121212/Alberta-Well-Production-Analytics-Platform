@@ -1,0 +1,64 @@
+# Shared cartography: QGIS .qml styles (gis/styles.py) and PNG maps (gis/maps.py) use these colours.
+
+palettes:
+  well_class:
+    active_reporting: {label: "Active - reporting", colour: "#1a9850"}
+    active_no_activity_6m: {label: "Active - no activity 6 months", colour: "#a6d96a"}
+    active_recently_spudded: {label: "Active - recently spudded", colour: "#66bd63"}
+    active_not_spudded: {label: "Active - not spudded", colour: "#d9d9d9"}
+    active_no_activity_12m: {label: "Inactive candidate - no activity 12 months", colour: "#fdae61"}
+    suspended: {label: "Suspended", colour: "#f46d43"}
+    abandoned: {label: "Abandoned - not reclaimed", colour: "#d73027"}
+    reclaimed: {label: "Reclaimed", colour: "#4575b4"}
+    cancelled: {label: "Cancelled licence", colour: "#969696"}
+    review_multi_licence_pad_never_reported: {label: "Review - multi-licence pad, never reported", colour: "#8073ac"}
+  pad_size_class:
+    "1": {label: "1 well", colour: "#c6dbef"}
+    "2": {label: "2 wells", colour: "#9ecae1"}
+    "3-4": {label: "3-4 wells", colour: "#6baed6"}
+    "5-9": {label: "5-9 wells", colour: "#3182bd"}
+    "10-19": {label: "10-19 wells", colour: "#08519c"}
+    "20-49": {label: "20-49 wells", colour: "#08306b"}
+    "50+": {label: "50+ wells", colour: "#000000"}
+  severity:
+    FAIL: {label: "FAIL", colour: "#b2182b"}
+    WARN: {label: "WARN", colour: "#ef8a62"}
+    INFO: {label: "INFO", colour: "#67a9cf"}
+
+layers:
+  wells: {type: categorized, field: well_class, palette: well_class, size: 1.8}
+  pads: {type: categorized, field: size_class, palette: pad_size_class, size: 2.4}
+  qa_failures: {type: categorized, field: severity, palette: severity, size: 2.6}
+  package_extent: {type: single, colour: "#ffffff", outline: "#e7298a", no_fill: true, outline_width: 0.8}
+  alberta_boundary: {type: single, colour: "#ffffff", outline: "#252525", no_fill: true, outline_width: 0.6}
+
+  # --- Map layers (gis/maps.py) ----------------------------------------------------------
+  # Map scale: no outline, no "other" class, liability classes drawn on top of reclaimed/cancelled.
+  wells_map:
+    type: categorized
+    field: well_class
+    palette: well_class
+    size: 0.8
+    outline_width: 0
+    other: false
+    draw_order: [cancelled, active_not_spudded, reclaimed, active_reporting, active_recently_spudded,
+                 active_no_activity_6m, review_multi_licence_pad_never_reported, active_no_activity_12m,
+                 suspended, abandoned]
+  hexagon_dominant_class: {type: categorized, field: dominant_class, palette: well_class, other: false}
+  hexagon_density:
+    type: graduated
+    field: wells
+    breaks: [1, 5, 25, 100, 250, 500, 100000]
+    colours: ["#fff5eb", "#fdd0a2", "#fdae6b", "#f16913", "#d94801", "#7f2704"]
+  township_abandoned:
+    type: graduated
+    field: abandoned_not_reclaimed
+    breaks: [1, 10, 50, 100, 200, 400, 100000]
+    colours: ["#fee5d9", "#fcbba1", "#fc9272", "#fb6a4a", "#de2d26", "#a50f15"]
+  # Categories are the FAIL/WARN rules that have located failures in the run (built in gis/maps.py).
+  qa_failures_map:
+    type: dynamic
+    field: rule_id
+    size: 3.2
+    colours: ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#a65628", "#f781bf", "#999999", "#1b9e77", "#d95f02"]
+  context_townships: {type: single, colour: "#ffffff", outline: "#dddddd", outline_width: 0.05, no_fill: true}

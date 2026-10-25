@@ -1,0 +1,139 @@
+# Data dictionary
+
+CRS of every spatial layer: NAD83 / Alberta 10-TM (Forest), EPSG:3400 (metres).
+
+## wells
+
+Geometry: point.
+
+| Field | Type / unit | Description |
+|---|---|---|
+| `licence_number` | text | AER well licence number (7 characters, zero-padded, may end in a letter). Primary key of the wells layer. |
+| `licensee` | text | Current licensee (licence holder) in AER ST37. |
+| `licence_status` | text | Licence status standardized through config/gis_licence_status_map.csv (for example Issued, Suspended, Abandoned, Reclamation Certified). |
+| `licence_status_group` | text | Status group: Active, Inactive, Abandoned, Reclaimed or Cancelled. |
+| `licence_status_date` | date | Date of the current licence status (ST37 Licence_Status_Date). |
+| `spud_date` | date | Spud date (drilling start) from ST37 surface holes. Empty if not spudded. |
+| `final_drill_date` | date | Most recent final drill date from ST37 surface holes. |
+| `energy_dev_category` | text | AER energy development category type (well type and H2S class). |
+| `surface_location_dls` | text | Surface location in Dominion Land Survey form LSD-SEC-TWP-RGE W MER, for example 06-15-024-01W5. |
+| `township` | text | Township key TWP-RGE W MER derived from surface_location_dls, for example 024-01W5. |
+| `latitude_nad83` | decimal degrees | Surface latitude, NAD83 (EPSG:4269), from ST37. |
+| `longitude_nad83` | decimal degrees | Surface longitude, NAD83 (EPSG:4269), from ST37. |
+| `ground_elevation_m` | metres | Ground elevation of the surface location. |
+| `well_class` | text | Screening class (project definition, not an AER term): active_reporting, active_no_activity_6m, active_no_activity_12m, active_recently_spudded, active_not_spudded, suspended, abandoned, reclaimed, cancelled, review_multi_licence_pad_never_reported. See DECISIONS.md DEC-012 and DEC-014. |
+| `inactive_candidate_6m` | boolean | Active licence, spudded, no Petrinex production/injection/disposal volume in the last 6 months. |
+| `inactive_candidate_12m` | boolean | Active licence, spudded, no Petrinex production/injection/disposal volume in the last 12 months. |
+| `petrinex_evidence` | text | What Petrinex shows in the last 12 months: volume reported, reported without volume (for example SHUTIN), or no Petrinex record in window. |
+| `last_prod_month` | YYYY-MM | Latest month with PROD volume > 0 for any UWI on the licence (loaded Petrinex months only). |
+| `last_activity_month` | YYYY-MM | Latest month with PROD, INJ or DISP volume > 0 for any UWI on the licence. |
+| `petrinex_well_keys` | integer | Number of Petrinex well keys (UWIs) on the licence found in the loaded Petrinex months. |
+| `oil_m3_12m` | m3 | Oil production in the last 12 Petrinex months, summed over the licence's UWIs. |
+| `gas_e3m3_12m` | thousand m3 | Gas production in the last 12 Petrinex months (e3m3). |
+| `cond_m3_12m` | m3 | Condensate production in the last 12 Petrinex months. |
+| `water_m3_12m` | m3 | Water production in the last 12 Petrinex months. |
+| `years_since_spud` | years | Years from spud date to the end of the as-of month. |
+| `years_in_status` | years | Years from licence_status_date to the end of the as-of month. |
+| `pad_id` | text | Multi-well pad id: drilled surface holes within 50 m (single linkage); id = smallest licence number on the pad. |
+| `pad_wells` | integer | Number of drilled wells on the pad. |
+| `qa_pass` | boolean | True when no FAIL or WARN QA rule flags this licence (its surface hole, bottom holes, production strings or trajectories). |
+| `n_fail_rules` | integer | Number of distinct FAIL-severity QA rules that flag this licence. |
+| `n_warn_rules` | integer | Number of distinct WARN-severity QA rules that flag this licence. |
+| `n_info_rules` | integer | Number of distinct INFO-severity QA rules that flag this licence. |
+| `flagged_rules` | text | Comma-separated QA rule ids that flag this licence (see qa_flags and the README QA summary). |
+
+## pads
+
+Geometry: point.
+
+| Field | Type / unit | Description |
+|---|---|---|
+| `pad_id` | text | Multi-well pad id: drilled surface holes within 50 m (single linkage); id = smallest licence number on the pad. |
+| `wells` | integer | Number of drilled wells (all licensees) on the pad. |
+| `wells_in_package` | integer | Number of this package's wells on the pad. |
+| `licensees` | integer | Number of distinct licensees on the pad. |
+| `main_licensee` | text | Licensee with the most wells on the pad. |
+| `surface_location_dls` | text | Surface location in Dominion Land Survey form LSD-SEC-TWP-RGE W MER, for example 06-15-024-01W5. |
+| `first_spud` | date | Earliest spud date on the pad. |
+| `last_spud` | date | Latest spud date on the pad. |
+| `active` | integer | Wells on the pad classed active_reporting or active_no_activity_6m. |
+| `spread_m` | metres | Twice the largest distance from the pad centre to a well on the pad. |
+| `size_class` | text | Pad size class by wells per pad: 1, 2, 3-4, 5-9, 10-19, 20-49, 50+. |
+
+## qa_flags
+
+Geometry: none (table).
+
+| Field | Type / unit | Description |
+|---|---|---|
+| `rule_id` | text | QA rule id (config/gis_qa.yaml), for example GQA-05. |
+| `rule_name` | text | QA rule name. |
+| `severity` | text | FAIL, WARN or INFO. |
+| `layer` | text | Source layer the rule ran on (wells_surface, bottom_holes, production_strings, well_trajectories). |
+| `record_key` | text | Key of the failed record: licence number or UWI. |
+| `licence_number` | text | AER well licence number (7 characters, zero-padded, may end in a letter). Primary key of the wells layer. |
+| `detail` | text | Human-readable explanation of the failure. |
+| `metric` | number | Rule measure where one exists, for example distance in metres or cells outside the DLS township. |
+
+## package_extent
+
+Geometry: polygon.
+
+| Field | Type / unit | Description |
+|---|---|---|
+| `selection_type` | text | How the package was selected: licensee, townships or aoi. |
+| `selection_value` | text | Licensee name, township list or AOI file name. |
+| `wells` | integer | Number of drilled wells (all licensees) on the pad. |
+| `area_km2` | km2 | Area of the extent polygon. |
+
+## alberta_boundary
+
+Geometry: polygon.
+
+| Field | Type / unit | Description |
+|---|---|---|
+| `province_uid` | text | Statistics Canada province code (48 = Alberta). |
+| `province_name` | text | Province name (English). |
+| `land_area_km2` | km2 | Land area published by Statistics Canada. |
+
+## wells.csv
+
+Geometry: none (CSV; coordinates in x_epsg3400 / y_epsg3400).
+
+| Field | Type / unit | Description |
+|---|---|---|
+| `licence_number` | text | AER well licence number (7 characters, zero-padded, may end in a letter). Primary key of the wells layer. |
+| `licensee` | text | Current licensee (licence holder) in AER ST37. |
+| `licence_status` | text | Licence status standardized through config/gis_licence_status_map.csv (for example Issued, Suspended, Abandoned, Reclamation Certified). |
+| `licence_status_group` | text | Status group: Active, Inactive, Abandoned, Reclaimed or Cancelled. |
+| `licence_status_date` | date | Date of the current licence status (ST37 Licence_Status_Date). |
+| `spud_date` | date | Spud date (drilling start) from ST37 surface holes. Empty if not spudded. |
+| `final_drill_date` | date | Most recent final drill date from ST37 surface holes. |
+| `energy_dev_category` | text | AER energy development category type (well type and H2S class). |
+| `surface_location_dls` | text | Surface location in Dominion Land Survey form LSD-SEC-TWP-RGE W MER, for example 06-15-024-01W5. |
+| `township` | text | Township key TWP-RGE W MER derived from surface_location_dls, for example 024-01W5. |
+| `latitude_nad83` | decimal degrees | Surface latitude, NAD83 (EPSG:4269), from ST37. |
+| `longitude_nad83` | decimal degrees | Surface longitude, NAD83 (EPSG:4269), from ST37. |
+| `ground_elevation_m` | metres | Ground elevation of the surface location. |
+| `well_class` | text | Screening class (project definition, not an AER term): active_reporting, active_no_activity_6m, active_no_activity_12m, active_recently_spudded, active_not_spudded, suspended, abandoned, reclaimed, cancelled, review_multi_licence_pad_never_reported. See DECISIONS.md DEC-012 and DEC-014. |
+| `inactive_candidate_6m` | boolean | Active licence, spudded, no Petrinex production/injection/disposal volume in the last 6 months. |
+| `inactive_candidate_12m` | boolean | Active licence, spudded, no Petrinex production/injection/disposal volume in the last 12 months. |
+| `petrinex_evidence` | text | What Petrinex shows in the last 12 months: volume reported, reported without volume (for example SHUTIN), or no Petrinex record in window. |
+| `last_prod_month` | YYYY-MM | Latest month with PROD volume > 0 for any UWI on the licence (loaded Petrinex months only). |
+| `last_activity_month` | YYYY-MM | Latest month with PROD, INJ or DISP volume > 0 for any UWI on the licence. |
+| `petrinex_well_keys` | integer | Number of Petrinex well keys (UWIs) on the licence found in the loaded Petrinex months. |
+| `oil_m3_12m` | m3 | Oil production in the last 12 Petrinex months, summed over the licence's UWIs. |
+| `gas_e3m3_12m` | thousand m3 | Gas production in the last 12 Petrinex months (e3m3). |
+| `cond_m3_12m` | m3 | Condensate production in the last 12 Petrinex months. |
+| `water_m3_12m` | m3 | Water production in the last 12 Petrinex months. |
+| `years_since_spud` | years | Years from spud date to the end of the as-of month. |
+| `years_in_status` | years | Years from licence_status_date to the end of the as-of month. |
+| `pad_id` | text | Multi-well pad id: drilled surface holes within 50 m (single linkage); id = smallest licence number on the pad. |
+| `pad_wells` | integer | Number of drilled wells on the pad. |
+| `qa_pass` | boolean | True when no FAIL or WARN QA rule flags this licence (its surface hole, bottom holes, production strings or trajectories). |
+| `n_fail_rules` | integer | Number of distinct FAIL-severity QA rules that flag this licence. |
+| `n_warn_rules` | integer | Number of distinct WARN-severity QA rules that flag this licence. |
+| `n_info_rules` | integer | Number of distinct INFO-severity QA rules that flag this licence. |
+| `flagged_rules` | text | Comma-separated QA rule ids that flag this licence (see qa_flags and the README QA summary). |
+| `x_epsg3400` | metres | Easting in NAD83 / Alberta 10-TM (Forest), EPSG:3400 (CSV only). |
+| `y_epsg3400` | metres | Northing in NAD83 / Alberta 10-TM (Forest), EPSG:3400 (CSV only). |
