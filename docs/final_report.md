@@ -140,7 +140,7 @@ project targets. Each has the evidence in the repo and a short answer to give in
   wrote down, not regulatory findings, and every output says so."
 
 ### SQL, Python and data modelling (Junior Data Developer)
-- **Evidence:** Fabric notebooks `01_bronze_transform` to `03_gold_dims` (medallion, star schema, DEC-005); GIS pipeline
+- **Evidence:** Fabric notebooks `01_bronze_transform` to `03_gold_transform` (medallion, star schema, DEC-005, DEC-021); GIS pipeline
   in pandas/geopandas; the same UWI-to-well-key rule in both (`test_uwi_to_well_key_matches_silver_rule`).
 - **Say:** "The Fabric track is Bronze/Silver/Gold with a star schema. The GIS track reuses the Silver well-key rule,
   and a test proves the two agree, so GIS outputs can join to Gold without a mapping table."

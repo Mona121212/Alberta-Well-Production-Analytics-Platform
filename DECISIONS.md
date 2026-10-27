@@ -448,3 +448,42 @@ export (depends on QGIS version-specific layout settings).
 
 **Consequences.** A new or changed GDAL message shows up in the run log; if it is reviewed as harmless, it is added
 to the config list verbatim.
+
+---
+
+## DEC-021 Split Gold into 03_gold_transform; pass DQ flags through a separate flag table
+
+**Date:** 2026-10-25
+
+**Context.** Gold was built in the last cells of `02_silver_transform` from in-memory variables (`base`, `rules`,
+`flagged`), and the date and operator dimensions lived in a third notebook, `03_gold_dims`. Gold could not be rerun
+without rerunning Silver and DQ, and the notebook boundaries did not match the medallion layers (DEC-004).
+A separate Gold notebook needs two row-level facts from DQ: whether a row is rejected, and whether it is in scope
+(PROD activity, WI rows). Both depend on the whole table: `exact_duplicate` is a window over every business
+column, and the well check joins `silver_dim_well`.
+
+**Decision.** `02_silver_transform` writes `silver_petrinex_vol_flagged` from the same persisted DataFrame that the
+DQ counts and `rejected_records` use: every Silver column plus `dq_rejected`, `dq_in_scope` and `_dq_run_id`,
+overwritten on every run (never appended). `03_gold_transform` reads only Lakehouse tables, takes `fact_rows` as
+`~dq_rejected & dq_in_scope`, and reuses `_dq_run_id` as its run ID, so `dq_results` and `reconciliation_results`
+still share one `run_id`. It stops if the table holds more than one run ID or its row count differs from
+`silver_petrinex_vol` (Silver reloaded without rerunning DQ). Business logic, Gold columns and the five
+reconciliation tests are unchanged.
+
+**Alternatives.**
+- New columns on `silver_petrinex_vol`: Silver is reloaded per source file before DQ runs, and the flags depend on
+  the whole table, so every run would have to rewrite all of Silver after DQ. That changes the Silver load mode and
+  rewrites the table being read.
+- A slim table with only keys and flags: Silver has no row ID, and exact duplicates are identical in every business
+  column, so flags cannot be joined back to one specific copy.
+- Recompute the rules in `03_gold_transform`: two copies of the rule logic that can drift apart.
+
+**Consequences.** One more Silver-sized table, rewritten on every run. Gold can be rerun alone from stored flags;
+rerunning `03_gold_transform` without `02_silver_transform` appends a second set of reconciliation rows under the same
+`run_id`. Which copy of an exact duplicate is kept is still arbitrary (`row_number` over `lit(1)`), as before; the
+copies are identical in business columns. The rest of DEC-005 (snake_case Gold columns, month-grain
+`gold_dim_date`, `gold_dim_product`) is not done yet; this change is structure only.
+Verified in Fabric on 2026-10-27: `02_silver_transform` and `03_gold_transform` ran without errors and all five
+reconciliation tests passed (6,481,961 Silver rows, 2,908,544 `gold_fact_production` rows). The four Gold tables
+moved from Delta versions 5/5/1/1 to 6/6/2/2, and `scripts/verify/compare_gold_versions.sql` found 0 different rows
+in both directions of EXCEPT ALL for every table, excluding the run ID columns (`_gold_run_id`, `_silver_run_id`).
