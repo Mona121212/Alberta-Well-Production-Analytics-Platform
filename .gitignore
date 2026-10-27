@@ -25,3 +25,4 @@ gis/output/
 deliverables/*/data.gpkg
 deliverables/*/wells.csv
 gis/well.qgz
+CLAUDE.md
