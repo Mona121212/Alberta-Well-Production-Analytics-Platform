@@ -82,6 +82,21 @@ python -m gis.changes demo --mode sample                           # synthetic s
 
 Maps need a local QGIS (path in `config/gis_maps.yaml`); without it `gis.run` skips the maps step with a warning.
 
+### Fabric pipeline
+
+Run the notebooks in this order in the `well-production-mvp` workspace (Lakehouse `alberta_wells`), for example
+`fab job run "well-production-mvp.Workspace/02_silver_transform.Notebook"`:
+
+| Order | Notebook | Writes |
+|---|---|---|
+| 1 | `01_bronze_transform` | `bronze_petrinex_vol`, `bronze_st37_production_string`, `bronze_st37_bh`, `pipeline_run_log` |
+| 2 | `02_silver_transform` | `silver_dim_well`, `silver_petrinex_vol`, `silver_petrinex_vol_flagged`, `dq_results`, `rejected_records`, `dq_rule_test_results`, `dq_month_coverage`, `dq_run_log` |
+| 3 | `03_gold_transform` | `gold_dim_well`, `gold_fact_production`, `gold_dim_date`, `gold_dim_operator`, `reconciliation_results` |
+
+`03_gold_transform` reads only Lakehouse tables. It takes the reject and in-scope flags and the run ID from
+`silver_petrinex_vol_flagged` (DEC-021) and stops if that table is out of date. `03_sensor_streaming_anomaly_detection`
+(optional demo) and `load_defect_log` run on their own; `explore_raw` is read-only exploration.
+
 ## Outputs
 
 | Output | Content |
@@ -180,9 +195,11 @@ packages and maps never run on bad data.
 
 ## Repository guide
 
+- `notebooks/` - Fabric notebooks: `01_bronze_transform`, `02_silver_transform`, `03_gold_transform`, plus
+  `03_sensor_streaming_anomaly_detection`, `load_defect_log` and `explore_raw`
 - `gis/` - pipeline modules (`stage`, `convert`, `qa`, `qa_checks`, `liability`, `analysis`, `package`, `changes`,
   `maps`, `qgis_maps`, `run`)
 - `config/` - every setting, rule, mapping table, field dictionary and style
 - `tests/gis/` - rule and module tests
 - `docs/` - `progress.md`, `final_report.md`, `st37_gis_exploration.md`, `defect_log.md`, maps
-- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-020)
+- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-021)
