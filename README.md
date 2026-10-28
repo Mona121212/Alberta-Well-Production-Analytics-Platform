@@ -97,6 +97,10 @@ Run the notebooks in this order in the `well-production-mvp` workspace (Lakehous
 `silver_petrinex_vol_flagged` (DEC-021) and stops if that table is out of date. `03_sensor_streaming_anomaly_detection`
 (optional demo) and `load_defect_log` run on their own; `explore_raw` is read-only exploration.
 
+A failed test stops the run (DEC-022): `02_silver_transform` stops if a DQ rule test fails, `03_gold_transform` stops
+if any reconciliation test fails or if the 02 run that wrote the flags did not finish. Results are stored before the
+error, in `dq_rule_test_results` and `reconciliation_results`.
+
 ## Outputs
 
 | Output | Content |
@@ -202,4 +206,4 @@ packages and maps never run on bad data.
 - `config/` - every setting, rule, mapping table, field dictionary and style
 - `tests/gis/` - rule and module tests
 - `docs/` - `progress.md`, `final_report.md`, `st37_gis_exploration.md`, `defect_log.md`, maps
-- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-021)
+- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-022)
