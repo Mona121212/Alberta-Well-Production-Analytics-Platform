@@ -538,3 +538,52 @@ separate Lakehouse (deleted afterwards; production tables were only read):
   tests and all 5 reconciliation tests passed, Gold moved from versions 6/6/2/2 to 7/7/3/3, and EXCEPT ALL between
   the old and new versions found 0 different rows in both directions for every table (run ID columns excluded).
   Production Gold was still at versions 6/6/2/2 after tests A and B.
+
+---
+
+## DEC-023 Partition gold_fact_production by production_month
+
+**Date:** 2026-10-28
+
+**Context.** Petrinex data arrives as one file per month, and the report filters and compares by month
+(MoM and rolling 3-month measures). `gold_fact_production` was written as one unpartitioned table of about
+2.9M rows in 10 files (43.9 MB), and every month filter read all of them. 03_gold_transform overwrites the whole
+fact table on every run, even when only one month changed.
+
+**Decision.** `03_gold_transform` writes `gold_fact_production` with `partitionBy("production_month")`, after
+`repartition("production_month")` so that each month is one file. The rest of the Gold logic is unchanged. The
+table is still fully overwritten on every run; partitioning makes a later move to `replaceWhere` (rewrite only the
+months that were reloaded) possible without changing the table layout again.
+
+**Alternatives.**
+- No partitioning: fast enough at this size, but a month filter reads the whole table, and a reload of one month
+  can only be done by rewriting the whole table.
+- `partitionBy` without `repartition`: the fact rows come from a filter without a shuffle, so every write task
+  would write one small file per month it touches. One file per month keeps the file count predictable for
+  Direct Lake.
+- Z-order on `production_month`: needs a separate `OPTIMIZE` run, gives data skipping on month filters but not
+  `replaceWhere` by month. Better suited to a high-cardinality column such as `well_key`, which must not be a
+  partition column.
+- Liquid clustering: replaces both partitioning and Z-order and allows changing the clustering columns later.
+  Not chosen because the month-based `replaceWhere` reload is the main goal and is simplest with plain
+  partitions; worth revisiting if the table grows or queries filter mainly by well or operator.
+- V-Order: a Parquet write optimization for Direct Lake reads, independent of partitioning. It is off in this
+  workspace (`spark.sql.parquet.vorder.default = false`); turning it on is a separate decision.
+
+**Consequences.** Honest limit: with about 242,000 rows and 3.6 MB per month, each partition is far below the
+size usually recommended for Delta partitions (around 1 GB), so the speed-up matters little at this scale.
+The main gain is the month-aligned layout and the option to rewrite single months.
+Verified in Fabric on 2026-10-28 (run `024b8cef`, `scripts/verify/check_fact_partitioning.py`):
+- Layout: `partitionColumns = [production_month]`, 12 files (one per month, 240,280 to 244,620 rows each),
+  43.9 MB in total, against 10 files and 43.9 MB before.
+- All 7 DQ rule tests and all 5 reconciliation tests passed. Gold moved from versions 7/7/3/3 to 8/8/4/4, and
+  EXCEPT ALL between the old and new versions found 0 different rows in both directions for every table
+  (`_gold_run_id` and `_silver_run_id` excluded).
+- Single-month query (`production_month = 2025-12-01`, sum of volume by product), old unpartitioned version 7
+  against new version 8, results identical: files read 10 to 1, bytes read 43,861,493 to 3,652,429, rows scanned
+  2,908,544 to 242,040; the new plan has a partition filter, the old one has none (no data skipping on month
+  either). Median of 5 timed runs: 1.58 s to 0.29 s. These timings are on a warm session and a small table;
+  they show fewer bytes read, not a meaningful saving for the report.
+- Direct Lake: the semantic model refresh completed (7 s), and a DAX query of gas volume, producing wells and
+  reconciliation status by month returned the same values before and after (largest gas difference 3e-8, from
+  floating point summation order). 12 files is far below the Direct Lake file limit per table.

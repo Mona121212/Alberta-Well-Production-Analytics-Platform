@@ -101,6 +101,8 @@ A failed test stops the run (DEC-022): `02_silver_transform` stops if a DQ rule 
 if any reconciliation test fails or if the 02 run that wrote the flags did not finish. Results are stored before the
 error, in `dq_rule_test_results` and `reconciliation_results`.
 
+`gold_fact_production` is partitioned by `production_month`, one file per month (DEC-023).
+
 ## Outputs
 
 | Output | Content |
@@ -206,4 +208,4 @@ packages and maps never run on bad data.
 - `config/` - every setting, rule, mapping table, field dictionary and style
 - `tests/gis/` - rule and module tests
 - `docs/` - `progress.md`, `final_report.md`, `st37_gis_exploration.md`, `defect_log.md`, maps
-- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-022)
+- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-023)
