@@ -487,3 +487,54 @@ Verified in Fabric on 2026-10-27: `02_silver_transform` and `03_gold_transform` 
 reconciliation tests passed (6,481,961 Silver rows, 2,908,544 `gold_fact_production` rows). The four Gold tables
 moved from Delta versions 5/5/1/1 to 6/6/2/2, and `scripts/verify/compare_gold_versions.sql` found 0 different rows
 in both directions of EXCEPT ALL for every table, excluding the run ID columns (`_gold_run_id`, `_silver_run_id`).
+
+---
+
+## DEC-022 Stop the pipeline when a test fails
+
+**Date:** 2026-10-27
+
+**Context.** The five reconciliation tests in `03_gold_transform` and the DQ rule tests in `02_silver_transform`
+(`dq_rule_test_results`) only wrote PASS or FAIL rows. A FAIL did not stop the notebook, so a scheduled run finished
+as "Succeeded" and nobody looked at the results. In `02_silver_transform` the rule tests run after
+`silver_petrinex_vol_flagged` is written, so stopping 02 alone would still leave flags from an untested run for
+`03_gold_transform` to use.
+
+**Decision.**
+- `03_gold_transform` appends its results to `reconciliation_results` first, then raises a `ValueError` that names
+  every failed test with its expected and actual values.
+- `02_silver_transform` writes `dq_rule_test_results` (now with `run_id`, overwritten on every run), then raises if any
+  rule test failed. The rule tests check the rule code on constructed rows, so a failure means the reject flags cannot
+  be trusted.
+- `dq_run_log` is written only in the last cell of `02_silver_transform`, so it marks a run that finished with all
+  rule tests passed. `03_gold_transform` stops if the `_dq_run_id` of the flag table is not in `dq_run_log`.
+
+**Alternatives.**
+- Write-Audit-Publish: write Gold to staging tables, run the reconciliation tests on staging, and replace the
+  production tables only when every test passes. This is the only option that keeps bad data away from the
+  Direct Lake model. Not done now: it doubles the Gold storage, needs a swap step per table (Delta has no atomic
+  multi-table swap, so a failure between swaps leaves Gold mixed), and the report has one user, a manual run and
+  Delta time travel to roll back (`RESTORE TABLE ... TO VERSION AS OF`). It becomes the right choice when the
+  pipeline is scheduled, the report has users who would act on a wrong number before someone restores, or a
+  restore is no longer acceptable as the recovery path.
+- Fail only in 03 and leave 02 as is: the rule test results would still be ignored, and 03 cannot tell whether 02
+  finished.
+- Move the rule tests before the flag table is written: needs the rule definitions split out of the DQ cell; the
+  `dq_run_log` check gives the same protection with a smaller change.
+
+**Consequences.** A failed run now shows as Failed in Fabric, with the failed tests in the error message.
+Gold tables are already overwritten when the reconciliation tests fail; the error message says so, and the
+previous version can be restored with time travel. A failed rule test in 02 leaves `silver_petrinex_vol_flagged`
+with an unlogged run ID, and 03 refuses it until 02 runs again successfully.
+Verified in Fabric on 2026-10-28, with the failure paths run against a temporary copy of the input tables in a
+separate Lakehouse (deleted afterwards; production tables were only read):
+- Test A (reconciliation failure): rows of one source file (`Vol_2025-07-AB.CSV`, 528,287 rows) deleted from the
+  copied `bronze_petrinex_vol`. `03_gold_transform` failed after writing 5 results; only
+  `bronze_equals_silver_rows` was FAIL (expected 5,953,674, actual 6,481,961).
+- Test B (rule test failure): a copy of `02_silver_transform` with one wrong expected value failed with `clean_row`
+  FAIL (6 of 7 PASS) and did not log its run ID in `dq_run_log`. `03_gold_transform` then stopped in its first cell
+  ("did not finish"): no new `reconciliation_results` rows, test Gold tables still at the same versions.
+- Success path on production: `02_silver_transform` and `03_gold_transform` completed (run `74f1c965`), all 7 rule
+  tests and all 5 reconciliation tests passed, Gold moved from versions 6/6/2/2 to 7/7/3/3, and EXCEPT ALL between
+  the old and new versions found 0 different rows in both directions for every table (run ID columns excluded).
+  Production Gold was still at versions 6/6/2/2 after tests A and B.
