@@ -1,5 +1,5 @@
 -- compare_gold_versions.sql
--- Verifies that the Gold split (DEC-021) leaves the Gold tables unchanged.
+-- Verifies that a change to 03_gold_transform leaves the Gold tables unchanged (used for DEC-021 and DEC-023).
 -- Run in a Fabric notebook SQL cell (Spark SQL) attached to the alberta_wells Lakehouse.
 --
 -- Part A: run BEFORE 03_gold_transform. Record the latest version of each Gold table.
@@ -23,14 +23,14 @@ DESCRIBE HISTORY gold_dim_operator LIMIT 1;
 
 
 -- =====================================================================================================
--- Part B: after the run. Versions recorded in Part A: fact=5, dim_well=5, dim_date=1, dim_operator=1.
+-- Part B: after the run. Versions recorded in Part A: fact=7, dim_well=7, dim_date=3, dim_operator=3.
 -- =====================================================================================================
 
 WITH
 fact_old AS (
     SELECT production_month, well_key, ProductID, ReportingFacilityID, OperatorBAID, OperatorName,
            volume, energy, hours, submission_date, _source_file
-    FROM gold_fact_production VERSION AS OF 5
+    FROM gold_fact_production VERSION AS OF 7
 ),
 fact_new AS (
     SELECT production_month, well_key, ProductID, ReportingFacilityID, OperatorBAID, OperatorName,
@@ -40,7 +40,7 @@ fact_new AS (
 dim_well_old AS (
     SELECT well_key, well_uwi, licence_number, well_name, status_fluid, status_mode, status_type,
            licence_status, in_production_string, in_bh, is_placeholder
-    FROM gold_dim_well VERSION AS OF 5
+    FROM gold_dim_well VERSION AS OF 7
 ),
 dim_well_new AS (
     SELECT well_key, well_uwi, licence_number, well_name, status_fluid, status_mode, status_type,
@@ -60,14 +60,14 @@ SELECT 'gold_dim_well', 'new_minus_old', COUNT(*)
 FROM (SELECT * FROM dim_well_new EXCEPT ALL SELECT * FROM dim_well_old)
 UNION ALL
 SELECT 'gold_dim_date', 'old_minus_new', COUNT(*)
-FROM (SELECT * FROM gold_dim_date VERSION AS OF 1 EXCEPT ALL SELECT * FROM gold_dim_date)
+FROM (SELECT * FROM gold_dim_date VERSION AS OF 3 EXCEPT ALL SELECT * FROM gold_dim_date)
 UNION ALL
 SELECT 'gold_dim_date', 'new_minus_old', COUNT(*)
-FROM (SELECT * FROM gold_dim_date EXCEPT ALL SELECT * FROM gold_dim_date VERSION AS OF 1)
+FROM (SELECT * FROM gold_dim_date EXCEPT ALL SELECT * FROM gold_dim_date VERSION AS OF 3)
 UNION ALL
 SELECT 'gold_dim_operator', 'old_minus_new', COUNT(*)
-FROM (SELECT * FROM gold_dim_operator VERSION AS OF 1 EXCEPT ALL SELECT * FROM gold_dim_operator)
+FROM (SELECT * FROM gold_dim_operator VERSION AS OF 3 EXCEPT ALL SELECT * FROM gold_dim_operator)
 UNION ALL
 SELECT 'gold_dim_operator', 'new_minus_old', COUNT(*)
-FROM (SELECT * FROM gold_dim_operator EXCEPT ALL SELECT * FROM gold_dim_operator VERSION AS OF 1)
+FROM (SELECT * FROM gold_dim_operator EXCEPT ALL SELECT * FROM gold_dim_operator VERSION AS OF 3)
 ORDER BY table_name, direction;
