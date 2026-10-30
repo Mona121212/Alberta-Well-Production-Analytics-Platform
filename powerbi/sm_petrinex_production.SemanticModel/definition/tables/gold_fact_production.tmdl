@@ -203,70 +203,8 @@ table gold_fact_production
 		formatString: 0.0%;-0.0%;0.0%
 		displayFolder: Production\Last 3M vs Prior 3M
 
-	/// Wells that produced oil, gas or condensate (volume > 0) before the last 3 months of the filter and not in those 3 months; an early warning only, not the AER inactive well definition (12 months), and a well can also disappear because it was transferred to another operator.
-	measure 'Recently Idle Wells (3+ months)' =
-			VAR m = MAX(gold_dim_date[month_start])
-			VAR recentStart = EDATE(m, -2)
-			VAR prodBefore = CALCULATETABLE(VALUES(gold_fact_production[well_key]), REMOVEFILTERS(gold_dim_date),
-			    gold_dim_date[month_start] < recentStart, gold_fact_production[volume] > 0, gold_fact_production[ProductID] IN {"OIL", "GAS", "COND"})
-			VAR prodRecent = CALCULATETABLE(VALUES(gold_fact_production[well_key]), REMOVEFILTERS(gold_dim_date),
-			    gold_dim_date[month_start] >= recentStart, gold_dim_date[month_start] <= m,
-			    gold_fact_production[volume] > 0, gold_fact_production[ProductID] IN {"OIL", "GAS", "COND"})
-			RETURN COUNTROWS(EXCEPT(prodBefore, prodRecent)) + 0
-		formatString: #,0
-		displayFolder: Well Activity
-
 	/// First month of the 3-month window used by Recently Idle Wells (3+ months), as yyyy-mm.
 	measure 'Idle Since' = FORMAT(EDATE(MAX(gold_dim_date[month_start]), -2), "yyyy-mm")
-		displayFolder: Well Activity
-
-	/// Latest month up to the end of the filter in which the well (or selection) produced oil, gas or condensate (volume > 0).
-	measure 'Last Production Month' =
-			VAR m = MAX(gold_dim_date[month_start])
-			RETURN CALCULATE(MAX(gold_fact_production[production_month]), REMOVEFILTERS(gold_dim_date),
-			    gold_dim_date[month_start] <= m, gold_fact_production[volume] > 0, gold_fact_production[ProductID] IN {"OIL", "GAS", "COND"})
-		formatString: yyyy-mm
-		displayFolder: Well Activity
-
-	/// Operator of the well in its Last Production Month, taken from the row of that month (MAX(OperatorName) if several operators reported it).
-	measure 'Last Operator' =
-			VAR last = [Last Production Month]
-			RETURN CALCULATE(MAX(gold_fact_production[OperatorName]), REMOVEFILTERS(gold_dim_date),
-			    gold_dim_date[month_start] = last, gold_fact_production[volume] > 0, gold_fact_production[ProductID] IN {"OIL", "GAS", "COND"})
-		displayFolder: Well Activity
-
-	/// Average monthly oil + condensate volume (m3) of one well over the 3 months ending at its Last Production Month (fewer months if the window starts before the first month loaded); blank unless one well is in the filter.
-	measure 'Pre-Idle Avg Liquids (m3)' =
-			VAR last = [Last Production Month]
-			VAR months = CALCULATE(DISTINCTCOUNT(gold_dim_date[month_start]), REMOVEFILTERS(gold_dim_date),
-			    gold_dim_date[month_start] > EDATE(last, -3), gold_dim_date[month_start] <= last)
-			RETURN IF(HASONEVALUE(gold_dim_well[well_key]) && NOT ISBLANK(last),
-			    DIVIDE(CALCULATE(SUM(gold_fact_production[volume]) + 0, REMOVEFILTERS(gold_dim_date),
-			        gold_dim_date[month_start] > EDATE(last, -3), gold_dim_date[month_start] <= last,
-			        gold_fact_production[ProductID] IN {"OIL", "COND"}), months))
-		formatString: #,0.0
-		displayFolder: Well Activity
-
-	/// Average monthly gas volume (e3m3) of one well over the 3 months ending at its Last Production Month (fewer months if the window starts before the first month loaded); blank unless one well is in the filter.
-	measure 'Pre-Idle Avg Gas (e3m3)' =
-			VAR last = [Last Production Month]
-			VAR months = CALCULATE(DISTINCTCOUNT(gold_dim_date[month_start]), REMOVEFILTERS(gold_dim_date),
-			    gold_dim_date[month_start] > EDATE(last, -3), gold_dim_date[month_start] <= last)
-			RETURN IF(HASONEVALUE(gold_dim_well[well_key]) && NOT ISBLANK(last),
-			    DIVIDE(CALCULATE(SUM(gold_fact_production[volume]) + 0, REMOVEFILTERS(gold_dim_date),
-			        gold_dim_date[month_start] > EDATE(last, -3), gold_dim_date[month_start] <= last,
-			        gold_fact_production[ProductID] = "GAS"), months))
-		formatString: #,0.0
-		displayFolder: Well Activity
-
-	/// Yes if the well appears in Gold (any product, any volume) after its Last Production Month under an OperatorBAID other than the one(s) of that month, which points to a transfer rather than a shut-in; blank unless one well is in the filter.
-	measure 'Reported by Another Operator Later' =
-			VAR last = [Last Production Month]
-			VAR lastOps = CALCULATETABLE(VALUES(gold_fact_production[OperatorBAID]), REMOVEFILTERS(gold_dim_date),
-			    gold_dim_date[month_start] = last, gold_fact_production[volume] > 0, gold_fact_production[ProductID] IN {"OIL", "GAS", "COND"})
-			VAR laterOther = CALCULATE(COUNTROWS(gold_fact_production), REMOVEFILTERS(gold_dim_date), REMOVEFILTERS(gold_dim_operator),
-			    gold_dim_date[month_start] > last, NOT gold_fact_production[OperatorBAID] IN lastOps)
-			RETURN IF(HASONEVALUE(gold_dim_well[well_key]) && NOT ISBLANK(last), IF(laterOther > 0, "Yes", "No"))
 		displayFolder: Well Activity
 
 	/// Unit of the selected product for titles: e3m3 for GAS, m3 otherwise.

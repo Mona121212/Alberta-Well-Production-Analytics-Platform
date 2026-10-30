@@ -1,0 +1,80 @@
+table gold_idle_wells
+	sourceLineageTag: [dbo].[gold_idle_wells]
+
+	/// Number of recently idle wells: rows of gold_idle_wells, built in 03_gold_transform (DEC-027); wells that produced oil, gas or condensate (volume > 0) before the last 3 months loaded and not in those 3 months. An early warning only, not the AER inactive well definition (12 months), and a well can also disappear because it was transferred to another operator.
+	measure 'Recently Idle Wells (3+ months)' = COUNTROWS(gold_idle_wells) + 0
+		formatString: #,0
+		displayFolder: Well Activity
+
+	column well_key
+		dataType: string
+		sourceLineageTag: well_key
+		summarizeBy: none
+		sourceColumn: well_key
+
+	column well_uwi
+		dataType: string
+		sourceLineageTag: well_uwi
+		summarizeBy: none
+		sourceColumn: well_uwi
+
+	column well_name
+		dataType: string
+		sourceLineageTag: well_name
+		summarizeBy: none
+		sourceColumn: well_name
+
+	column last_operator
+		dataType: string
+		sourceLineageTag: last_operator
+		summarizeBy: none
+		sourceColumn: last_operator
+
+	column last_operator_baid
+		dataType: string
+		isHidden
+		sourceLineageTag: last_operator_baid
+		summarizeBy: none
+		sourceColumn: last_operator_baid
+
+	column last_production_month
+		dataType: dateTime
+		formatString: yyyy-mm
+		sourceLineageTag: last_production_month
+		summarizeBy: none
+		sourceColumn: last_production_month
+
+	column pre_idle_liquids_m3
+		dataType: double
+		formatString: #,0.0
+		sourceLineageTag: pre_idle_liquids_m3
+		summarizeBy: none
+		sourceColumn: pre_idle_liquids_m3
+
+	column pre_idle_gas_e3m3
+		dataType: double
+		formatString: #,0.0
+		sourceLineageTag: pre_idle_gas_e3m3
+		summarizeBy: none
+		sourceColumn: pre_idle_gas_e3m3
+
+	column reported_by_other_operator_later
+		dataType: boolean
+		sourceLineageTag: reported_by_other_operator_later
+		summarizeBy: none
+		sourceColumn: reported_by_other_operator_later
+
+	column _gold_run_id
+		dataType: string
+		isHidden
+		sourceLineageTag: _gold_run_id
+		summarizeBy: none
+		sourceColumn: _gold_run_id
+
+	partition gold_idle_wells = entity
+		mode: directLake
+		source
+			entityName: gold_idle_wells
+			schemaName: dbo
+			expressionSource: 'DirectLake - alberta_wells'
+

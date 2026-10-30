@@ -22,6 +22,7 @@ ref table dq_rule_test_results
 ref table dq_run_log
 ref table reconciliation_results
 ref table defect_log
+ref table gold_idle_wells
 
 ref role Crude_Oil_Viewer
 

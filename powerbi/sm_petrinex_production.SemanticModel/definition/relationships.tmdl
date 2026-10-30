@@ -10,3 +10,11 @@ relationship 43f09649-4583-b0de-f955-a77b81237831
 	fromColumn: gold_fact_production.well_key
 	toColumn: gold_dim_well.well_key
 
+relationship a1d3c6e2-7b41-4e0f-9c58-2f6b1d0e8a01
+	fromColumn: gold_idle_wells.well_key
+	toColumn: gold_dim_well.well_key
+
+relationship b2e4d7f3-8c52-4f1a-8d69-3a7c2e1f9b02
+	fromColumn: gold_idle_wells.last_operator_baid
+	toColumn: gold_dim_operator.OperatorBAID
+
