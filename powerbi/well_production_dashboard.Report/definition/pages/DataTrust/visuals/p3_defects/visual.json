@@ -3,10 +3,10 @@
     "name": "p3_defects",
     "position": {
         "x": 428,
-        "y": 500,
+        "y": 554,
         "z": 13,
         "width": 836,
-        "height": 212,
+        "height": 158,
         "tabOrder": 13
     },
     "visual": {
@@ -155,6 +155,19 @@
                             "expr": {
                                 "Literal": {
                                     "Value": "'Defect log (config/defect_log.yaml)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
                                 }
                             }
                         }

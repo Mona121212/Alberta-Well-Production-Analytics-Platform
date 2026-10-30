@@ -3,7 +3,7 @@
     "name": "p3_recon",
     "position": {
         "x": 428,
-        "y": 338,
+        "y": 392,
         "z": 12,
         "width": 836,
         "height": 150,
@@ -155,6 +155,19 @@
                             "expr": {
                                 "Literal": {
                                     "Value": "'Reconciliation tests, latest run (rows or volume)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
                                 }
                             }
                         }

@@ -6,14 +6,14 @@
         "y": 176,
         "z": 10,
         "width": 620,
-        "height": 150,
+        "height": 204,
         "tabOrder": 10
     },
     "visual": {
-        "visualType": "lineChart",
+        "visualType": "tableEx",
         "query": {
             "queryState": {
-                "Category": {
+                "Values": {
                     "projections": [
                         {
                             "field": {
@@ -28,12 +28,8 @@
                             },
                             "queryRef": "dq_run_log.run_ts",
                             "nativeQueryRef": "run_ts",
-                            "active": true
-                        }
-                    ]
-                },
-                "Y": {
-                    "projections": [
+                            "displayName": "Run (UTC)"
+                        },
                         {
                             "field": {
                                 "Measure": {
@@ -48,11 +44,7 @@
                             "queryRef": "dq_run_log.Run Silver Rows",
                             "nativeQueryRef": "Run Silver Rows",
                             "displayName": "Silver rows"
-                        }
-                    ]
-                },
-                "Y2": {
-                    "projections": [
+                        },
                         {
                             "field": {
                                 "Measure": {
@@ -61,12 +53,12 @@
                                             "Entity": "dq_run_log"
                                         }
                                     },
-                                    "Property": "Run Recon Passed"
+                                    "Property": "Run Recon Result"
                                 }
                             },
-                            "queryRef": "dq_run_log.Run Recon Passed",
-                            "nativeQueryRef": "Run Recon Passed",
-                            "displayName": "Reconciliation tests passed"
+                            "queryRef": "dq_run_log.Run Recon Result",
+                            "nativeQueryRef": "Run Recon Result",
+                            "displayName": "Reconciliation passed / total"
                         }
                     ]
                 }
@@ -84,24 +76,79 @@
                                 "Property": "run_ts"
                             }
                         },
-                        "direction": "Ascending"
+                        "direction": "Descending"
                     }
-                ],
-                "isDefaultSort": true
+                ]
             }
         },
         "objects": {
-            "dataPoint": [
+            "total": [
                 {
                     "properties": {
-                        "fill": {
-                            "solid": {
-                                "color": {
-                                    "expr": {
-                                        "Literal": {
-                                            "Value": "'#2E6F9E'"
-                                        }
-                                    }
+                        "totals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "autoSizeColumnWidth": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "wordWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "wordWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "130D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "dq_run_log.run_ts"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "96D"
                                 }
                             }
                         }
@@ -112,53 +159,16 @@
                 },
                 {
                     "properties": {
-                        "fill": {
-                            "solid": {
-                                "color": {
-                                    "expr": {
-                                        "Literal": {
-                                            "Value": "'#2E7D32'"
-                                        }
-                                    }
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "190D"
                                 }
                             }
                         }
                     },
                     "selector": {
-                        "metadata": "dq_run_log.Run Recon Passed"
-                    }
-                }
-            ],
-            "legend": [
-                {
-                    "properties": {
-                        "show": {
-                            "expr": {
-                                "Literal": {
-                                    "Value": "true"
-                                }
-                            }
-                        },
-                        "position": {
-                            "expr": {
-                                "Literal": {
-                                    "Value": "'Top'"
-                                }
-                            }
-                        }
-                    }
-                }
-            ],
-            "lineStyles": [
-                {
-                    "properties": {
-                        "lineChartType": {
-                            "expr": {
-                                "Literal": {
-                                    "Value": "'linear'"
-                                }
-                            }
-                        }
+                        "metadata": "dq_run_log.Run Recon Result"
                     }
                 }
             ]
@@ -191,7 +201,20 @@
                         "text": {
                             "expr": {
                                 "Literal": {
-                                    "Value": "'Run history: Silver rows and reconciliation tests passed (right axis)'"
+                                    "Value": "'Run history, newest first'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
                                 }
                             }
                         }

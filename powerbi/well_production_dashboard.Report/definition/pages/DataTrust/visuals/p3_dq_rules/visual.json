@@ -3,10 +3,10 @@
     "name": "p3_dq_rules",
     "position": {
         "x": 16,
-        "y": 338,
+        "y": 392,
         "z": 11,
         "width": 400,
-        "height": 374,
+        "height": 320,
         "tabOrder": 11
     },
     "visual": {
@@ -113,6 +113,17 @@
             "values": [
                 {
                     "properties": {
+                        "wordWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
                         "backColor": {
                             "solid": {
                                 "color": {
@@ -154,6 +165,84 @@
                         }
                     }
                 }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "autoSizeColumnWidth": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "wordWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "176D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "dq_results.rule_name"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "62D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "dq_results.severity"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "84D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "dq_run_log.Rows Flagged Latest"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "44D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "dq_results.Severity Order"
+                    }
+                }
             ]
         },
         "visualContainerObjects": {
@@ -184,7 +273,20 @@
                         "text": {
                             "expr": {
                                 "Literal": {
-                                    "Value": "'DQ rules, latest run (rows)'"
+                                    "Value": "'DQ rules, latest run (rows flagged; monthly well checks on page 2)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
                                 }
                             }
                         }
@@ -192,5 +294,196 @@
                 }
             ]
         }
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "p3_rules_no_monthly",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "dq_results"
+                            }
+                        },
+                        "Property": "rule_name"
+                    }
+                },
+                "type": "Advanced",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "d",
+                            "Entity": "dq_results",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "And": {
+                                    "Left": {
+                                        "Not": {
+                                            "Expression": {
+                                                "StartsWith": {
+                                                    "Left": {
+                                                        "Column": {
+                                                            "Expression": {
+                                                                "SourceRef": {
+                                                                    "Source": "d"
+                                                                }
+                                                            },
+                                                            "Property": "rule_name"
+                                                        }
+                                                    },
+                                                    "Right": {
+                                                        "Literal": {
+                                                            "Value": "'wells_disappeared_'"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "Right": {
+                                        "Not": {
+                                            "Expression": {
+                                                "StartsWith": {
+                                                    "Left": {
+                                                        "Column": {
+                                                            "Expression": {
+                                                                "SourceRef": {
+                                                                    "Source": "d"
+                                                                }
+                                                            },
+                                                            "Property": "rule_name"
+                                                        }
+                                                    },
+                                                    "Right": {
+                                                        "Literal": {
+                                                            "Value": "'wells_new_'"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "p3_rules_no_sensor_demo",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "dq_results"
+                            }
+                        },
+                        "Property": "rule_name"
+                    }
+                },
+                "type": "Categorical",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "d",
+                            "Entity": "dq_results",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Not": {
+                                    "Expression": {
+                                        "In": {
+                                            "Expressions": [
+                                                {
+                                                    "Column": {
+                                                        "Expression": {
+                                                            "SourceRef": {
+                                                                "Source": "d"
+                                                            }
+                                                        },
+                                                        "Property": "rule_name"
+                                                    }
+                                                }
+                                            ],
+                                            "Values": [
+                                                [
+                                                    {
+                                                        "Literal": {
+                                                            "Value": "'sensor_malfunction_consecutive_neg'"
+                                                        }
+                                                    }
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "p3_rules_latest_run",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "dq_run_log"
+                            }
+                        },
+                        "Property": "Rows Flagged Latest"
+                    }
+                },
+                "type": "Advanced",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "r",
+                            "Entity": "dq_run_log",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Not": {
+                                    "Expression": {
+                                        "Comparison": {
+                                            "ComparisonKind": 0,
+                                            "Left": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Source": "r"
+                                                        }
+                                                    },
+                                                    "Property": "Rows Flagged Latest"
+                                                }
+                                            },
+                                            "Right": {
+                                                "Literal": {
+                                                    "Value": "null"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
     }
 }

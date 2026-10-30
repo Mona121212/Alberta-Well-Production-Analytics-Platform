@@ -6,7 +6,7 @@
         "y": 176,
         "z": 9,
         "width": 616,
-        "height": 150,
+        "height": 204,
         "tabOrder": 9
     },
     "visual": {
@@ -94,6 +94,83 @@
                         }
                     }
                 }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "autoSizeColumnWidth": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "wordWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "wordWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "50D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "defect_log.defect_code"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "236D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "defect_log.description"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "290D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "defect_log.impact"
+                    }
+                }
             ]
         },
         "visualContainerObjects": {
@@ -125,6 +202,19 @@
                             "expr": {
                                 "Literal": {
                                     "Value": "'Known data issues (severity high, not closed)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
                                 }
                             }
                         }
