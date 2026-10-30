@@ -2,22 +2,27 @@ table dq_run_log
 	lineageTag: ef65c492-9a8f-44e3-839a-89dd36f5806d
 	sourceLineageTag: [dbo].[dq_run_log]
 
+	/// run_id of the latest finished 02_silver_transform run: the row with the latest run_ts in dq_run_log.
 	measure 'Latest Run ID' =
 			
 			MAXX(TOPN(1, dq_run_log, dq_run_log[run_ts], DESC), dq_run_log[run_id])
+		displayFolder: Data Quality\Run
 		lineageTag: 5f0b1db6-f064-40db-9fdd-183e995c2823
 
 		changedProperty = Name
 
+	/// Rows flagged by all DQ rules in the latest run: sum of dq_results[rows_flagged] for [Latest Run ID] across all severities, counting a row once per rule it breaks.
 	measure 'Rows Flagged Latest' =
 			
 			VAR r = [Latest Run ID]
 			RETURN CALCULATE(SUM(dq_results[rows_flagged]), dq_results[run_id] = r)
 		formatString: 0
+		displayFolder: Data Quality\Rules
 		lineageTag: 739ef1f6-dfbc-4d7c-9acf-e6e83be52675
 
 		changedProperty = Name
 
+	/// Rows flagged by reject rules in the latest run: sum of dq_results[rows_flagged] for [Latest Run ID] where layer = "silver" and severity = "reject", counting a row once per reject rule it breaks.
 	measure 'Rows Rejected' =
 			
 			VAR r = [Latest Run ID]
@@ -27,10 +32,12 @@ table dq_run_log
 			    dq_results[layer] = "silver",
 			    dq_results[severity] = "reject")
 		formatString: 0
+		displayFolder: Data Quality\Rules
 		lineageTag: 3a3a7954-737f-4660-8bb8-ab58ef9c8059
 
 		changedProperty = Name
 
+	/// Silver row count of the latest run: the actual value of the reconciliation test bronze_equals_silver_rows for [Latest Run ID].
 	measure 'Silver Rows' =
 			
 			VAR r = [Latest Run ID]
@@ -39,18 +46,22 @@ table dq_run_log
 			    reconciliation_results[run_id] = r,
 			    reconciliation_results[test_name] = "bronze_equals_silver_rows")
 		formatString: 0
+		displayFolder: Data Quality\Run
 		lineageTag: f40a5635-a44a-42ef-b71e-8e63ed4983ee
 
 		changedProperty = Name
 
+	/// Share of Silver rows flagged by reject rules in the latest run: [Rows Rejected] / [Silver Rows].
 	measure 'Reject Rate %' = DIVIDE([Rows Rejected], [Silver Rows])
 		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Data Quality\Rules
 		lineageTag: 7d84f948-8341-49c3-ae8e-9233f762e872
 
 		changedProperty = Name
 
 		changedProperty = FormatString
 
+	/// Number of reconciliation tests with status PASS in the latest run (reconciliation_results for [Latest Run ID]).
 	measure 'Recon Passed' =
 			
 			VAR r = [Latest Run ID]
@@ -59,37 +70,46 @@ table dq_run_log
 			    reconciliation_results[run_id] = r,
 			    reconciliation_results[status] = "PASS")
 		formatString: 0
+		displayFolder: Data Quality\Reconciliation
 		lineageTag: 0aa76b7e-7b9d-46ac-8f47-549aeac5b76f
 
 		changedProperty = Name
 
+	/// Number of reconciliation tests in the latest run (reconciliation_results for [Latest Run ID]).
 	measure 'Recon Total' =
 			
 			VAR r = [Latest Run ID]
 			RETURN CALCULATE(COUNTROWS(reconciliation_results), reconciliation_results[run_id] = r)
 		formatString: 0
+		displayFolder: Data Quality\Reconciliation
 		lineageTag: 6a59ca08-2e6f-4498-a21b-de0f6ac87f35
 
 		changedProperty = Name
 
+	/// Reconciliation result as card text: [Recon Passed] & " / " & [Recon Total], for example "5 / 5".
 	measure 'Recon Status Text' = [Recon Passed] & " / " & [Recon Total]
+		displayFolder: Data Quality\Reconciliation
 		lineageTag: 47de4472-4f6d-4411-af40-76059c4953b9
 
 		changedProperty = Name
 
+	/// Number of production months in the latest run: distinct production_month in dq_month_coverage for [Latest Run ID].
 	measure 'Months Loaded' =
 			
 			VAR r = [Latest Run ID]
 			RETURN CALCULATE(DISTINCTCOUNT(dq_month_coverage[production_month]), dq_month_coverage[run_id] = r)
 		formatString: 0
+		displayFolder: Data Quality\Run
 		lineageTag: 7635035a-0848-4d59-8f48-2ca1cef2d111
 
 		changedProperty = Name
 
+	/// Number of defects not closed: rows in defect_log whose status is not "Closed", so both Mitigated and Open defects count (DEC-024), 0 when there are none.
 	measure 'Open Defects' =
 			
 			CALCULATE(COUNTROWS(defect_log), defect_log[status] <> "Closed") + 0
 		formatString: 0
+		displayFolder: Data Quality\Defects
 		lineageTag: b7175b26-cc37-40c8-9c64-77a516b0c8cb
 
 		changedProperty = Name

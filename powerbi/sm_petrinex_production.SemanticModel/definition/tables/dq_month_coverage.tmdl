@@ -2,29 +2,35 @@ table dq_month_coverage
 	lineageTag: d90c9832-ff32-41e6-af05-b187d042bc38
 	sourceLineageTag: [dbo].[dq_month_coverage]
 
+	/// Producing wells (PROD, WI) per month in the latest run: sum of dq_month_coverage[producing_wells] for [Latest Run ID], to be used with a month on the axis. Not the same as Producing Wells, which counts gas wells only.
 	measure 'Wells Producing' =
 			
 			VAR r = [Latest Run ID]
 			RETURN CALCULATE(SUM(dq_month_coverage[producing_wells]), dq_month_coverage[run_id] = r)
 		formatString: 0
+		displayFolder: Data Quality\Month Coverage
 		lineageTag: 3ae973c3-ede8-48d7-9bc4-ae237b4e660d
 
 		changedProperty = Name
 
+	/// Wells reporting PROD in a month but not in the previous month, latest run: sum of dq_month_coverage[wells_added] for [Latest Run ID], blank for the first month.
 	measure 'Wells Added' =
 			
 			VAR r = [Latest Run ID]
 			RETURN CALCULATE(SUM(dq_month_coverage[wells_added]), dq_month_coverage[run_id] = r)
 		formatString: 0
+		displayFolder: Data Quality\Month Coverage
 		lineageTag: d4b9ea34-1346-496e-bcf9-bb2a7b29d0df
 
 		changedProperty = Name
 
+	/// Wells reporting PROD in the previous month but not in this month, latest run: sum of dq_month_coverage[wells_dropped] for [Latest Run ID], blank for the first month.
 	measure 'Wells Dropped' =
 			
 			VAR r = [Latest Run ID]
 			RETURN CALCULATE(SUM(dq_month_coverage[wells_dropped]), dq_month_coverage[run_id] = r)
 		formatString: 0
+		displayFolder: Data Quality\Month Coverage
 		lineageTag: 1062501e-8184-424b-813f-d7f59bddec42
 
 		changedProperty = Name

@@ -51,3 +51,30 @@ def test_connection_string_only_in_pbir_and_without_credentials():
 ])
 def test_patterns_catch_known_samples(name, sample):
     assert re.search(FORBIDDEN[name], sample)
+
+
+def measures():
+    """(table, measure, description, display folder) for every measure in the TMDL files."""
+    found = []
+    for path in TABLES:
+        lines = path.read_text(encoding="utf-8").splitlines()
+        for i, line in enumerate(lines):
+            m = re.match(r"^\tmeasure\s+'?([^'=]+?)'?\s*=", line)
+            if not m:
+                continue
+            desc = lines[i - 1].strip()[3:].strip() if lines[i - 1].strip().startswith("///") else ""
+            folder = ""
+            for nxt in lines[i + 1:]:
+                if re.match(r"^\t\S", nxt):
+                    break
+                if nxt.startswith("\t\tdisplayFolder:"):
+                    folder = nxt.split(":", 1)[1].strip()
+            found.append((path.stem, m.group(1).strip(), desc, folder))
+    return found
+
+
+def test_every_measure_has_description_and_display_folder():
+    found = measures()
+    assert len(found) == 19
+    missing = [f"{t}[{name}]" for t, name, desc, folder in found if not desc or not folder]
+    assert missing == [], f"measures without description or display folder: {missing}"

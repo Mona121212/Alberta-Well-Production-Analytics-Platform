@@ -2,6 +2,7 @@ table gold_fact_production
 	lineageTag: a7d59962-d657-445a-8791-8b1ef803ef3b
 	sourceLineageTag: [dbo].[gold_fact_production]
 
+	/// Total gas volume in Gold (e3m3): sum of gold_fact_production[volume] where ProductID = "GAS".
 	measure 'Total Gas' =
 			
 			CALCULATE (
@@ -9,12 +10,14 @@ table gold_fact_production
 			    gold_fact_production[ProductID] = "GAS"
 			)
 		formatString: #,0
+		displayFolder: Production
 		lineageTag: 9a91ef68-9782-4b6e-83db-7e0848243bd5
 
 		changedProperty = Name
 
 		changedProperty = FormatString
 
+	/// Number of wells with gas production: distinct well_key in gold_fact_production where ProductID = "GAS" and volume > 0, so wells without gas volume are not counted. Not the same as Wells Producing, which counts PROD wells of every product.
 	measure 'Producing Wells' =
 			
 			CALCULATE (
@@ -23,10 +26,12 @@ table gold_fact_production
 			    gold_fact_production[volume] > 0
 			)
 		formatString: 0
+		displayFolder: Production
 		lineageTag: 5cd0cdb8-3069-483d-9048-219e420c82a2
 
 		changedProperty = Name
 
+	/// Month-over-month change in Total Gas: (current month - previous month) / previous month, blank unless exactly one year_month is in the filter.
 	measure 'Gas MoM %' =
 			
 			IF (
@@ -36,12 +41,14 @@ table gold_fact_production
 			    RETURN DIVIDE ( cur - prev, prev )
 			)
 		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Production\Time Intelligence
 		lineageTag: aea7e43f-4610-4c50-a650-e72fb9c18c06
 
 		changedProperty = Name
 
 		changedProperty = FormatString
 
+	/// Total Gas over the 3 months ending at the latest date in the filter (DATESINPERIOD), blank where the current period has no gas.
 	measure 'Gas Rolling 3M' =
 			
 			IF (
@@ -52,12 +59,14 @@ table gold_fact_production
 			    )
 			)
 		formatString: #,0
+		displayFolder: Production\Time Intelligence
 		lineageTag: 04796ff0-d120-46a3-b38c-d25d59011d3d
 
 		changedProperty = Name
 
 		changedProperty = FormatString
 
+	/// Average monthly Total Gas over the same 3-month window: rolling Total Gas divided by the number of months of that window present in gold_dim_date (fewer than 3 at the start of the data).
 	measure 'Gas Rolling 3M Avg' =
 			
 			IF (
@@ -70,6 +79,7 @@ table gold_fact_production
 			        )
 			)
 		formatString: #,0
+		displayFolder: Production\Time Intelligence
 		lineageTag: 2668885f-c8ce-42be-b0b6-45dd4cacc8fa
 
 		changedProperty = Name
