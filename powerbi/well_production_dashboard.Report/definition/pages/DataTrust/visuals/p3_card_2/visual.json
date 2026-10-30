@@ -1,0 +1,53 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p3_card_2",
+    "position": {
+        "x": 350,
+        "y": 72,
+        "z": 5,
+        "width": 150,
+        "height": 92,
+        "tabOrder": 5
+    },
+    "visual": {
+        "visualType": "cardVisual",
+        "query": {
+            "queryState": {
+                "Data": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_run_log"
+                                        }
+                                    },
+                                    "Property": "Silver Rows (M)"
+                                }
+                            },
+                            "queryRef": "dq_run_log.Silver Rows (M)",
+                            "nativeQueryRef": "Silver Rows (M)",
+                            "displayName": "Silver rows (M)"
+                        }
+                    ]
+                }
+            }
+        },
+        "visualContainerObjects": {
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,53 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p3_card_0",
+    "position": {
+        "x": 16,
+        "y": 72,
+        "z": 3,
+        "width": 168,
+        "height": 92,
+        "tabOrder": 3
+    },
+    "visual": {
+        "visualType": "cardVisual",
+        "query": {
+            "queryState": {
+                "Data": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_run_log"
+                                        }
+                                    },
+                                    "Property": "Recon Status Text"
+                                }
+                            },
+                            "queryRef": "dq_run_log.Recon Status Text",
+                            "nativeQueryRef": "Recon Status Text",
+                            "displayName": "Recon tests passed"
+                        }
+                    ]
+                }
+            }
+        },
+        "visualContainerObjects": {
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

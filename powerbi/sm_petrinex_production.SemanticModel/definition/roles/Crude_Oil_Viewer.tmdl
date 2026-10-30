@@ -1,0 +1,7 @@
+role Crude_Oil_Viewer
+	modelPermission: read
+
+	tablePermission gold_dim_well = [status_fluid] = "CRUDE OIL"
+
+	annotation PBI_Id = 6abd95899aef401e9642e177fab8d17d
+

@@ -1,0 +1,10 @@
+{
+  "idle_wells": {
+    "target_table": "gold_idle_wells",
+    "recent_months": 3,
+    "pre_idle_months": 3,
+    "hydrocarbon_products": ["OIL", "GAS", "COND"],
+    "liquid_products": ["OIL", "COND"],
+    "gas_products": ["GAS"]
+  }
+}

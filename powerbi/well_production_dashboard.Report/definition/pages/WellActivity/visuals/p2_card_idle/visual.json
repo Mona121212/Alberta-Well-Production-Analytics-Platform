@@ -1,0 +1,71 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p2_card_idle",
+    "position": {
+        "x": 16,
+        "y": 72,
+        "z": 4,
+        "width": 500,
+        "height": 84,
+        "tabOrder": 4
+    },
+    "visual": {
+        "visualType": "cardVisual",
+        "query": {
+            "queryState": {
+                "Data": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_idle_wells"
+                                        }
+                                    },
+                                    "Property": "Recently Idle Wells (3+ months)"
+                                }
+                            },
+                            "queryRef": "gold_idle_wells.Recently Idle Wells (3+ months)",
+                            "nativeQueryRef": "Recently Idle Wells (3+ months)",
+                            "displayName": "Recently idle wells (3+ months)"
+                        }
+                    ]
+                }
+            }
+        },
+        "visualContainerObjects": {
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "objects": {
+            "value": [
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                }
+            ]
+        }
+    }
+}

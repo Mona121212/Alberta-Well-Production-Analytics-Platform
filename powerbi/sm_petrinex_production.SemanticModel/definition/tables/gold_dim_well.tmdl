@@ -1,0 +1,128 @@
+table gold_dim_well
+	lineageTag: 54dbb9c5-00eb-4186-bc9c-0ae08d574353
+	sourceLineageTag: [dbo].[gold_dim_well]
+
+	column well_key
+		dataType: string
+		isHidden
+		lineageTag: 30cc425c-9259-4599-afa2-fc43624ae736
+		sourceLineageTag: well_key
+		summarizeBy: none
+		sourceColumn: well_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column well_uwi
+		dataType: string
+		lineageTag: 355c60bc-df3f-47b4-a3ab-d9809007a33e
+		sourceLineageTag: well_uwi
+		summarizeBy: none
+		sourceColumn: well_uwi
+
+		annotation SummarizationSetBy = Automatic
+
+	column licence_number
+		dataType: string
+		lineageTag: eea917cd-f03b-4ad1-8b1e-54906f68cfac
+		sourceLineageTag: licence_number
+		summarizeBy: none
+		sourceColumn: licence_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column well_name
+		dataType: string
+		lineageTag: 4fd6d3f4-5b5b-405d-a646-bf1a1b15b5f6
+		sourceLineageTag: well_name
+		summarizeBy: none
+		sourceColumn: well_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column status_fluid
+		dataType: string
+		lineageTag: 2c1f3cf3-923e-4ca8-9398-80593240e9c1
+		sourceLineageTag: status_fluid
+		summarizeBy: none
+		sourceColumn: status_fluid
+
+		annotation SummarizationSetBy = Automatic
+
+	column status_mode
+		dataType: string
+		lineageTag: d116da14-92fb-4ac3-9607-8630f9d364c7
+		sourceLineageTag: status_mode
+		summarizeBy: none
+		sourceColumn: status_mode
+
+		annotation SummarizationSetBy = Automatic
+
+	column status_type
+		dataType: string
+		lineageTag: 87901855-f222-436e-9362-4ff7e0d2678f
+		sourceLineageTag: status_type
+		summarizeBy: none
+		sourceColumn: status_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column licence_status
+		dataType: string
+		lineageTag: 13dbd32e-e992-41e3-83da-d4c046dc9355
+		sourceLineageTag: licence_status
+		summarizeBy: none
+		sourceColumn: licence_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column in_production_string
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 7da09ea8-b3b3-4a1f-8e15-30e7d5306971
+		sourceLineageTag: in_production_string
+		summarizeBy: none
+		sourceColumn: in_production_string
+
+		annotation SummarizationSetBy = Automatic
+
+	column in_bh
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 6919f237-0644-43d9-bfb3-eb10452913cc
+		sourceLineageTag: in_bh
+		summarizeBy: none
+		sourceColumn: in_bh
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_placeholder
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 85d68fb6-ab4b-4d5f-a9e9-9dfaad907617
+		sourceLineageTag: is_placeholder
+		summarizeBy: none
+		sourceColumn: is_placeholder
+
+		annotation SummarizationSetBy = Automatic
+
+	column _silver_run_id
+		dataType: string
+		isHidden
+		lineageTag: 8eefca7b-3e9c-437d-af6e-17df1a4f2df5
+		sourceLineageTag: _silver_run_id
+		summarizeBy: none
+		sourceColumn: _silver_run_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition gold_dim_well = entity
+		mode: directLake
+		source
+			entityName: gold_dim_well
+			schemaName: dbo
+			expressionSource: 'DirectLake - alberta_wells'
+

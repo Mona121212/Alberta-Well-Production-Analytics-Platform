@@ -1,0 +1,58 @@
+table reconciliation_results
+	lineageTag: 46fea046-be51-41e4-b6ba-68b30fc5c621
+	sourceLineageTag: [dbo].[reconciliation_results]
+
+	column run_id
+		dataType: string
+		lineageTag: 03615032-94eb-4473-a8fd-eb02c70af7fb
+		sourceLineageTag: run_id
+		summarizeBy: none
+		sourceColumn: run_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column test_name
+		dataType: string
+		lineageTag: cdcc97c7-39fc-4932-ba7c-a613ba2c05a4
+		sourceLineageTag: test_name
+		summarizeBy: none
+		sourceColumn: test_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column expected
+		dataType: int64
+		formatString: #,0
+		lineageTag: 4a9441d3-1fca-4044-b870-2fccadf90f97
+		sourceLineageTag: expected
+		summarizeBy: sum
+		sourceColumn: expected
+
+		annotation SummarizationSetBy = Automatic
+
+	column actual
+		dataType: int64
+		formatString: #,0
+		lineageTag: 71737ac3-9792-434d-9389-95b56867ee6a
+		sourceLineageTag: actual
+		summarizeBy: sum
+		sourceColumn: actual
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: 1e5509a8-731f-4aed-b81c-07253fd15209
+		sourceLineageTag: status
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	partition reconciliation_results = entity
+		mode: directLake
+		source
+			entityName: reconciliation_results
+			schemaName: dbo
+			expressionSource: 'DirectLake - alberta_wells'
+

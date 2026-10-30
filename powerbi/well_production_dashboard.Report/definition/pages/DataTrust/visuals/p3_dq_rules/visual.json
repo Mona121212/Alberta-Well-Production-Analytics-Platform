@@ -1,0 +1,432 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p3_dq_rules",
+    "position": {
+        "x": 16,
+        "y": 392,
+        "z": 11,
+        "width": 400,
+        "height": 320,
+        "tabOrder": 11
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_results"
+                                        }
+                                    },
+                                    "Property": "rule_name"
+                                }
+                            },
+                            "queryRef": "dq_results.rule_name",
+                            "nativeQueryRef": "rule_name",
+                            "displayName": "Rule"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_results"
+                                        }
+                                    },
+                                    "Property": "severity"
+                                }
+                            },
+                            "queryRef": "dq_results.severity",
+                            "nativeQueryRef": "severity",
+                            "displayName": "Severity"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_run_log"
+                                        }
+                                    },
+                                    "Property": "Rows Flagged Latest"
+                                }
+                            },
+                            "queryRef": "dq_run_log.Rows Flagged Latest",
+                            "nativeQueryRef": "Rows Flagged Latest",
+                            "displayName": "Rows flagged"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_results"
+                                        }
+                                    },
+                                    "Property": "Severity Order"
+                                }
+                            },
+                            "queryRef": "dq_results.Severity Order",
+                            "nativeQueryRef": "Severity Order",
+                            "displayName": "Order"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "dq_results"
+                                    }
+                                },
+                                "Property": "Severity Order"
+                            }
+                        },
+                        "direction": "Ascending"
+                    },
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "dq_run_log"
+                                    }
+                                },
+                                "Property": "Rows Flagged Latest"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ]
+            }
+        },
+        "objects": {
+            "values": [
+                {
+                    "properties": {
+                        "wordWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "dq_results"
+                                                }
+                                            },
+                                            "Property": "Severity Color"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "dq_results.severity"
+                    }
+                }
+            ],
+            "total": [
+                {
+                    "properties": {
+                        "totals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "autoSizeColumnWidth": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "wordWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "176D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "dq_results.rule_name"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "62D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "dq_results.severity"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "84D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "dq_run_log.Rows Flagged Latest"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "44D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "dq_results.Severity Order"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'DQ rules, latest run (rows flagged; monthly well checks on page 2)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "p3_rules_no_monthly",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "dq_results"
+                            }
+                        },
+                        "Property": "rule_name"
+                    }
+                },
+                "type": "Advanced",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "d",
+                            "Entity": "dq_results",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "And": {
+                                    "Left": {
+                                        "Not": {
+                                            "Expression": {
+                                                "StartsWith": {
+                                                    "Left": {
+                                                        "Column": {
+                                                            "Expression": {
+                                                                "SourceRef": {
+                                                                    "Source": "d"
+                                                                }
+                                                            },
+                                                            "Property": "rule_name"
+                                                        }
+                                                    },
+                                                    "Right": {
+                                                        "Literal": {
+                                                            "Value": "'wells_disappeared_'"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "Right": {
+                                        "Not": {
+                                            "Expression": {
+                                                "StartsWith": {
+                                                    "Left": {
+                                                        "Column": {
+                                                            "Expression": {
+                                                                "SourceRef": {
+                                                                    "Source": "d"
+                                                                }
+                                                            },
+                                                            "Property": "rule_name"
+                                                        }
+                                                    },
+                                                    "Right": {
+                                                        "Literal": {
+                                                            "Value": "'wells_new_'"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "p3_rules_latest_run",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "dq_run_log"
+                            }
+                        },
+                        "Property": "Rows Flagged Latest"
+                    }
+                },
+                "type": "Advanced",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "r",
+                            "Entity": "dq_run_log",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Not": {
+                                    "Expression": {
+                                        "Comparison": {
+                                            "ComparisonKind": 0,
+                                            "Left": {
+                                                "Measure": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Source": "r"
+                                                        }
+                                                    },
+                                                    "Property": "Rows Flagged Latest"
+                                                }
+                                            },
+                                            "Right": {
+                                                "Literal": {
+                                                    "Value": "null"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

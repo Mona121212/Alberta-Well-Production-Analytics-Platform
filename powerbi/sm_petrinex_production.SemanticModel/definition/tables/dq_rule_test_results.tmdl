@@ -1,0 +1,47 @@
+table dq_rule_test_results
+	lineageTag: 6b9f1f84-b828-4f1a-a3ea-54592c36dad7
+	sourceLineageTag: [dbo].[dq_rule_test_results]
+
+	column test_case
+		dataType: string
+		lineageTag: faa2abc9-6f50-4af2-9dbe-51ff9a72f8a8
+		sourceLineageTag: test_case
+		summarizeBy: none
+		sourceColumn: test_case
+
+		annotation SummarizationSetBy = Automatic
+
+	column expected
+		dataType: string
+		lineageTag: 2e2670b1-3941-4a92-ae7d-949d585c2d30
+		sourceLineageTag: expected
+		summarizeBy: none
+		sourceColumn: expected
+
+		annotation SummarizationSetBy = Automatic
+
+	column actual
+		dataType: string
+		lineageTag: 2aafe77f-593d-4276-9ffa-55d6db0af249
+		sourceLineageTag: actual
+		summarizeBy: none
+		sourceColumn: actual
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: d5c6c31c-ca8d-4208-9515-aaedddf98751
+		sourceLineageTag: status
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dq_rule_test_results = entity
+		mode: directLake
+		source
+			entityName: dq_rule_test_results
+			schemaName: dbo
+			expressionSource: 'DirectLake - alberta_wells'
+

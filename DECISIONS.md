@@ -636,3 +636,171 @@ original columns; the new columns are in the table for SQL and can be added to t
 Verified in Fabric on 2026-10-30: `load_defect_log` wrote 10 rows (D-001 to D-010, the same ids as the yaml), the
 semantic model refresh completed, and a DAX query of the six columns used by the report table returned all 10
 rows; `Open Defects` is 5 (3 Mitigated, 2 Open), against 0 before.
+
+---
+
+## DEC-025 Semantic model and dashboard as TMDL / PBIR files in the repo
+
+**Date:** 2026-10-30
+
+**Context.** The semantic model `sm_petrinex_production` and its reports existed only in the Fabric workspace, so
+measures, relationships and pages had no history or review, although the project guide said the model was stored as
+TMDL. The workspace is not connected to Fabric Git integration; notebooks are deployed with `fab import`.
+
+**Decision.** `fab export` writes the model as TMDL to `powerbi/sm_petrinex_production.SemanticModel/` and the
+dashboard as PBIR to `powerbi/well_production_dashboard.Report/`. The repo is the source: changes are made in the
+files and deployed with `fab import`, then the item is exported again and the service's own formatting is copied back,
+so a later export compares with the repo without noise. The report keeps the exported `byConnection` reference to the
+model, and the OneLake workspace and lakehouse IDs stay in `expressions.tmdl`; they identify items but grant no
+access, and the same IDs are already in the notebook metadata. `tests/test_powerbi_files.py` fails on passwords,
+secrets, storage keys, tokens, tenant IDs, e-mail addresses or a connection string with credentials, and on any
+measure without a description or display folder. Only the dashboard is in the repo; the old test report
+`rpt_petrinex_production` was deleted from the workspace.
+
+**Alternatives.**
+- Fabric Git integration: syncs automatically, but the workspace is not connected and the notebooks already use
+  manual `fab import`; two deployment paths would be harder to follow.
+- `.pbix` file: one binary, no readable diff of measures or visuals.
+- PBIP with a `byPath` model reference: opens in Power BI Desktop as a local project, but `fab import` of the report
+  needs the `byConnection` reference.
+
+**Consequences.** An edit made in the workspace is lost at the next import unless it is exported first. Measures are
+reviewable line by line in pull requests. Report screenshots are taken by hand, because the tenant setting "Export
+reports as image files" is off (the ExportToFile API returns 403). Verified on 2026-10-30: import, export and diff of
+the model and the report gave no difference.
+
+---
+
+## DEC-026 Dashboard design: two users, one business question per page
+
+**Date:** 2026-10-30
+
+**Context.** The first dashboard showed gas totals and DQ tables without saying who it was for. The data has 12
+months of Petrinex volumes by well and operator, no prices, and units that differ by product (gas e3m3, liquids m3).
+
+**Decision.** `well_production_dashboard` has three 16:9 pages, each with a title and a one-line question, and every
+visual supports one decision. The users are asset and operations teams at Alberta producers (pick a company, compare
+with peers) and the data team (publish the month or not).
+- **Production Performance:** cards for the latest month with MoM, oil and gas trends with the 3-month average,
+  water cut of oil wells, uptime, and the 10 operators and 10 wells with the largest drop.
+- **Well Activity & Idle Wells:** wells producing per month, wells added and dropped, recently idle wells by operator
+  and a ranked list.
+- **Data Trust:** reconciliation, months loaded, Silver rows, reject rate, open defects, freshness, run history, the
+  open high-severity defects, DQ rules, reconciliation tests and the defect log.
+
+Operators are taken from each row's own month (`OperatorBAID` of that row). A well transferred during the 12 months
+therefore moves its volume from one operator to another; in the drop tables a transfer looks like a drop for the old
+operator and a gain for the new one, and in the idle list the column "Reported by another operator later" separates
+a transfer from a shut-in (4 of 5,628 idle wells). The idle list uses the operator of the last production month.
+
+**Alternatives.**
+- One page for everything: the asset user and the data user ask different questions and would have to skip half the
+  page.
+- Single-month MoM for the drop tables: one month is noisy (late submissions, short months); last 3 months against
+  the 3 before is steadier and still fits 12 months.
+- Barrels of oil equivalent to rank wells and operators in one number: needs a conversion factor and would break the
+  rule that products are not summed; the tables use one product at a time and the idle list shows liquids (m3) and
+  gas (e3m3) separately.
+
+**Consequences.** Deliberately not shown: revenue (no prices), YoY and decline curves (12 months), the AER inactive
+well definition (12 months without activity cannot be tested inside a 12-month window; "recently idle" is an early
+warning only), maps (the GIS track covers them) and forecasts. The drop tables need one product selected and at least
+6 months before the selected month. Every new measure was compared with an independent Spark SQL result (38,396
+values; two differences explained: a month without volume counts as 0 in MoM, and a tie at rank 10).
+
+Review of the first screenshots led to three fixes:
+- The trend lines show the 3-month average (`Oil Rolling 3M Avg (m3)`, `Gas Rolling 3M Avg`), not the 3-month
+  sum: the sum is about three times the monthly volume and flattened the monthly line on the same axis. Both
+  averages match Spark SQL (264 values, 11 groups by 12 months).
+- Every table has its total row turned off. The tables are lists of operators, wells, rules, tests and defects;
+  a total row adds values that do not belong together (the well drop table showed one operator name in its
+  total row) and makes the query slower.
+- The reconciliation table shows the run with the latest `run_ts` (`Latest Run ID`). `run_id` is random, so the
+  filter `Is Latest Recon Run` matches it instead of comparing `MAX(run_id)`, which had picked an older run and
+  hid tests.
+
+A second review of all three pages led to these changes:
+- All visuals: no auto-generated subtitle ("... by year_month"); date axes use `month_start` and `production_month`
+  formatted `mmm yy` on a continuous axis, so the labels are short and never slanted.
+- Production Performance: the operator slicer has a search box (default still All); the card groups show the month
+  in their title ("Oil, Jun 2026", measures `Oil/Gas/Condensate Card Title`, following the Month slicer); card values
+  have 1 decimal (12.1M); MoM % is red when negative and green when positive (`... MoM Color`).
+- Well Activity: the idle count shows the exact number (5,628) and the idle month in full; the note has room for all
+  of its text; the idle list drops `well_key` (UWI is the well ID people use) and keeps both pre-idle columns in view;
+  the operator bar chart has room for full company names.
+- Data Trust: the known issues table shows all open high-severity defects (D-002, D-010) with wrapped text; the DQ
+  rules table shows only the rules of the latest run (`Rows Flagged Latest` not blank; `Severity Order` alone had also
+  listed rules of older runs), leaves out the monthly `wells_disappeared_*` and `wells_new_*` checks (page 2 shows
+  wells added and dropped); the rule `sensor_malfunction_consecutive_neg` of the sensor demo no longer appears (the
+  demo and its rows were removed, DEC-028); reconciliation numbers have thousands separators.
+- Run history is a table (run time, Silver rows, reconciliation tests passed / total, newest first) instead of a line
+  chart: the number of tests grew from 5 to 9, and a rising line read as better data.
+
+### Interview notes
+
+| Page | User | Business question | Decision it supports | How the numbers are verified | Limits | Left out on purpose |
+|---|---|---|---|---|---|---|
+| Production Performance | Asset and operations team | Is production rising or falling, and where is the drop? | Which operator or well to look at first; whether a drop is broad or concentrated | Every measure recomputed with Spark SQL by month, for 10 operators and for all operators per product; Gas MoM % identical before and after its rewrite | 12 months; drop tables need one product and 6 prior months; transfers show as drops | Revenue, YoY, decline curves, BOE totals |
+| Well Activity & Idle Wells | Asset team, liability or abandonment planning | Which wells stopped producing, and which could become a liability? | Which idle wells to review first (by pre-idle volume); shut-in or transfer | `gold_idle_wells` row count tested against a Spark SQL recount in every 03 run; all 28,140 values matched an independent Spark result | 3-month window, not the AER 12-month definition; wells idle before 2025-07 are not visible; well counts per month are all Alberta | AER inactive status, closure cost estimates |
+| Data Trust | Data team | Can this month's data be published? | Publish or hold the month; which defect or rule to fix first | Cards read the same `reconciliation_results`, `dq_results` and `dq_run_log` rows the pipeline tests write; defect list comes from `config/defect_log.yaml` | Shows the latest finished run only; a run that stopped on a failed test is not in `dq_run_log` | Row-level drill-through into rejected records |
+
+---
+
+## DEC-027 Per-well idle logic in the pipeline (gold_idle_wells), not in DAX
+
+**Date:** 2026-10-30
+
+**Context.** The idle well list on the Well Activity page was a table of `gold_dim_well[well_key]` with six DAX
+measures per well (last production month, last operator, pre-idle averages, transfer flag) and a measure filter for
+recently idle wells. Each measure depends on that well's own last production month, so the engine evaluates it well
+by well instead of in one scan. The query Power BI sends for that visual, with its grand total row, took 39.1 s
+through the API (19.4 s without the total row); in the report the visual kept loading and never showed data.
+
+**Decision.** `03_gold_transform` writes `gold_idle_wells` with Spark: one row per recently idle well with
+`well_key`, `well_uwi`, `well_name`, `last_operator`, `last_operator_baid`, `last_production_month`,
+`pre_idle_liquids_m3`, `pre_idle_gas_e3m3` and `reported_by_other_operator_later`. The window sizes and product lists
+are in `config/gold.json`. The semantic model reads the table (relationships to `gold_dim_well` and, by the last
+operator, to `gold_dim_operator`); `Recently Idle Wells (3+ months)` counts its rows, and the per-well measures were
+removed. The list has no total row. Four reconciliation tests guard the table: row count against a Spark SQL recount
+of the same definition, unique and non-null keys, no orphan wells.
+
+**Alternatives.**
+- Rewrite the DAX so the engine can batch it: may help, but the logic would still run on every page view, and each
+  rewrite needs its own proof that the numbers stay the same.
+- Calculated table in the model: not supported for Direct Lake tables.
+- Turn off the total row only: halves the time to about 19 s, still too slow for a dashboard.
+
+**Consequences.** The list now loads in about 4.5 s through the API, the same as an empty query (5.2 s, the overhead
+of the `fab` call), so the query itself takes well under a second; the card and the top 10 operators also return at
+that overhead. The idle state is a snapshot of the last 03 run and changes only when 03 runs again; the page has no
+month filter, so this matches what the page shows. The operator filter now means "wells whose last operator is X";
+the DAX version looked at operator X's own rows (1,042 idle wells for one large operator under the old meaning).
+Verified on 2026-10-30, run `38b61620`: 9 of 9 reconciliation tests PASS, `gold_idle_wells` has 5,628 rows (the DAX
+measure gave 5,628 before the change), and all 28,140 values match the independent Spark result; 4 wells were
+reported by another operator after their last production month.
+
+## DEC-028 Remove the sensor anomaly demo notebook and its rows
+
+**Context.** `03_sensor_streaming_anomaly_detection` simulated pressure readings from Silver `PROD` rows (random
+values, about 5% forced negative) and appended its result to the production audit tables: one row per run in
+`dq_results` (layer "gold", severity "reject", although it read Silver and removed nothing) and the flagged rows in
+`rejected_records`, with the simulated pressure in the `volume` column. Its run IDs were not in `dq_run_log`, so a
+filter that did not pin the latest run showed the demo rule next to the Petrinex rules (the Data Trust page did, see
+DEC-026). All readings had the same timestamp, so "3 consecutive negative readings" had no defined order and the
+result changed on every run.
+
+**Decision.** Delete the notebook from the repo and the workspace, and delete its rows from the audit tables
+(rule `sensor_malfunction_consecutive_neg`). Delta versions before the delete, for `RESTORE TABLE ... TO VERSION AS
+OF`: `dq_results` 22, `rejected_records` 11 (after: 23 and 12). Rows: `dq_results` 263 -> 260 (3 demo runs),
+`rejected_records` 4,562 -> 4,538 (24 rows, all from those 3 runs). If streaming is shown again, rebuild it with
+Fabric Eventstream on a real or clearly separated simulated feed, writing to its own tables.
+
+**Alternatives.**
+- Fix the demo (deterministic timestamps, a seed, its own `demo_*` tables): keeps simulated data in the project and
+  still needs a story for why it exists; a real streaming source shows the skill better.
+- Keep the notebook and only filter the rule out of the report: leaves simulated rows in tables that are meant to be
+  the audit trail of the Petrinex pipeline.
+
+**Consequences.** `dq_results` and `rejected_records` hold only rows from `02_silver_transform`. The Data Trust page
+shows the same numbers as before (its visuals already read the latest run only); the report filter that excluded the
+demo rule was removed. The pipeline is three notebooks plus `load_defect_log`.

@@ -1,0 +1,313 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p2_idle_list",
+    "position": {
+        "x": 528,
+        "y": 330,
+        "z": 10,
+        "width": 736,
+        "height": 382,
+        "tabOrder": 10
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_idle_wells"
+                                        }
+                                    },
+                                    "Property": "well_uwi"
+                                }
+                            },
+                            "queryRef": "gold_idle_wells.well_uwi",
+                            "nativeQueryRef": "well_uwi",
+                            "displayName": "UWI"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_idle_wells"
+                                        }
+                                    },
+                                    "Property": "last_operator"
+                                }
+                            },
+                            "queryRef": "gold_idle_wells.last_operator",
+                            "nativeQueryRef": "last_operator",
+                            "displayName": "Last operator"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_idle_wells"
+                                        }
+                                    },
+                                    "Property": "last_production_month"
+                                }
+                            },
+                            "queryRef": "gold_idle_wells.last_production_month",
+                            "nativeQueryRef": "last_production_month",
+                            "displayName": "Last production month"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_idle_wells"
+                                        }
+                                    },
+                                    "Property": "pre_idle_liquids_m3"
+                                }
+                            },
+                            "queryRef": "gold_idle_wells.pre_idle_liquids_m3",
+                            "nativeQueryRef": "pre_idle_liquids_m3",
+                            "displayName": "Pre-idle liquids (m3/month)"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_idle_wells"
+                                        }
+                                    },
+                                    "Property": "pre_idle_gas_e3m3"
+                                }
+                            },
+                            "queryRef": "gold_idle_wells.pre_idle_gas_e3m3",
+                            "nativeQueryRef": "pre_idle_gas_e3m3",
+                            "displayName": "Pre-idle gas (e3m3/month)"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_idle_wells"
+                                        }
+                                    },
+                                    "Property": "reported_by_other_operator_later"
+                                }
+                            },
+                            "queryRef": "gold_idle_wells.reported_by_other_operator_later",
+                            "nativeQueryRef": "reported_by_other_operator_later",
+                            "displayName": "Reported by another operator later"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "gold_idle_wells"
+                                    }
+                                },
+                                "Property": "pre_idle_liquids_m3"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ]
+            }
+        },
+        "objects": {
+            "total": [
+                {
+                    "properties": {
+                        "totals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "autoSizeColumnWidth": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "wordWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "wordWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "156D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_idle_wells.well_uwi"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "170D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_idle_wells.last_operator"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "96D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_idle_wells.last_production_month"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "100D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_idle_wells.pre_idle_liquids_m3"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "100D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_idle_wells.pre_idle_gas_e3m3"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "80D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_idle_wells.reported_by_other_operator_later"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Recently idle wells, by pre-idle liquids (oil + condensate m3, gas e3m3)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}
