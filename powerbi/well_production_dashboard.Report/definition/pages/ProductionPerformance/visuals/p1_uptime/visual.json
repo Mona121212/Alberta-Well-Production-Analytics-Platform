@@ -23,11 +23,11 @@
                                             "Entity": "gold_dim_date"
                                         }
                                     },
-                                    "Property": "year_month"
+                                    "Property": "month_start"
                                 }
                             },
-                            "queryRef": "gold_dim_date.year_month",
-                            "nativeQueryRef": "year_month",
+                            "queryRef": "gold_dim_date.month_start",
+                            "nativeQueryRef": "month_start",
                             "active": true
                         }
                     ]
@@ -62,7 +62,7 @@
                                         "Entity": "gold_dim_date"
                                     }
                                 },
-                                "Property": "year_month"
+                                "Property": "month_start"
                             }
                         },
                         "direction": "Ascending"
@@ -124,6 +124,26 @@
                         }
                     }
                 }
+            ],
+            "categoryAxis": [
+                {
+                    "properties": {
+                        "axisType": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Scalar'"
+                                }
+                            }
+                        },
+                        "showAxisTitle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
             ]
         },
         "visualContainerObjects": {
@@ -155,6 +175,19 @@
                             "expr": {
                                 "Literal": {
                                     "Value": "'Uptime (% of calendar hours, per well-month)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
                                 }
                             }
                         }

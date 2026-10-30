@@ -76,11 +76,77 @@
                         },
                         "text": {
                             "expr": {
-                                "Literal": {
-                                    "Value": "'Condensate, latest month'"
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Condensate Card Title"
                                 }
                             }
                         }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "objects": {
+            "value": [
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "0D"
+                                }
+                            }
+                        },
+                        "labelPrecision": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1L"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
+                    }
+                },
+                {
+                    "properties": {
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "gold_fact_production"
+                                                }
+                                            },
+                                            "Property": "Condensate MoM Color"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_fact_production.Condensate MoM %"
                     }
                 }
             ]
