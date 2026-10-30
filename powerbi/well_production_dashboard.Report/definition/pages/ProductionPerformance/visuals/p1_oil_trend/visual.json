@@ -144,6 +144,19 @@
                         }
                     }
                 }
+            ],
+            "lineStyles": [
+                {
+                    "properties": {
+                        "lineChartType": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'linear'"
+                                }
+                            }
+                        }
+                    }
+                }
             ]
         },
         "visualContainerObjects": {

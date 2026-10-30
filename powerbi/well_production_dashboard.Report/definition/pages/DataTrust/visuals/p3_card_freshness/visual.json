@@ -2,10 +2,10 @@
     "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
     "name": "p3_card_freshness",
     "position": {
-        "x": 1061,
+        "x": 896,
         "y": 72,
         "z": 8,
-        "width": 203,
+        "width": 368,
         "height": 92,
         "tabOrder": 8
     },
@@ -43,11 +43,47 @@
                             },
                             "queryRef": "dq_run_log.Latest Production Month",
                             "nativeQueryRef": "Latest Production Month",
-                            "displayName": "Latest production month"
+                            "displayName": "Latest month"
                         }
                     ]
                 }
             }
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Freshness'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
         }
     }
 }

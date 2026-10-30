@@ -3,11 +3,11 @@
     "name": "p2_idle_note",
     "position": {
         "x": 16,
-        "y": 194,
-        "z": 5,
-        "width": 250,
-        "height": 108,
-        "tabOrder": 5
+        "y": 232,
+        "z": 6,
+        "width": 300,
+        "height": 70,
+        "tabOrder": 6
     },
     "visual": {
         "visualType": "textbox",
@@ -19,7 +19,7 @@
                             {
                                 "textRuns": [
                                     {
-                                        "value": "Recently idle: produced oil, gas or condensate before, none in the last 3 months loaded. Early warning only, not the AER inactive well definition (12 months). A well can also disappear after a transfer: see the last column of the list.",
+                                        "value": "Produced oil, gas or condensate before, none in the last 3 months loaded. Early warning only, not the AER inactive well definition (12 months). A well can also disappear after a transfer.",
                                         "textStyle": {
                                             "fontSize": "9pt",
                                             "color": "#605E5C"

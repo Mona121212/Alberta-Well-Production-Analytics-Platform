@@ -5,7 +5,7 @@
         "x": 16,
         "y": 72,
         "z": 3,
-        "width": 200,
+        "width": 168,
         "height": 92,
         "tabOrder": 3
     },
@@ -28,7 +28,7 @@
                             },
                             "queryRef": "dq_run_log.Recon Status Text",
                             "nativeQueryRef": "Recon Status Text",
-                            "displayName": "Reconciliation tests passed"
+                            "displayName": "Recon tests passed"
                         }
                     ]
                 }

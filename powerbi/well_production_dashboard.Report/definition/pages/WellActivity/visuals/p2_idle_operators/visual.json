@@ -4,10 +4,10 @@
     "position": {
         "x": 16,
         "y": 314,
-        "z": 7,
+        "z": 9,
         "width": 420,
         "height": 398,
-        "tabOrder": 7
+        "tabOrder": 9
     },
     "visual": {
         "visualType": "clusteredBarChart",
@@ -39,13 +39,13 @@
                                 "Measure": {
                                     "Expression": {
                                         "SourceRef": {
-                                            "Entity": "gold_fact_production"
+                                            "Entity": "gold_idle_wells"
                                         }
                                     },
                                     "Property": "Recently Idle Wells (3+ months)"
                                 }
                             },
-                            "queryRef": "gold_fact_production.Recently Idle Wells (3+ months)",
+                            "queryRef": "gold_idle_wells.Recently Idle Wells (3+ months)",
                             "nativeQueryRef": "Recently Idle Wells (3+ months)",
                             "displayName": "Recently idle wells"
                         }
@@ -59,7 +59,7 @@
                             "Measure": {
                                 "Expression": {
                                     "SourceRef": {
-                                        "Entity": "gold_fact_production"
+                                        "Entity": "gold_idle_wells"
                                     }
                                 },
                                 "Property": "Recently Idle Wells (3+ months)"
@@ -87,7 +87,7 @@
                         }
                     },
                     "selector": {
-                        "metadata": "gold_fact_production.Recently Idle Wells (3+ months)"
+                        "metadata": "gold_idle_wells.Recently Idle Wells (3+ months)"
                     }
                 }
             ],
@@ -133,7 +133,7 @@
                         "text": {
                             "expr": {
                                 "Literal": {
-                                    "Value": "'Top 10 operators by recently idle wells (count)'"
+                                    "Value": "'Top 10 operators by recently idle wells (count, last operator)'"
                                 }
                             }
                         }
@@ -175,7 +175,7 @@
                                             },
                                             {
                                                 "Name": "y",
-                                                "Entity": "gold_fact_production",
+                                                "Entity": "gold_idle_wells",
                                                 "Type": 0
                                             }
                                         ],

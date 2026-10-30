@@ -32,18 +32,18 @@
                         },
                         {
                             "field": {
-                                "Measure": {
+                                "Column": {
                                     "Expression": {
                                         "SourceRef": {
-                                            "Entity": "gold_fact_production"
+                                            "Entity": "gold_dim_well"
                                         }
                                     },
-                                    "Property": "Last Operator"
+                                    "Property": "well_name"
                                 }
                             },
-                            "queryRef": "gold_fact_production.Last Operator",
-                            "nativeQueryRef": "Last Operator",
-                            "displayName": "Operator"
+                            "queryRef": "gold_dim_well.well_name",
+                            "nativeQueryRef": "well_name",
+                            "displayName": "Well name"
                         },
                         {
                             "field": {

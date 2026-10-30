@@ -5,8 +5,8 @@
         "x": 16,
         "y": 72,
         "z": 4,
-        "width": 250,
-        "height": 110,
+        "width": 300,
+        "height": 80,
         "tabOrder": 4
     },
     "visual": {
@@ -20,34 +20,55 @@
                                 "Measure": {
                                     "Expression": {
                                         "SourceRef": {
-                                            "Entity": "gold_fact_production"
+                                            "Entity": "gold_idle_wells"
                                         }
                                     },
                                     "Property": "Recently Idle Wells (3+ months)"
                                 }
                             },
-                            "queryRef": "gold_fact_production.Recently Idle Wells (3+ months)",
+                            "queryRef": "gold_idle_wells.Recently Idle Wells (3+ months)",
                             "nativeQueryRef": "Recently Idle Wells (3+ months)",
-                            "displayName": "Recently idle wells (3+ months)"
-                        },
-                        {
-                            "field": {
-                                "Measure": {
-                                    "Expression": {
-                                        "SourceRef": {
-                                            "Entity": "gold_fact_production"
-                                        }
-                                    },
-                                    "Property": "Idle Since"
-                                }
-                            },
-                            "queryRef": "gold_fact_production.Idle Since",
-                            "nativeQueryRef": "Idle Since",
-                            "displayName": "No production since"
+                            "displayName": "Wells"
                         }
                     ]
                 }
             }
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Recently idle wells (3+ months)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
         }
     }
 }

@@ -1,16 +1,16 @@
 {
     "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
-    "name": "p2_coverage",
+    "name": "p2_wells_added_dropped",
     "position": {
-        "x": 282,
+        "x": 800,
         "y": 72,
-        "z": 6,
-        "width": 982,
+        "z": 8,
+        "width": 464,
         "height": 230,
-        "tabOrder": 6
+        "tabOrder": 8
     },
     "visual": {
-        "visualType": "lineChart",
+        "visualType": "clusteredColumnChart",
         "query": {
             "queryState": {
                 "Category": {
@@ -63,25 +63,6 @@
                             "queryRef": "dq_month_coverage.Wells Dropped",
                             "nativeQueryRef": "Wells Dropped",
                             "displayName": "Wells dropped"
-                        }
-                    ]
-                },
-                "Y2": {
-                    "projections": [
-                        {
-                            "field": {
-                                "Measure": {
-                                    "Expression": {
-                                        "SourceRef": {
-                                            "Entity": "dq_month_coverage"
-                                        }
-                                    },
-                                    "Property": "Wells Producing"
-                                }
-                            },
-                            "queryRef": "dq_month_coverage.Wells Producing",
-                            "nativeQueryRef": "Wells Producing",
-                            "displayName": "Wells producing"
                         }
                     ]
                 }
@@ -142,24 +123,6 @@
                     "selector": {
                         "metadata": "dq_month_coverage.Wells Dropped"
                     }
-                },
-                {
-                    "properties": {
-                        "fill": {
-                            "solid": {
-                                "color": {
-                                    "expr": {
-                                        "Literal": {
-                                            "Value": "'#2E6F9E'"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "selector": {
-                        "metadata": "dq_month_coverage.Wells Producing"
-                    }
                 }
             ],
             "legend": [
@@ -211,7 +174,7 @@
                         "text": {
                             "expr": {
                                 "Literal": {
-                                    "Value": "'Wells per month, all Alberta (not filtered by operator; producing wells on the right axis)'"
+                                    "Value": "'Wells added and dropped per month, all Alberta (count)'"
                                 }
                             }
                         }

@@ -15,5 +15,16 @@
     "tableAccent": "#2E6F9E",
     "good": "#2E7D32",
     "bad": "#C62828",
-    "neutral": "#F9A825"
+    "neutral": "#F9A825",
+    "visualStyles": {
+        "lineChart": {
+            "*": {
+                "lineStyles": [
+                    {
+                        "lineChartType": "linear"
+                    }
+                ]
+            }
+        }
+    }
 }

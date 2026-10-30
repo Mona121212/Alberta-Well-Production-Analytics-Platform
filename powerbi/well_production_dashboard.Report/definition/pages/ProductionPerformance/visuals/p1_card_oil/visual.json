@@ -28,7 +28,7 @@
                             },
                             "queryRef": "gold_fact_production.Latest Month Oil",
                             "nativeQueryRef": "Latest Month Oil",
-                            "displayName": "Oil, latest month (m3)"
+                            "displayName": "Volume (m3)"
                         },
                         {
                             "field": {
@@ -43,11 +43,47 @@
                             },
                             "queryRef": "gold_fact_production.Oil MoM %",
                             "nativeQueryRef": "Oil MoM %",
-                            "displayName": "Oil MoM %"
+                            "displayName": "MoM %"
                         }
                     ]
                 }
             }
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Oil, latest month'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
         }
     }
 }
