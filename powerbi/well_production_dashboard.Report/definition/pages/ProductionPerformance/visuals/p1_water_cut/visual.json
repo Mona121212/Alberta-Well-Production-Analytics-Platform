@@ -1,0 +1,153 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p1_water_cut",
+    "position": {
+        "x": 16,
+        "y": 450,
+        "z": 12,
+        "width": 408,
+        "height": 262,
+        "tabOrder": 12
+    },
+    "visual": {
+        "visualType": "lineChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_dim_date"
+                                        }
+                                    },
+                                    "Property": "year_month"
+                                }
+                            },
+                            "queryRef": "gold_dim_date.year_month",
+                            "nativeQueryRef": "year_month",
+                            "active": true
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Water Cut %"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Water Cut %",
+                            "nativeQueryRef": "Water Cut %",
+                            "displayName": "Water cut % (oil wells)"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "gold_dim_date"
+                                    }
+                                },
+                                "Property": "year_month"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "dataPoint": [
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#4A90A4'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_fact_production.Water Cut %"
+                    }
+                }
+            ],
+            "legend": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "position": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Top'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Water cut of oil wells (% of liquids, m3)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

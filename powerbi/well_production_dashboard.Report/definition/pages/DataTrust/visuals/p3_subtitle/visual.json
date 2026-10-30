@@ -1,0 +1,36 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p3_subtitle",
+    "position": {
+        "x": 16,
+        "y": 42,
+        "z": 2,
+        "width": 640,
+        "height": 24,
+        "tabOrder": 2
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Can this month's data be published?",
+                                        "textStyle": {
+                                            "fontSize": "11pt",
+                                            "color": "#605E5C"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+}

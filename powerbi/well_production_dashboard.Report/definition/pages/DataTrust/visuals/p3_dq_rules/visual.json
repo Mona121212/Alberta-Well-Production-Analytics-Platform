@@ -1,0 +1,183 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p3_dq_rules",
+    "position": {
+        "x": 16,
+        "y": 338,
+        "z": 11,
+        "width": 400,
+        "height": 374,
+        "tabOrder": 11
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_results"
+                                        }
+                                    },
+                                    "Property": "rule_name"
+                                }
+                            },
+                            "queryRef": "dq_results.rule_name",
+                            "nativeQueryRef": "rule_name",
+                            "displayName": "Rule"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_results"
+                                        }
+                                    },
+                                    "Property": "severity"
+                                }
+                            },
+                            "queryRef": "dq_results.severity",
+                            "nativeQueryRef": "severity",
+                            "displayName": "Severity"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_run_log"
+                                        }
+                                    },
+                                    "Property": "Rows Flagged Latest"
+                                }
+                            },
+                            "queryRef": "dq_run_log.Rows Flagged Latest",
+                            "nativeQueryRef": "Rows Flagged Latest",
+                            "displayName": "Rows flagged"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_results"
+                                        }
+                                    },
+                                    "Property": "Severity Order"
+                                }
+                            },
+                            "queryRef": "dq_results.Severity Order",
+                            "nativeQueryRef": "Severity Order",
+                            "displayName": "Order"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "dq_results"
+                                    }
+                                },
+                                "Property": "Severity Order"
+                            }
+                        },
+                        "direction": "Ascending"
+                    },
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "dq_run_log"
+                                    }
+                                },
+                                "Property": "Rows Flagged Latest"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ]
+            }
+        },
+        "objects": {
+            "values": [
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "dq_results"
+                                                }
+                                            },
+                                            "Property": "Severity Color"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "dq_results.severity"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'DQ rules, latest run (rows)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

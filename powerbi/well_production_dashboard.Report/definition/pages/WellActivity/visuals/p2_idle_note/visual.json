@@ -1,0 +1,36 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p2_idle_note",
+    "position": {
+        "x": 16,
+        "y": 194,
+        "z": 5,
+        "width": 250,
+        "height": 108,
+        "tabOrder": 5
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Recently idle: produced oil, gas or condensate before, none in the last 3 months loaded. Early warning only, not the AER inactive well definition (12 months). A well can also disappear after a transfer: see the last column of the list.",
+                                        "textStyle": {
+                                            "fontSize": "9pt",
+                                            "color": "#605E5C"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+}

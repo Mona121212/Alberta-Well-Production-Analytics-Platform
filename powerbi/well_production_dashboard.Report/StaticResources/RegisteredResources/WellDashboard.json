@@ -1,0 +1,19 @@
+{
+    "name": "WellDashboard",
+    "dataColors": [
+        "#2E6F9E",
+        "#C2762B",
+        "#6B8E23",
+        "#4A90A4",
+        "#2E7D32",
+        "#C62828",
+        "#8A8A8A",
+        "#9DBCD4"
+    ],
+    "foreground": "#252423",
+    "background": "#FFFFFF",
+    "tableAccent": "#2E6F9E",
+    "good": "#2E7D32",
+    "bad": "#C62828",
+    "neutral": "#F9A825"
+}

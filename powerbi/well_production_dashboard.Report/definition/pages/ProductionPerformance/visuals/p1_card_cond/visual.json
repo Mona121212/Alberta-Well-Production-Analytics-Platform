@@ -1,0 +1,53 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p1_card_cond",
+    "position": {
+        "x": 856,
+        "y": 72,
+        "z": 8,
+        "width": 408,
+        "height": 92,
+        "tabOrder": 8
+    },
+    "visual": {
+        "visualType": "cardVisual",
+        "query": {
+            "queryState": {
+                "Data": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Latest Month Condensate"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Latest Month Condensate",
+                            "nativeQueryRef": "Latest Month Condensate",
+                            "displayName": "Condensate, latest month (m3)"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Condensate MoM %"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Condensate MoM %",
+                            "nativeQueryRef": "Condensate MoM %",
+                            "displayName": "Condensate MoM %"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

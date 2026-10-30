@@ -1,0 +1,190 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p3_run_history",
+    "position": {
+        "x": 644,
+        "y": 176,
+        "z": 10,
+        "width": 620,
+        "height": 150,
+        "tabOrder": 10
+    },
+    "visual": {
+        "visualType": "lineChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_run_log"
+                                        }
+                                    },
+                                    "Property": "run_ts"
+                                }
+                            },
+                            "queryRef": "dq_run_log.run_ts",
+                            "nativeQueryRef": "run_ts",
+                            "active": true
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_run_log"
+                                        }
+                                    },
+                                    "Property": "Run Silver Rows"
+                                }
+                            },
+                            "queryRef": "dq_run_log.Run Silver Rows",
+                            "nativeQueryRef": "Run Silver Rows",
+                            "displayName": "Silver rows"
+                        }
+                    ]
+                },
+                "Y2": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_run_log"
+                                        }
+                                    },
+                                    "Property": "Run Recon Passed"
+                                }
+                            },
+                            "queryRef": "dq_run_log.Run Recon Passed",
+                            "nativeQueryRef": "Run Recon Passed",
+                            "displayName": "Reconciliation tests passed"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "dq_run_log"
+                                    }
+                                },
+                                "Property": "run_ts"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "dataPoint": [
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#2E6F9E'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "dq_run_log.Run Silver Rows"
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#2E7D32'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "dq_run_log.Run Recon Passed"
+                    }
+                }
+            ],
+            "legend": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "position": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Top'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Run history: Silver rows and reconciliation tests passed (right axis)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

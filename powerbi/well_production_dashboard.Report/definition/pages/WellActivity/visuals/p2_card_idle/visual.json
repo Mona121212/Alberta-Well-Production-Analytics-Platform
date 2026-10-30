@@ -1,0 +1,53 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p2_card_idle",
+    "position": {
+        "x": 16,
+        "y": 72,
+        "z": 4,
+        "width": 250,
+        "height": 110,
+        "tabOrder": 4
+    },
+    "visual": {
+        "visualType": "cardVisual",
+        "query": {
+            "queryState": {
+                "Data": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Recently Idle Wells (3+ months)"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Recently Idle Wells (3+ months)",
+                            "nativeQueryRef": "Recently Idle Wells (3+ months)",
+                            "displayName": "Recently idle wells (3+ months)"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Idle Since"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Idle Since",
+                            "nativeQueryRef": "Idle Since",
+                            "displayName": "No production since"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

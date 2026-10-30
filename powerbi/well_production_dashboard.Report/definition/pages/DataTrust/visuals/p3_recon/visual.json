@@ -1,0 +1,205 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p3_recon",
+    "position": {
+        "x": 428,
+        "y": 338,
+        "z": 12,
+        "width": 836,
+        "height": 150,
+        "tabOrder": 12
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "reconciliation_results"
+                                        }
+                                    },
+                                    "Property": "test_name"
+                                }
+                            },
+                            "queryRef": "reconciliation_results.test_name",
+                            "nativeQueryRef": "test_name",
+                            "displayName": "Reconciliation test"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "reconciliation_results"
+                                        }
+                                    },
+                                    "Property": "expected"
+                                }
+                            },
+                            "queryRef": "reconciliation_results.expected",
+                            "nativeQueryRef": "expected",
+                            "displayName": "Expected"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "reconciliation_results"
+                                        }
+                                    },
+                                    "Property": "actual"
+                                }
+                            },
+                            "queryRef": "reconciliation_results.actual",
+                            "nativeQueryRef": "actual",
+                            "displayName": "Actual"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "reconciliation_results"
+                                        }
+                                    },
+                                    "Property": "status"
+                                }
+                            },
+                            "queryRef": "reconciliation_results.status",
+                            "nativeQueryRef": "status",
+                            "displayName": "Status"
+                        }
+                    ]
+                }
+            }
+        },
+        "objects": {
+            "values": [
+                {
+                    "properties": {
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "dq_run_log"
+                                                }
+                                            },
+                                            "Property": "Recon Status Color"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "reconciliation_results.status"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Reconciliation tests, latest run (rows or volume)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "p3_recon_latest",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "dq_run_log"
+                            }
+                        },
+                        "Property": "Is Latest Recon Run"
+                    }
+                },
+                "type": "Advanced",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "a",
+                            "Entity": "dq_run_log",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Comparison": {
+                                    "ComparisonKind": 0,
+                                    "Left": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Source": "a"
+                                                }
+                                            },
+                                            "Property": "Is Latest Recon Run"
+                                        }
+                                    },
+                                    "Right": {
+                                        "Literal": {
+                                            "Value": "1L"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

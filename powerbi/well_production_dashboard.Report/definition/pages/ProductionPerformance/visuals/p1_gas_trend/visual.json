@@ -1,0 +1,186 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p1_gas_trend",
+    "position": {
+        "x": 436,
+        "y": 176,
+        "z": 10,
+        "width": 408,
+        "height": 262,
+        "tabOrder": 10
+    },
+    "visual": {
+        "visualType": "lineChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_dim_date"
+                                        }
+                                    },
+                                    "Property": "year_month"
+                                }
+                            },
+                            "queryRef": "gold_dim_date.year_month",
+                            "nativeQueryRef": "year_month",
+                            "active": true
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Total Gas"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Total Gas",
+                            "nativeQueryRef": "Total Gas",
+                            "displayName": "Gas (e3m3)"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Gas Rolling 3M"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Gas Rolling 3M",
+                            "nativeQueryRef": "Gas Rolling 3M",
+                            "displayName": "Gas rolling 3M (e3m3)"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "gold_dim_date"
+                                    }
+                                },
+                                "Property": "year_month"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "dataPoint": [
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#C2762B'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_fact_production.Total Gas"
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#E3B98F'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_fact_production.Gas Rolling 3M"
+                    }
+                }
+            ],
+            "legend": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "position": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Top'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Gas by month and rolling 3 months (e3m3)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,219 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p2_idle_list",
+    "position": {
+        "x": 452,
+        "y": 314,
+        "z": 8,
+        "width": 812,
+        "height": 398,
+        "tabOrder": 8
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_dim_well"
+                                        }
+                                    },
+                                    "Property": "well_key"
+                                }
+                            },
+                            "queryRef": "gold_dim_well.well_key",
+                            "nativeQueryRef": "well_key",
+                            "displayName": "Well"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Last Operator"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Last Operator",
+                            "nativeQueryRef": "Last Operator",
+                            "displayName": "Last operator"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Last Production Month"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Last Production Month",
+                            "nativeQueryRef": "Last Production Month",
+                            "displayName": "Last production month"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Pre-Idle Avg Liquids (m3)"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Pre-Idle Avg Liquids (m3)",
+                            "nativeQueryRef": "Pre-Idle Avg Liquids (m3)",
+                            "displayName": "Pre-idle avg liquids (m3/month)"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Pre-Idle Avg Gas (e3m3)"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Pre-Idle Avg Gas (e3m3)",
+                            "nativeQueryRef": "Pre-Idle Avg Gas (e3m3)",
+                            "displayName": "Pre-idle avg gas (e3m3/month)"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Reported by Another Operator Later"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Reported by Another Operator Later",
+                            "nativeQueryRef": "Reported by Another Operator Later",
+                            "displayName": "Reported by another operator later"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "gold_fact_production"
+                                    }
+                                },
+                                "Property": "Pre-Idle Avg Liquids (m3)"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ]
+            }
+        },
+        "objects": {},
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Recently idle wells, by pre-idle liquids (oil + condensate m3, gas e3m3)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "p2_idle_only",
+                "field": {
+                    "Measure": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "gold_fact_production"
+                            }
+                        },
+                        "Property": "Recently Idle Wells (3+ months)"
+                    }
+                },
+                "type": "Advanced",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "a",
+                            "Entity": "gold_fact_production",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Comparison": {
+                                    "ComparisonKind": 0,
+                                    "Left": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Source": "a"
+                                                }
+                                            },
+                                            "Property": "Recently Idle Wells (3+ months)"
+                                        }
+                                    },
+                                    "Right": {
+                                        "Literal": {
+                                            "Value": "1L"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

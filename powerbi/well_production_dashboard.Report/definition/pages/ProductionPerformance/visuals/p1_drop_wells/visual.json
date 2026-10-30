@@ -1,0 +1,262 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p1_drop_wells",
+    "position": {
+        "x": 856,
+        "y": 450,
+        "z": 14,
+        "width": 408,
+        "height": 262,
+        "tabOrder": 14
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_dim_well"
+                                        }
+                                    },
+                                    "Property": "well_key"
+                                }
+                            },
+                            "queryRef": "gold_dim_well.well_key",
+                            "nativeQueryRef": "well_key",
+                            "displayName": "Well"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Last Operator"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Last Operator",
+                            "nativeQueryRef": "Last Operator",
+                            "displayName": "Operator"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Last 3M Volume"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Last 3M Volume",
+                            "nativeQueryRef": "Last 3M Volume",
+                            "displayName": "Last 3M"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Prior 3M Volume"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Prior 3M Volume",
+                            "nativeQueryRef": "Prior 3M Volume",
+                            "displayName": "Prior 3M"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Last 3M vs Prior 3M Change"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Last 3M vs Prior 3M Change",
+                            "nativeQueryRef": "Last 3M vs Prior 3M Change",
+                            "displayName": "Change"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "gold_fact_production"
+                                    }
+                                },
+                                "Property": "Last 3M vs Prior 3M Change"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ]
+            }
+        },
+        "objects": {},
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Well Drop Title"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "p1_drop_wells_top10",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "gold_dim_well"
+                            }
+                        },
+                        "Property": "well_key"
+                    }
+                },
+                "type": "TopN",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "subquery",
+                            "Type": 2,
+                            "Expression": {
+                                "Subquery": {
+                                    "Query": {
+                                        "Version": 2,
+                                        "From": [
+                                            {
+                                                "Name": "x",
+                                                "Entity": "gold_dim_well",
+                                                "Type": 0
+                                            },
+                                            {
+                                                "Name": "y",
+                                                "Entity": "gold_fact_production",
+                                                "Type": 0
+                                            }
+                                        ],
+                                        "Select": [
+                                            {
+                                                "Column": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Source": "x"
+                                                        }
+                                                    },
+                                                    "Property": "well_key"
+                                                },
+                                                "Name": "field"
+                                            }
+                                        ],
+                                        "OrderBy": [
+                                            {
+                                                "Direction": 2,
+                                                "Expression": {
+                                                    "Measure": {
+                                                        "Expression": {
+                                                            "SourceRef": {
+                                                                "Source": "y"
+                                                            }
+                                                        },
+                                                        "Property": "Volume Drop Sort"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Top": 10
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "Name": "a",
+                            "Entity": "gold_dim_well",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "In": {
+                                    "Expressions": [
+                                        {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Source": "a"
+                                                    }
+                                                },
+                                                "Property": "well_key"
+                                            }
+                                        }
+                                    ],
+                                    "Table": {
+                                        "SourceRef": {
+                                            "Source": "subquery"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

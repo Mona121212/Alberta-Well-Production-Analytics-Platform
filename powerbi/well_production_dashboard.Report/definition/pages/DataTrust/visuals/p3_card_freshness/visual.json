@@ -1,0 +1,53 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p3_card_freshness",
+    "position": {
+        "x": 1061,
+        "y": 72,
+        "z": 8,
+        "width": 203,
+        "height": 92,
+        "tabOrder": 8
+    },
+    "visual": {
+        "visualType": "cardVisual",
+        "query": {
+            "queryState": {
+                "Data": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_run_log"
+                                        }
+                                    },
+                                    "Property": "Last Successful Run"
+                                }
+                            },
+                            "queryRef": "dq_run_log.Last Successful Run",
+                            "nativeQueryRef": "Last Successful Run",
+                            "displayName": "Last successful run"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_run_log"
+                                        }
+                                    },
+                                    "Property": "Latest Production Month"
+                                }
+                            },
+                            "queryRef": "dq_run_log.Latest Production Month",
+                            "nativeQueryRef": "Latest Production Month",
+                            "displayName": "Latest production month"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

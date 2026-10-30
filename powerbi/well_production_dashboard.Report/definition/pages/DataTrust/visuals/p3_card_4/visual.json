@@ -1,0 +1,38 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p3_card_4",
+    "position": {
+        "x": 852,
+        "y": 72,
+        "z": 7,
+        "width": 200,
+        "height": 92,
+        "tabOrder": 7
+    },
+    "visual": {
+        "visualType": "cardVisual",
+        "query": {
+            "queryState": {
+                "Data": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_run_log"
+                                        }
+                                    },
+                                    "Property": "Open Defects"
+                                }
+                            },
+                            "queryRef": "dq_run_log.Open Defects",
+                            "nativeQueryRef": "Open Defects",
+                            "displayName": "Open defects"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

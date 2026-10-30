@@ -1,0 +1,223 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p2_coverage",
+    "position": {
+        "x": 282,
+        "y": 72,
+        "z": 6,
+        "width": 982,
+        "height": 230,
+        "tabOrder": 6
+    },
+    "visual": {
+        "visualType": "lineChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_month_coverage"
+                                        }
+                                    },
+                                    "Property": "production_month"
+                                }
+                            },
+                            "queryRef": "dq_month_coverage.production_month",
+                            "nativeQueryRef": "production_month",
+                            "active": true
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_month_coverage"
+                                        }
+                                    },
+                                    "Property": "Wells Added"
+                                }
+                            },
+                            "queryRef": "dq_month_coverage.Wells Added",
+                            "nativeQueryRef": "Wells Added",
+                            "displayName": "Wells added"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_month_coverage"
+                                        }
+                                    },
+                                    "Property": "Wells Dropped"
+                                }
+                            },
+                            "queryRef": "dq_month_coverage.Wells Dropped",
+                            "nativeQueryRef": "Wells Dropped",
+                            "displayName": "Wells dropped"
+                        }
+                    ]
+                },
+                "Y2": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dq_month_coverage"
+                                        }
+                                    },
+                                    "Property": "Wells Producing"
+                                }
+                            },
+                            "queryRef": "dq_month_coverage.Wells Producing",
+                            "nativeQueryRef": "Wells Producing",
+                            "displayName": "Wells producing"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "dq_month_coverage"
+                                    }
+                                },
+                                "Property": "production_month"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "dataPoint": [
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#2E7D32'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "dq_month_coverage.Wells Added"
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#C62828'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "dq_month_coverage.Wells Dropped"
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#2E6F9E'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "dq_month_coverage.Wells Producing"
+                    }
+                }
+            ],
+            "legend": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "position": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Top'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Wells per month, all Alberta (not filtered by operator; producing wells on the right axis)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

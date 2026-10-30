@@ -1,0 +1,53 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p1_card_gas",
+    "position": {
+        "x": 436,
+        "y": 72,
+        "z": 7,
+        "width": 408,
+        "height": 92,
+        "tabOrder": 7
+    },
+    "visual": {
+        "visualType": "cardVisual",
+        "query": {
+            "queryState": {
+                "Data": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Latest Month Gas"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Latest Month Gas",
+                            "nativeQueryRef": "Latest Month Gas",
+                            "displayName": "Gas, latest month (e3m3)"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Gas MoM %"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Gas MoM %",
+                            "nativeQueryRef": "Gas MoM %",
+                            "displayName": "Gas MoM %"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

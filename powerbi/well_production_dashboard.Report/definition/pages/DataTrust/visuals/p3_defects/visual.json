@@ -1,0 +1,152 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p3_defects",
+    "position": {
+        "x": 428,
+        "y": 500,
+        "z": 13,
+        "width": 836,
+        "height": 212,
+        "tabOrder": 13
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "defect_log"
+                                        }
+                                    },
+                                    "Property": "defect_code"
+                                }
+                            },
+                            "queryRef": "defect_log.defect_code",
+                            "nativeQueryRef": "defect_code",
+                            "displayName": "ID"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "defect_log"
+                                        }
+                                    },
+                                    "Property": "severity"
+                                }
+                            },
+                            "queryRef": "defect_log.severity",
+                            "nativeQueryRef": "severity",
+                            "displayName": "Severity"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "defect_log"
+                                        }
+                                    },
+                                    "Property": "status"
+                                }
+                            },
+                            "queryRef": "defect_log.status",
+                            "nativeQueryRef": "status",
+                            "displayName": "Status"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "defect_log"
+                                        }
+                                    },
+                                    "Property": "area"
+                                }
+                            },
+                            "queryRef": "defect_log.area",
+                            "nativeQueryRef": "area",
+                            "displayName": "Area"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "defect_log"
+                                        }
+                                    },
+                                    "Property": "description"
+                                }
+                            },
+                            "queryRef": "defect_log.description",
+                            "nativeQueryRef": "description",
+                            "displayName": "Issue"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "defect_log"
+                                    }
+                                },
+                                "Property": "defect_code"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ]
+            }
+        },
+        "objects": {},
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Defect log (config/defect_log.yaml)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}
