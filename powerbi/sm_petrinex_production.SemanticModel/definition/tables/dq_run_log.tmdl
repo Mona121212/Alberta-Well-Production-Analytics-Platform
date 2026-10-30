@@ -138,8 +138,10 @@ table dq_run_log
 		formatString: 0
 		displayFolder: Data Quality\Run History
 
-	/// 1 for reconciliation_results rows of [Latest Run ID]; visual filter for the reconciliation table.
-	measure 'Is Latest Recon Run' = IF(MAX(reconciliation_results[run_id]) = [Latest Run ID], 1)
+	/// 1 when the reconciliation_results rows in the filter include a row of [Latest Run ID] (the run with the latest run_ts); visual filter for the reconciliation table. run_id is random, so it is matched, never compared with MAX.
+	measure 'Is Latest Recon Run' =
+			VAR r = [Latest Run ID]
+			RETURN IF(NOT ISEMPTY(FILTER(reconciliation_results, reconciliation_results[run_id] = r)), 1)
 		formatString: 0
 		isHidden
 		displayFolder: Formatting
