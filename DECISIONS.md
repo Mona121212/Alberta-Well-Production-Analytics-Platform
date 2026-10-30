@@ -587,3 +587,52 @@ Verified in Fabric on 2026-10-28 (run `024b8cef`, `scripts/verify/check_fact_par
 - Direct Lake: the semantic model refresh completed (7 s), and a DAX query of gas volume, producing wells and
   reconciliation status by month returned the same values before and after (largest gas difference 3e-8, from
   floating point summation order). 12 files is far below the Direct Lake file limit per table.
+
+---
+
+## DEC-024 One source for the defect log: config/defect_log.yaml
+
+**Date:** 2026-10-30
+
+**Context.** The defect log lived in two places that had drifted apart: `docs/defect_log.md` (D-001 to D-006, with
+figures from two months) and a hard-coded list in `load_defect_log` (5 entries, other numbering, two defects that
+were not in the Markdown and three Markdown defects that were not in the table). The report reads the Lakehouse
+table, so the report and the documentation showed different defect lists. CLAUDE.md also asks for config, not
+hard-coded lists.
+
+**Decision.** `config/defect_log.yaml` is the only place a defect is written. Each entry has `id`, `issue`, `impact`,
+`handling`, `status`, `area`, `severity`, `found_date` and `metrics` (name, value, scope). The two lists were merged:
+overlapping entries were combined under the Markdown IDs (the GIS reconciliation config refers to D-001 and D-002),
+and the two notebook-only defects became D-007 and D-008.
+- `scripts/build_defect_log.py` builds the table in `docs/defect_log.md`. The detail paragraphs stay hand-written;
+  `--check` (run by `tests/test_defect_log.py`) fails if the table is out of date or a yaml metric is missing from
+  its paragraph. It does not require every number in a paragraph to be a metric, so dates and months do not cause
+  false failures.
+- `load_defect_log` reads `Files/config/defect_log.yaml` (uploaded with `fab cp`, like `sources.json`), checks ids
+  (not null, unique), required fields and accepted values, then overwrites `defect_log` and checks that the table
+  holds exactly the yaml ids. A failed check raises before the write: a broken config file is fixed at the source,
+  so there is no quarantine table for it.
+- `defect_log` keeps its six columns (`defect_id`, `found_date`, `area`, `severity`, `status`, `description`) with the
+  same names and types, so the semantic model and the GIS `qa_defect_log.csv` need no change; `defect_code`,
+  `impact`, `handling`, `resolution` and `key_metrics` are added after them.
+- `status_map`: Fixed -> Closed, Mitigated -> Mitigated, Open -> Open. The measure `Open Defects` counts
+  `status <> "Closed"`, so it now counts Mitigated defects. This is intended: a mitigated defect is handled in the
+  pipeline but still exists in the source data (for example D-002, wells missing from ST37), and the report should
+  not show it as closed. `resolution` keeps the yaml status.
+
+**Alternatives.**
+- Markdown as the source, parsed by the notebook: parsing a Markdown table is fragile and the numbers would still be
+  free text.
+- The Lakehouse table as the source: it cannot be reviewed or diffed in Git, and the documentation would need an
+  export step from Fabric.
+- Generate the whole Markdown file, details included: the details explain causes and checks in prose; templating
+  every sentence makes them harder to write and read.
+- Map Mitigated to Closed: keeps the card at its old value, but hides defects that still affect the data.
+
+**Consequences.** A defect change is one yaml edit, then `build_defect_log.py`, `fab cp` and a `load_defect_log`
+run; the test catches a Markdown that was not rebuilt, but not a yaml that was not uploaded to Fabric. The report card
+`Open Defects` rises from 0 to the number of Mitigated and Open defects. The semantic model only exposes the six
+original columns; the new columns are in the table for SQL and can be added to the model later.
+Verified in Fabric on 2026-10-30: `load_defect_log` wrote 10 rows (D-001 to D-010, the same ids as the yaml), the
+semantic model refresh completed, and a DAX query of the six columns used by the report table returned all 10
+rows; `Open Defects` is 5 (3 Mitigated, 2 Open), against 0 before.

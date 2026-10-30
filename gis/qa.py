@@ -1,7 +1,7 @@
 """Run the config-driven GIS QA rules on the standardized GeoPackage.
 
 Outputs in gis/output/<mode>/qa/:
-- qa_defect_log.csv            one row per rule, same columns as the Lakehouse defect_log table
+- qa_defect_log.csv            one row per rule, the six core columns of the Lakehouse defect_log table
 - qa_rule_summary.csv          rows checked / failed and PASS/FAIL/WARN/INFO per rule
 - qa_failures.csv              every failed record (no geometry)
 - qa_examples.md               the first examples_per_rule failures per rule
@@ -156,7 +156,7 @@ def run_rules(ctx, qa_cfg):
 
 
 def to_defect_log(summary, qa_cfg):
-    """Same schema as the Lakehouse defect_log table (notebooks/load_defect_log.ipynb)."""
+    """The six core columns of the Lakehouse defect_log table (notebooks/load_defect_log.ipynb)."""
     labels = qa_cfg["defect_log"]["severity_labels"]
     return pd.DataFrame({
         "defect_id": summary["rule_id"].str.extract(r"(\d+)$")[0].astype(int),
