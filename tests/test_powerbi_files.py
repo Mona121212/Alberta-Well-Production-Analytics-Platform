@@ -39,3 +39,15 @@ def test_connection_string_only_in_pbir_and_without_credentials():
             conn = re.search(r'"connectionString":\s*"([^"]*)"', text).group(1)
             assert "integrated security=ClaimsToken" in conn
             assert not re.search(r"(?i)user id|password", conn)
+
+
+@pytest.mark.parametrize("name, sample", [
+    ("password", "Password=hunter2"),
+    ("secret", '"client_secret": "abc"'),
+    ("storage key", "AccountKey=abc123"),
+    ("token", "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOi"),
+    ("tenant", '"tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47"'),
+    ("email", "owner: someone@example.com"),
+])
+def test_patterns_catch_known_samples(name, sample):
+    assert re.search(FORBIDDEN[name], sample)
