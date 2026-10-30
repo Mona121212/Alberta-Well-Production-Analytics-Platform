@@ -639,6 +639,85 @@ rows; `Open Defects` is 5 (3 Mitigated, 2 Open), against 0 before.
 
 ---
 
+## DEC-025 Semantic model and dashboard as TMDL / PBIR files in the repo
+
+**Date:** 2026-10-30
+
+**Context.** The semantic model `sm_petrinex_production` and its reports existed only in the Fabric workspace, so
+measures, relationships and pages had no history or review, although the project guide said the model was stored as
+TMDL. The workspace is not connected to Fabric Git integration; notebooks are deployed with `fab import`.
+
+**Decision.** `fab export` writes the model as TMDL to `powerbi/sm_petrinex_production.SemanticModel/` and the
+dashboard as PBIR to `powerbi/well_production_dashboard.Report/`. The repo is the source: changes are made in the
+files and deployed with `fab import`, then the item is exported again and the service's own formatting is copied back,
+so a later export compares with the repo without noise. The report keeps the exported `byConnection` reference to the
+model, and the OneLake workspace and lakehouse IDs stay in `expressions.tmdl`; they identify items but grant no
+access, and the same IDs are already in the notebook metadata. `tests/test_powerbi_files.py` fails on passwords,
+secrets, storage keys, tokens, tenant IDs, e-mail addresses or a connection string with credentials, and on any
+measure without a description or display folder. Only the dashboard is in the repo; the old test report
+`rpt_petrinex_production` was deleted from the workspace.
+
+**Alternatives.**
+- Fabric Git integration: syncs automatically, but the workspace is not connected and the notebooks already use
+  manual `fab import`; two deployment paths would be harder to follow.
+- `.pbix` file: one binary, no readable diff of measures or visuals.
+- PBIP with a `byPath` model reference: opens in Power BI Desktop as a local project, but `fab import` of the report
+  needs the `byConnection` reference.
+
+**Consequences.** An edit made in the workspace is lost at the next import unless it is exported first. Measures are
+reviewable line by line in pull requests. Report screenshots are taken by hand, because the tenant setting "Export
+reports as image files" is off (the ExportToFile API returns 403). Verified on 2026-10-30: import, export and diff of
+the model and the report gave no difference.
+
+---
+
+## DEC-026 Dashboard design: two users, one business question per page
+
+**Date:** 2026-10-30
+
+**Context.** The first dashboard showed gas totals and DQ tables without saying who it was for. The data has 12
+months of Petrinex volumes by well and operator, no prices, and units that differ by product (gas e3m3, liquids m3).
+
+**Decision.** `well_production_dashboard` has three 16:9 pages, each with a title and a one-line question, and every
+visual supports one decision. The users are asset and operations teams at Alberta producers (pick a company, compare
+with peers) and the data team (publish the month or not).
+- **Production Performance:** cards for the latest month with MoM, oil and gas trends with rolling 3 months, water
+  cut of oil wells, uptime, and the 10 operators and 10 wells with the largest drop.
+- **Well Activity & Idle Wells:** wells producing per month, wells added and dropped, recently idle wells by operator
+  and a ranked list.
+- **Data Trust:** reconciliation, months loaded, Silver rows, reject rate, open defects, freshness, run history, the
+  open high-severity defects, DQ rules, reconciliation tests and the defect log.
+
+Operators are taken from each row's own month (`OperatorBAID` of that row). A well transferred during the 12 months
+therefore moves its volume from one operator to another; in the drop tables a transfer looks like a drop for the old
+operator and a gain for the new one, and in the idle list the column "Reported by another operator later" separates
+a transfer from a shut-in (4 of 5,628 idle wells). The idle list uses the operator of the last production month.
+
+**Alternatives.**
+- One page for everything: the asset user and the data user ask different questions and would have to skip half the
+  page.
+- Single-month MoM for the drop tables: one month is noisy (late submissions, short months); last 3 months against
+  the 3 before is steadier and still fits 12 months.
+- Barrels of oil equivalent to rank wells and operators in one number: needs a conversion factor and would break the
+  rule that products are not summed; the tables use one product at a time and the idle list shows liquids (m3) and
+  gas (e3m3) separately.
+
+**Consequences.** Deliberately not shown: revenue (no prices), YoY and decline curves (12 months), the AER inactive
+well definition (12 months without activity cannot be tested inside a 12-month window; "recently idle" is an early
+warning only), maps (the GIS track covers them) and forecasts. The drop tables need one product selected and at least
+6 months before the selected month. Every new measure was compared with an independent Spark SQL result (38,396
+values; two differences explained: a month without volume counts as 0 in MoM, and a tie at rank 10).
+
+### Interview notes
+
+| Page | User | Business question | Decision it supports | How the numbers are verified | Limits | Left out on purpose |
+|---|---|---|---|---|---|---|
+| Production Performance | Asset and operations team | Is production rising or falling, and where is the drop? | Which operator or well to look at first; whether a drop is broad or concentrated | Every measure recomputed with Spark SQL by month, for 10 operators and for all operators per product; Gas MoM % identical before and after its rewrite | 12 months; drop tables need one product and 6 prior months; transfers show as drops | Revenue, YoY, decline curves, BOE totals |
+| Well Activity & Idle Wells | Asset team, liability or abandonment planning | Which wells stopped producing, and which could become a liability? | Which idle wells to review first (by pre-idle volume); shut-in or transfer | `gold_idle_wells` row count tested against a Spark SQL recount in every 03 run; all 28,140 values matched an independent Spark result | 3-month window, not the AER 12-month definition; wells idle before 2025-07 are not visible; well counts per month are all Alberta | AER inactive status, closure cost estimates |
+| Data Trust | Data team | Can this month's data be published? | Publish or hold the month; which defect or rule to fix first | Cards read the same `reconciliation_results`, `dq_results` and `dq_run_log` rows the pipeline tests write; defect list comes from `config/defect_log.yaml` | Shows the latest finished run only; a run that stopped on a failed test is not in `dq_run_log` | Row-level drill-through into rejected records |
+
+---
+
 ## DEC-027 Per-well idle logic in the pipeline (gold_idle_wells), not in DAX
 
 **Date:** 2026-10-30

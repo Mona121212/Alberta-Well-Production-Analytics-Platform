@@ -65,7 +65,7 @@ step reads Parquet or the standardized GeoPackage.
 pip install -r requirements.txt
 python -m gis.run --mode sample          # whole track on a Calgary-region sample (about 1-2 minutes)
 python -m gis.run --mode full            # whole province (about 8-10 minutes)
-python -m pytest tests                   # 53 GIS tests with constructed rows + 7 defect log tests
+python -m pytest tests                   # GIS rule tests, defect log and Power BI file checks
 ```
 
 `gis.run` writes `gis/output/<mode>/run_log.txt` and `run_manifest.json` (git commit, per-step status and runtime, row
@@ -91,7 +91,7 @@ Run the notebooks in this order in the `well-production-mvp` workspace (Lakehous
 |---|---|---|
 | 1 | `01_bronze_transform` | `bronze_petrinex_vol`, `bronze_st37_production_string`, `bronze_st37_bh`, `pipeline_run_log` |
 | 2 | `02_silver_transform` | `silver_dim_well`, `silver_petrinex_vol`, `silver_petrinex_vol_flagged`, `dq_results`, `rejected_records`, `dq_rule_test_results`, `dq_month_coverage`, `dq_run_log` |
-| 3 | `03_gold_transform` | `gold_dim_well`, `gold_fact_production`, `gold_dim_date`, `gold_dim_operator`, `reconciliation_results` |
+| 3 | `03_gold_transform` | `gold_dim_well`, `gold_fact_production`, `gold_dim_date`, `gold_dim_operator`, `gold_idle_wells`, `reconciliation_results` |
 
 `03_gold_transform` reads only Lakehouse tables. It takes the reject and in-scope flags and the run ID from
 `silver_petrinex_vol_flagged` (DEC-021) and stops if that table is out of date. `03_sensor_streaming_anomaly_detection`
@@ -111,6 +111,51 @@ if any reconciliation test fails or if the 02 run that wrote the flags did not f
 error, in `dq_rule_test_results` and `reconciliation_results`.
 
 `gold_fact_production` is partitioned by `production_month`, one file per month (DEC-023).
+
+## Power BI dashboard
+
+`well_production_dashboard` reads the semantic model `sm_petrinex_production` (Direct Lake on the Gold and DQ
+tables). Both live in the repo: the model as TMDL in `powerbi/sm_petrinex_production.SemanticModel/`, the report as
+PBIR in `powerbi/well_production_dashboard.Report/` (DEC-025). The dashboard has two users: asset and operations teams
+at Alberta producers, who pick their company and compare it with peers, and the data team, who decides whether a
+month can be published (DEC-026).
+
+**Production Performance** - is production rising or falling, and where is the drop? Latest month oil, gas and
+condensate with MoM, 12-month trends with rolling 3 months, water cut of oil wells and uptime, and the 10 operators
+and 10 wells with the largest drop, last 3 months against the 3 before. Supports the decision which operator or well
+to look at first.
+
+![Production Performance](docs/screenshots/dashboard_production.png)
+
+**Well Activity & Idle Wells** - which wells stopped producing, and which could become a liability? Wells added and
+dropped per month, recently idle wells (3+ months without oil, gas or condensate) by operator, and the list ranked by
+pre-idle volume, with a flag for wells that reappear under another operator. Supports the decision which idle wells
+to review first, and whether a drop is a shut-in or a transfer. The per-well logic is computed in 03_gold_transform
+(`gold_idle_wells`, DEC-027).
+
+![Well Activity & Idle Wells](docs/screenshots/dashboard_well_activity.png)
+
+**Data Trust** - can this month's data be published? Reconciliation status, months loaded, Silver rows, reject rate,
+open defects, freshness, run history, the high-severity defects that are not closed, the DQ rules of the latest run,
+the reconciliation tests and the defect log. Supports the decision to publish the month or hold it.
+
+![Data Trust](docs/screenshots/dashboard_data_trust.png)
+
+Every measure has a description and a display folder (a test checks this). Each new measure was computed a second
+time with Spark SQL on the Lakehouse and compared value by value with DAX (38,396 values); `gold_idle_wells` matches
+an independent Spark result in all 28,140 values. Not in the dashboard on purpose: revenue (no prices in the data),
+YoY and decline curves (12 months only), sums across products (gas e3m3, liquids m3) and the AER 12-month inactive
+well definition (DEC-026).
+
+Deploy after editing the files, and export again after a change made in the workspace:
+
+```text
+fab import "well-production-mvp.Workspace/sm_petrinex_production.SemanticModel" -i powerbi/sm_petrinex_production.SemanticModel -f
+fab import "well-production-mvp.Workspace/well_production_dashboard.Report" -i powerbi/well_production_dashboard.Report -f
+fab export "well-production-mvp.Workspace/well_production_dashboard.Report" -o <tmp> -f   # then copy back to powerbi/
+```
+
+After a model import, refresh the semantic model so Direct Lake picks up the new definition.
 
 ## Outputs
 
@@ -215,6 +260,8 @@ packages and maps never run on bad data.
 - `gis/` - pipeline modules (`stage`, `convert`, `qa`, `qa_checks`, `liability`, `analysis`, `package`, `changes`,
   `maps`, `qgis_maps`, `run`)
 - `config/` - every setting, rule, mapping table, field dictionary and style
-- `tests/gis/` - rule and module tests; `tests/test_defect_log.py` - defect log in sync with its yaml source
-- `docs/` - `progress.md`, `final_report.md`, `st37_gis_exploration.md`, `defect_log.md`, maps
-- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-024)
+- `powerbi/` - semantic model (TMDL) and dashboard (PBIR), deployed with `fab import` (DEC-025)
+- `tests/gis/` - rule and module tests; `tests/test_defect_log.py` - defect log in sync with its yaml source;
+  `tests/test_powerbi_files.py` - no credentials in `powerbi/`, every measure documented
+- `docs/` - `progress.md`, `final_report.md`, `st37_gis_exploration.md`, `defect_log.md`, maps, dashboard screenshots
+- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-027)
