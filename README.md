@@ -65,7 +65,7 @@ step reads Parquet or the standardized GeoPackage.
 pip install -r requirements.txt
 python -m gis.run --mode sample          # whole track on a Calgary-region sample (about 1-2 minutes)
 python -m gis.run --mode full            # whole province (about 8-10 minutes)
-python -m pytest tests/gis               # 53 tests with constructed rows
+python -m pytest tests                   # 53 GIS tests with constructed rows + 7 defect log tests
 ```
 
 `gis.run` writes `gis/output/<mode>/run_log.txt` and `run_manifest.json` (git commit, per-step status and runtime, row
@@ -97,6 +97,15 @@ Run the notebooks in this order in the `well-production-mvp` workspace (Lakehous
 `silver_petrinex_vol_flagged` (DEC-021) and stops if that table is out of date. `03_sensor_streaming_anomaly_detection`
 (optional demo) and `load_defect_log` run on their own; `explore_raw` is read-only exploration.
 
+The defect log has one source, `config/defect_log.yaml` (DEC-024). After editing it:
+
+```text
+python scripts/build_defect_log.py            # rebuild the table in docs/defect_log.md
+python scripts/build_defect_log.py --check    # table and yaml metrics match the Markdown
+fab cp config/defect_log.yaml "well-production-mvp.Workspace/alberta_wells.Lakehouse/Files/config/"
+fab job run "well-production-mvp.Workspace/load_defect_log.Notebook"
+```
+
 A failed test stops the run (DEC-022): `02_silver_transform` stops if a DQ rule test fails, `03_gold_transform` stops
 if any reconciliation test fails or if the 02 run that wrote the flags did not finish. Results are stored before the
 error, in `dq_rule_test_results` and `reconciliation_results`.
@@ -108,7 +117,7 @@ error, in `dq_rule_test_results` and `reconciliation_results`.
 | Output | Content |
 |---|---|
 | `gis/output/<mode>/alberta_wells.gpkg` | Standardized layers in EPSG:3400: `wells_surface`, `bottom_holes`, `production_strings`, `well_trajectories`, `alberta_boundary`; wells also as Shapefile and CSV |
-| `.../qa/` | `qa_defect_log.csv` (same columns as the Lakehouse `defect_log`), rule summary, all failures, 5 examples per rule, licensee scorecard, `qa_results.gpkg` (one layer per rule + `wells_qa`) |
+| `.../qa/` | `qa_defect_log.csv` (the six core columns of the Lakehouse `defect_log`), rule summary, all failures, 5 examples per rule, licensee scorecard, `qa_results.gpkg` (one layer per rule + `wells_qa`) |
 | `.../liability/` | `liability.gpkg` (`wells_liability`, `abandoned_not_reclaimed`, `inactive_candidates`, `abandoned_by_township`) and CSV summaries |
 | `.../analysis/` | `analysis.gpkg` (`townships`, `hexagons_5km`, `pads`, `wellbore_laterals`) and CSV summaries |
 | `deliverables/<client>/` | Client package: `data.gpkg` with embedded QGIS styles, `wells.csv`, `data_dictionary.md`, `README.md`, `.qml` per layer |
@@ -119,7 +128,7 @@ error, in `dq_rule_test_results` and `reconciliation_results`.
 Rules are data, not code: each entry in `config/gis_qa.yaml` names a generic check, the layer, a severity and
 parameters. FAIL rules stop the run on any failure that is not on the rule's `allowlist` of reviewed exceptions (each
 entry is a licence number with a written reason; GQA-01 lists the 13 known border wells), after all outputs are
-written. WARN rules count against a well in the scorecard, INFO rules document known source characteristics. Results use the
+written. WARN rules count against a well in the scorecard, INFO rules document known source characteristics. Results use the six core
 `defect_log` columns, and every rule has a constructed-row test (a meta-test fails if a check has none).
 
 Inject a bad row and the run stops:
@@ -206,6 +215,6 @@ packages and maps never run on bad data.
 - `gis/` - pipeline modules (`stage`, `convert`, `qa`, `qa_checks`, `liability`, `analysis`, `package`, `changes`,
   `maps`, `qgis_maps`, `run`)
 - `config/` - every setting, rule, mapping table, field dictionary and style
-- `tests/gis/` - rule and module tests
+- `tests/gis/` - rule and module tests; `tests/test_defect_log.py` - defect log in sync with its yaml source
 - `docs/` - `progress.md`, `final_report.md`, `st37_gis_exploration.md`, `defect_log.md`, maps
-- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-023)
+- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-024)
