@@ -719,6 +719,24 @@ Review of the first screenshots led to three fixes:
   filter `Is Latest Recon Run` matches it instead of comparing `MAX(run_id)`, which had picked an older run and
   hid tests.
 
+A second review of all three pages led to these changes:
+- All visuals: no auto-generated subtitle ("... by year_month"); date axes use `month_start` and `production_month`
+  formatted `mmm yy` on a continuous axis, so the labels are short and never slanted.
+- Production Performance: the operator slicer has a search box (default still All); the card groups show the month
+  in their title ("Oil, Jun 2026", measures `Oil/Gas/Condensate Card Title`, following the Month slicer); card values
+  have 1 decimal (12.1M); MoM % is red when negative and green when positive (`... MoM Color`).
+- Well Activity: the idle count shows the exact number (5,628) and the idle month in full; the note has room for all
+  of its text; the idle list drops `well_key` (UWI is the well ID people use) and keeps both pre-idle columns in view;
+  the operator bar chart has room for full company names.
+- Data Trust: the known issues table shows all open high-severity defects (D-002, D-010) with wrapped text; the DQ
+  rules table shows only the rules of the latest run (`Rows Flagged Latest` not blank; `Severity Order` alone had also
+  listed rules of older runs), leaves out the monthly `wells_disappeared_*` and `wells_new_*` checks (page 2 shows
+  wells added and dropped) and the rule `sensor_malfunction_consecutive_neg` (written by the
+  `03_sensor_streaming_anomaly_detection` demo, not the Petrinex pipeline); reconciliation numbers have thousands
+  separators.
+- Run history is a table (run time, Silver rows, reconciliation tests passed / total, newest first) instead of a line
+  chart: the number of tests grew from 5 to 9, and a rising line read as better data.
+
 ### Interview notes
 
 | Page | User | Business question | Decision it supports | How the numbers are verified | Limits | Left out on purpose |
