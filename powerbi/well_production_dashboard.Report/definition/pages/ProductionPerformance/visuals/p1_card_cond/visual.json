@@ -2,10 +2,10 @@
     "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
     "name": "p1_card_cond",
     "position": {
-        "x": 856,
+        "x": 712,
         "y": 72,
         "z": 8,
-        "width": 408,
+        "width": 552,
         "height": 92,
         "tabOrder": 8
     },

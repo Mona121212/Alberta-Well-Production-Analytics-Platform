@@ -2,10 +2,10 @@
     "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
     "name": "p1_uptime",
     "position": {
-        "x": 436,
+        "x": 364,
         "y": 450,
         "z": 13,
-        "width": 408,
+        "width": 336,
         "height": 262,
         "tabOrder": 13
     },

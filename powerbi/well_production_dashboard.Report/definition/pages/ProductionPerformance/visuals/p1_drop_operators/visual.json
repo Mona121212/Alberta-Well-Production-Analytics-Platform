@@ -2,10 +2,10 @@
     "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
     "name": "p1_drop_operators",
     "position": {
-        "x": 856,
+        "x": 712,
         "y": 176,
         "z": 11,
-        "width": 408,
+        "width": 552,
         "height": 262,
         "tabOrder": 11
     },
@@ -122,6 +122,111 @@
                                 }
                             }
                         }
+                    }
+                }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "autoSizeColumnWidth": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "wordWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "wordWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "200D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_dim_operator.operator_name"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "76D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_fact_production.Last 3M Volume"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "76D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_fact_production.Prior 3M Volume"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "84D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_fact_production.Last 3M vs Prior 3M Change"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "76D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_fact_production.Last 3M vs Prior 3M %"
                     }
                 }
             ]

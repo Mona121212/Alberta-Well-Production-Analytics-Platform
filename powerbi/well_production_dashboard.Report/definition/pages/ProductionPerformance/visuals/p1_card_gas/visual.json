@@ -2,10 +2,10 @@
     "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
     "name": "p1_card_gas",
     "position": {
-        "x": 436,
+        "x": 364,
         "y": 72,
         "z": 7,
-        "width": 408,
+        "width": 336,
         "height": 92,
         "tabOrder": 7
     },
