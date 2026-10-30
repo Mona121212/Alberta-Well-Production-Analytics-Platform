@@ -121,7 +121,7 @@ at Alberta producers, who pick their company and compare it with peers, and the 
 month can be published (DEC-026).
 
 **Production Performance** - is production rising or falling, and where is the drop? Latest month oil, gas and
-condensate with MoM, 12-month trends with rolling 3 months, water cut of oil wells and uptime, and the 10 operators
+condensate with MoM, 12-month trends with the 3-month average, water cut of oil wells and uptime, and the 10 operators
 and 10 wells with the largest drop, last 3 months against the 3 before. Supports the decision which operator or well
 to look at first.
 

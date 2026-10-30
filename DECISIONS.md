@@ -681,8 +681,8 @@ months of Petrinex volumes by well and operator, no prices, and units that diffe
 **Decision.** `well_production_dashboard` has three 16:9 pages, each with a title and a one-line question, and every
 visual supports one decision. The users are asset and operations teams at Alberta producers (pick a company, compare
 with peers) and the data team (publish the month or not).
-- **Production Performance:** cards for the latest month with MoM, oil and gas trends with rolling 3 months, water
-  cut of oil wells, uptime, and the 10 operators and 10 wells with the largest drop.
+- **Production Performance:** cards for the latest month with MoM, oil and gas trends with the 3-month average,
+  water cut of oil wells, uptime, and the 10 operators and 10 wells with the largest drop.
 - **Well Activity & Idle Wells:** wells producing per month, wells added and dropped, recently idle wells by operator
   and a ranked list.
 - **Data Trust:** reconciliation, months loaded, Silver rows, reject rate, open defects, freshness, run history, the
@@ -707,6 +707,17 @@ well definition (12 months without activity cannot be tested inside a 12-month w
 warning only), maps (the GIS track covers them) and forecasts. The drop tables need one product selected and at least
 6 months before the selected month. Every new measure was compared with an independent Spark SQL result (38,396
 values; two differences explained: a month without volume counts as 0 in MoM, and a tie at rank 10).
+
+Review of the first screenshots led to three fixes:
+- The trend lines show the 3-month average (`Oil Rolling 3M Avg (m3)`, `Gas Rolling 3M Avg`), not the 3-month
+  sum: the sum is about three times the monthly volume and flattened the monthly line on the same axis. Both
+  averages match Spark SQL (264 values, 11 groups by 12 months).
+- Every table has its total row turned off. The tables are lists of operators, wells, rules, tests and defects;
+  a total row adds values that do not belong together (the well drop table showed one operator name in its
+  total row) and makes the query slower.
+- The reconciliation table shows the run with the latest `run_ts` (`Latest Run ID`). `run_id` is random, so the
+  filter `Is Latest Recon Run` matches it instead of comparing `MAX(run_id)`, which had picked an older run and
+  hid tests.
 
 ### Interview notes
 
