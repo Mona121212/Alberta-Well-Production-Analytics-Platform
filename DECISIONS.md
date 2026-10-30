@@ -636,3 +636,38 @@ original columns; the new columns are in the table for SQL and can be added to t
 Verified in Fabric on 2026-10-30: `load_defect_log` wrote 10 rows (D-001 to D-010, the same ids as the yaml), the
 semantic model refresh completed, and a DAX query of the six columns used by the report table returned all 10
 rows; `Open Defects` is 5 (3 Mitigated, 2 Open), against 0 before.
+
+---
+
+## DEC-027 Per-well idle logic in the pipeline (gold_idle_wells), not in DAX
+
+**Date:** 2026-10-30
+
+**Context.** The idle well list on the Well Activity page was a table of `gold_dim_well[well_key]` with six DAX
+measures per well (last production month, last operator, pre-idle averages, transfer flag) and a measure filter for
+recently idle wells. Each measure depends on that well's own last production month, so the engine evaluates it well
+by well instead of in one scan. The query Power BI sends for that visual, with its grand total row, took 39.1 s
+through the API (19.4 s without the total row); in the report the visual kept loading and never showed data.
+
+**Decision.** `03_gold_transform` writes `gold_idle_wells` with Spark: one row per recently idle well with
+`well_key`, `well_uwi`, `well_name`, `last_operator`, `last_operator_baid`, `last_production_month`,
+`pre_idle_liquids_m3`, `pre_idle_gas_e3m3` and `reported_by_other_operator_later`. The window sizes and product lists
+are in `config/gold.json`. The semantic model reads the table (relationships to `gold_dim_well` and, by the last
+operator, to `gold_dim_operator`); `Recently Idle Wells (3+ months)` counts its rows, and the per-well measures were
+removed. The list has no total row. Four reconciliation tests guard the table: row count against a Spark SQL recount
+of the same definition, unique and non-null keys, no orphan wells.
+
+**Alternatives.**
+- Rewrite the DAX so the engine can batch it: may help, but the logic would still run on every page view, and each
+  rewrite needs its own proof that the numbers stay the same.
+- Calculated table in the model: not supported for Direct Lake tables.
+- Turn off the total row only: halves the time to about 19 s, still too slow for a dashboard.
+
+**Consequences.** The list now loads in about 4.5 s through the API, the same as an empty query (5.2 s, the overhead
+of the `fab` call), so the query itself takes well under a second; the card and the top 10 operators also return at
+that overhead. The idle state is a snapshot of the last 03 run and changes only when 03 runs again; the page has no
+month filter, so this matches what the page shows. The operator filter now means "wells whose last operator is X";
+the DAX version looked at operator X's own rows (1,042 idle wells for one large operator under the old meaning).
+Verified on 2026-10-30, run `38b61620`: 9 of 9 reconciliation tests PASS, `gold_idle_wells` has 5,628 rows (the DAX
+measure gave 5,628 before the change), and all 28,140 values match the independent Spark result; 4 wells were
+reported by another operator after their last production month.
