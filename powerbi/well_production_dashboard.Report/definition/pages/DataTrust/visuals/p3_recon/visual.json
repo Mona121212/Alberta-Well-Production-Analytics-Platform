@@ -111,6 +111,19 @@
                         "metadata": "reconciliation_results.status"
                     }
                 }
+            ],
+            "total": [
+                {
+                    "properties": {
+                        "totals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
             ]
         },
         "visualContainerObjects": {

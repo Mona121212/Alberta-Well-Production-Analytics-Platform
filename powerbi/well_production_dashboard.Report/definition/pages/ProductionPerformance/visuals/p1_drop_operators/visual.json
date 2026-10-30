@@ -111,7 +111,21 @@
                 ]
             }
         },
-        "objects": {},
+        "objects": {
+            "total": [
+                {
+                    "properties": {
+                        "totals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
         "visualContainerObjects": {
             "title": [
                 {
