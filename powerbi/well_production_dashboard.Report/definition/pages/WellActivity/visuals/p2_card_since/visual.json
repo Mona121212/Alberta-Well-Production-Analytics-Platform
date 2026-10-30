@@ -3,10 +3,10 @@
     "name": "p2_card_since",
     "position": {
         "x": 16,
-        "y": 160,
+        "y": 164,
         "z": 5,
-        "width": 300,
-        "height": 64,
+        "width": 500,
+        "height": 84,
         "tabOrder": 5
     },
     "visual": {
@@ -28,44 +28,41 @@
                             },
                             "queryRef": "gold_fact_production.Idle Since",
                             "nativeQueryRef": "Idle Since",
-                            "displayName": "Month"
+                            "displayName": "No production since"
                         }
                     ]
                 }
             }
         },
         "visualContainerObjects": {
-            "title": [
+            "subTitle": [
                 {
                     "properties": {
                         "show": {
                             "expr": {
                                 "Literal": {
-                                    "Value": "true"
-                                }
-                            }
-                        },
-                        "fontSize": {
-                            "expr": {
-                                "Literal": {
-                                    "Value": "11D"
-                                }
-                            }
-                        },
-                        "bold": {
-                            "expr": {
-                                "Literal": {
-                                    "Value": "true"
-                                }
-                            }
-                        },
-                        "text": {
-                            "expr": {
-                                "Literal": {
-                                    "Value": "'No production since'"
+                                    "Value": "false"
                                 }
                             }
                         }
+                    }
+                }
+            ]
+        },
+        "objects": {
+            "value": [
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
                     }
                 }
             ]

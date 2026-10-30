@@ -2,11 +2,11 @@
     "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
     "name": "p2_wells_producing",
     "position": {
-        "x": 328,
+        "x": 528,
         "y": 72,
         "z": 7,
-        "width": 460,
-        "height": 230,
+        "width": 364,
+        "height": 246,
         "tabOrder": 7
     },
     "visual": {
@@ -124,6 +124,26 @@
                         }
                     }
                 }
+            ],
+            "categoryAxis": [
+                {
+                    "properties": {
+                        "axisType": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Scalar'"
+                                }
+                            }
+                        },
+                        "showAxisTitle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
             ]
         },
         "visualContainerObjects": {
@@ -155,6 +175,19 @@
                             "expr": {
                                 "Literal": {
                                     "Value": "'Producing wells per month, all Alberta (count)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
                                 }
                             }
                         }

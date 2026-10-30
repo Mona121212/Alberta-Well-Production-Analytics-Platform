@@ -3,10 +3,10 @@
     "name": "p2_idle_note",
     "position": {
         "x": 16,
-        "y": 232,
+        "y": 256,
         "z": 6,
-        "width": 300,
-        "height": 70,
+        "width": 500,
+        "height": 66,
         "tabOrder": 6
     },
     "visual": {

@@ -5,8 +5,8 @@
         "x": 16,
         "y": 72,
         "z": 4,
-        "width": 300,
-        "height": 80,
+        "width": 500,
+        "height": 84,
         "tabOrder": 4
     },
     "visual": {
@@ -28,44 +28,41 @@
                             },
                             "queryRef": "gold_idle_wells.Recently Idle Wells (3+ months)",
                             "nativeQueryRef": "Recently Idle Wells (3+ months)",
-                            "displayName": "Wells"
+                            "displayName": "Recently idle wells (3+ months)"
                         }
                     ]
                 }
             }
         },
         "visualContainerObjects": {
-            "title": [
+            "subTitle": [
                 {
                     "properties": {
                         "show": {
                             "expr": {
                                 "Literal": {
-                                    "Value": "true"
-                                }
-                            }
-                        },
-                        "fontSize": {
-                            "expr": {
-                                "Literal": {
-                                    "Value": "11D"
-                                }
-                            }
-                        },
-                        "bold": {
-                            "expr": {
-                                "Literal": {
-                                    "Value": "true"
-                                }
-                            }
-                        },
-                        "text": {
-                            "expr": {
-                                "Literal": {
-                                    "Value": "'Recently idle wells (3+ months)'"
+                                    "Value": "false"
                                 }
                             }
                         }
+                    }
+                }
+            ]
+        },
+        "objects": {
+            "value": [
+                {
+                    "properties": {
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "id": "default"
                     }
                 }
             ]

@@ -2,11 +2,11 @@
     "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
     "name": "p2_wells_added_dropped",
     "position": {
-        "x": 800,
+        "x": 900,
         "y": 72,
         "z": 8,
-        "width": 464,
-        "height": 230,
+        "width": 364,
+        "height": 246,
         "tabOrder": 8
     },
     "visual": {
@@ -144,6 +144,26 @@
                         }
                     }
                 }
+            ],
+            "categoryAxis": [
+                {
+                    "properties": {
+                        "axisType": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Scalar'"
+                                }
+                            }
+                        },
+                        "showAxisTitle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
             ]
         },
         "visualContainerObjects": {
@@ -175,6 +195,19 @@
                             "expr": {
                                 "Literal": {
                                     "Value": "'Wells added and dropped per month, all Alberta (count)'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
                                 }
                             }
                         }
