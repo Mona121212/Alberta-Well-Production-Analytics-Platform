@@ -114,6 +114,51 @@ table dq_run_log
 
 		changedProperty = Name
 
+	/// Silver row count of the latest run in millions: [Silver Rows] / 1,000,000, shown with 2 decimals.
+	measure 'Silver Rows (M)' =
+			DIVIDE([Silver Rows], 1000000)
+		formatString: 0.00
+		displayFolder: Data Quality\Run
+
+	/// Time of the latest finished 02_silver_transform run (MAX(dq_run_log[run_ts]), UTC); a run is logged only after its DQ rule tests pass.
+	measure 'Last Successful Run' =
+			FORMAT(MAX(dq_run_log[run_ts]), "yyyy-mm-dd hh:nn") & " UTC"
+		displayFolder: Data Quality\Freshness
+
+	/// Latest production month in Gold, as yyyy-mm: MAX(gold_fact_production[production_month]).
+	measure 'Latest Production Month' =
+			FORMAT(CALCULATE(MAX(gold_fact_production[production_month]), REMOVEFILTERS(gold_dim_date)), "yyyy-mm")
+		displayFolder: Data Quality\Freshness
+
+	/// Silver row count of each run in the filter: the actual value of the reconciliation test bronze_equals_silver_rows for that run_id (MAX, so a repeated Gold run is not counted twice).
+	measure 'Run Silver Rows' =
+			VAR r = SELECTEDVALUE(dq_run_log[run_id])
+			RETURN CALCULATE(MAX(reconciliation_results[actual]),
+			    reconciliation_results[run_id] = r, reconciliation_results[test_name] = "bronze_equals_silver_rows")
+		formatString: #,0
+		displayFolder: Data Quality\Run History
+
+	/// Number of distinct reconciliation tests with status PASS for each run in the filter (reconciliation_results for that run_id).
+	measure 'Run Recon Passed' =
+			VAR r = SELECTEDVALUE(dq_run_log[run_id])
+			RETURN CALCULATE(DISTINCTCOUNT(reconciliation_results[test_name]),
+			    reconciliation_results[run_id] = r, reconciliation_results[status] = "PASS")
+		formatString: 0
+		displayFolder: Data Quality\Run History
+
+	/// 1 for reconciliation_results rows of [Latest Run ID]; visual filter for the reconciliation table.
+	measure 'Is Latest Recon Run' =
+			IF(MAX(reconciliation_results[run_id]) = [Latest Run ID], 1)
+		formatString: 0
+		isHidden
+		displayFolder: Formatting
+
+	/// Font colour of the reconciliation status: green for PASS, red otherwise.
+	measure 'Recon Status Color' =
+			IF(MAX(reconciliation_results[status]) = "PASS", "#2E7D32", "#C62828")
+		isHidden
+		displayFolder: Formatting
+
 	column run_id
 		dataType: string
 		lineageTag: ef78519c-ab69-44b4-8e74-4ed4f86bb6c2

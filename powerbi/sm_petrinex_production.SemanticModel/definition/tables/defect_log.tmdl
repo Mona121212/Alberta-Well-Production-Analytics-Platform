@@ -58,6 +58,20 @@ table defect_log
 
 		annotation SummarizationSetBy = Automatic
 
+	column defect_code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: defect_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column impact
+		dataType: string
+		summarizeBy: none
+		sourceColumn: impact
+
+		annotation SummarizationSetBy = Automatic
+
 	partition defect_log = entity
 		mode: directLake
 		source

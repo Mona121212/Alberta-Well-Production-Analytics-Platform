@@ -31,15 +31,12 @@ table gold_fact_production
 
 		changedProperty = Name
 
-	/// Month-over-month change in Total Gas: (current month - previous month) / previous month, blank unless exactly one year_month is in the filter.
+	/// Month-over-month change in Total Gas (e3m3) for the latest month of the current filter: (that month - previous month) / previous month, a month without volume counts as 0 (-100%), blank for the first month loaded.
 	measure 'Gas MoM %' =
-			
-			IF (
-			    HASONEVALUE ( gold_dim_date[year_month] ),
-			    VAR cur = [Total Gas]
-			    VAR prev = CALCULATE ( [Total Gas], DATEADD ( gold_dim_date[date], -1, MONTH ) )
-			    RETURN DIVIDE ( cur - prev, prev )
-			)
+			VAR m = MAX(gold_dim_date[month_start])
+			VAR cur = CALCULATE([Total Gas], REMOVEFILTERS(gold_dim_date), gold_dim_date[month_start] = m)
+			VAR prev = CALCULATE([Total Gas], REMOVEFILTERS(gold_dim_date), gold_dim_date[month_start] = EDATE(m, -1))
+			RETURN IF(NOT ISBLANK(prev), DIVIDE(cur - prev, prev))
 		formatString: 0.0%;-0.0%;0.0%
 		displayFolder: Production\Time Intelligence
 		lineageTag: aea7e43f-4610-4c50-a650-e72fb9c18c06
@@ -85,6 +82,223 @@ table gold_fact_production
 		changedProperty = Name
 
 		changedProperty = FormatString
+
+	/// Total oil volume in Gold (m3): sum of gold_fact_production[volume] where ProductID = "OIL".
+	measure 'Total Oil (m3)' =
+			CALCULATE(SUM(gold_fact_production[volume]), gold_fact_production[ProductID] = "OIL")
+		formatString: #,0
+		displayFolder: Production
+
+	/// Total condensate volume in Gold (m3): sum of gold_fact_production[volume] where ProductID = "COND".
+	measure 'Total Condensate (m3)' =
+			CALCULATE(SUM(gold_fact_production[volume]), gold_fact_production[ProductID] = "COND")
+		formatString: #,0
+		displayFolder: Production
+
+	/// Total produced water volume in Gold (m3): sum of gold_fact_production[volume] where ProductID = "WATER".
+	measure 'Total Water (m3)' =
+			CALCULATE(SUM(gold_fact_production[volume]), gold_fact_production[ProductID] = "WATER")
+		formatString: #,0
+		displayFolder: Production
+
+	/// Oil volume (m3) in the latest month of the current filter: Total Oil (m3) for the latest month_start.
+	measure 'Latest Month Oil' =
+			VAR m = MAX(gold_dim_date[month_start])
+			RETURN CALCULATE([Total Oil (m3)], REMOVEFILTERS(gold_dim_date), gold_dim_date[month_start] = m)
+		formatString: #,0
+		displayFolder: Production
+
+	/// Gas volume (e3m3) in the latest month of the current filter: Total Gas for the latest month_start.
+	measure 'Latest Month Gas' =
+			VAR m = MAX(gold_dim_date[month_start])
+			RETURN CALCULATE([Total Gas], REMOVEFILTERS(gold_dim_date), gold_dim_date[month_start] = m)
+		formatString: #,0
+		displayFolder: Production
+
+	/// Condensate volume (m3) in the latest month of the current filter: Total Condensate (m3) for the latest month_start.
+	measure 'Latest Month Condensate' =
+			VAR m = MAX(gold_dim_date[month_start])
+			RETURN CALCULATE([Total Condensate (m3)], REMOVEFILTERS(gold_dim_date), gold_dim_date[month_start] = m)
+		formatString: #,0
+		displayFolder: Production
+
+	/// Month-over-month change in oil volume (m3) for the latest month of the current filter: (that month - previous month) / previous month, a month without volume counts as 0 (-100%), blank for the first month loaded.
+	measure 'Oil MoM %' =
+			VAR m = MAX(gold_dim_date[month_start])
+			VAR cur = CALCULATE([Total Oil (m3)], REMOVEFILTERS(gold_dim_date), gold_dim_date[month_start] = m)
+			VAR prev = CALCULATE([Total Oil (m3)], REMOVEFILTERS(gold_dim_date), gold_dim_date[month_start] = EDATE(m, -1))
+			RETURN IF(NOT ISBLANK(prev), DIVIDE(cur - prev, prev))
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Production\Time Intelligence
+
+	/// Month-over-month change in condensate volume (m3) for the latest month of the current filter: (that month - previous month) / previous month, a month without volume counts as 0 (-100%), blank for the first month loaded.
+	measure 'Condensate MoM %' =
+			VAR m = MAX(gold_dim_date[month_start])
+			VAR cur = CALCULATE([Total Condensate (m3)], REMOVEFILTERS(gold_dim_date), gold_dim_date[month_start] = m)
+			VAR prev = CALCULATE([Total Condensate (m3)], REMOVEFILTERS(gold_dim_date), gold_dim_date[month_start] = EDATE(m, -1))
+			RETURN IF(NOT ISBLANK(prev), DIVIDE(cur - prev, prev))
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Production\Time Intelligence
+
+	/// Oil volume (m3) over the 3 months ending at the latest date in the filter (DATESINPERIOD), blank where the current period has no oil.
+	measure 'Oil Rolling 3M (m3)' =
+			IF(
+			    NOT ISBLANK([Total Oil (m3)]),
+			    CALCULATE([Total Oil (m3)], DATESINPERIOD(gold_dim_date[date], MAX(gold_dim_date[date]), -3, MONTH))
+			)
+		formatString: #,0
+		displayFolder: Production\Time Intelligence
+
+	/// Share of water in the liquids of oil wells: water / (oil + water) in m3, summed over well-months where the well produced oil (OIL volume > 0); condensate and gas-only wells are excluded.
+	measure 'Water Cut %' =
+			VAR wm = ADDCOLUMNS(
+			    SUMMARIZE(gold_fact_production, gold_fact_production[production_month], gold_fact_production[well_key]),
+			    "@oil", CALCULATE(SUM(gold_fact_production[volume]), gold_fact_production[ProductID] = "OIL"),
+			    "@water", CALCULATE(SUM(gold_fact_production[volume]), gold_fact_production[ProductID] = "WATER"))
+			VAR oilWells = FILTER(wm, [@oil] > 0)
+			VAR o = SUMX(oilWells, [@oil])
+			VAR w = SUMX(oilWells, [@water])
+			RETURN DIVIDE(w, o + w)
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Production\Ratios
+
+	/// Producing hours / calendar hours, per well-month: hours = MAX(hours) of the well-month (product rows repeat the same hours, so they are not added), calendar hours = days x 24; well-months with masked or missing hours are excluded, and 2025-11 counts 720 hours although DST made it 721 (rows reporting 721 are rejected, D-010).
+	measure 'Uptime %' =
+			VAR wm = ADDCOLUMNS(
+			    SUMMARIZE(gold_fact_production, gold_fact_production[production_month], gold_fact_production[well_key]),
+			    "@h", CALCULATE(MAX(gold_fact_production[hours])),
+			    "@cal", DAY(EOMONTH(gold_fact_production[production_month], 0)) * 24)
+			VAR reported = FILTER(wm, NOT ISBLANK([@h]))
+			RETURN DIVIDE(SUMX(reported, [@h]), SUMX(reported, [@cal]))
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Production\Ratios
+
+	/// Volume of the one product selected (OIL or COND in m3, GAS in e3m3) in the 3 months ending at the latest month of the filter; blank unless exactly one of OIL, GAS, COND is selected.
+	measure 'Last 3M Volume' =
+			VAR m = MAX(gold_dim_date[month_start])
+			RETURN IF(
+			    HASONEVALUE(gold_fact_production[ProductID]) && SELECTEDVALUE(gold_fact_production[ProductID]) IN {"OIL", "GAS", "COND"},
+			    CALCULATE(SUM(gold_fact_production[volume]), REMOVEFILTERS(gold_dim_date),
+			        gold_dim_date[month_start] > EDATE(m, -3), gold_dim_date[month_start] <= m))
+		formatString: #,0
+		displayFolder: Production\Last 3M vs Prior 3M
+
+	/// Volume of the one product selected (OIL or COND in m3, GAS in e3m3) in the 3 months before the Last 3M window; blank unless exactly one of OIL, GAS, COND is selected.
+	measure 'Prior 3M Volume' =
+			VAR m = MAX(gold_dim_date[month_start])
+			RETURN IF(
+			    HASONEVALUE(gold_fact_production[ProductID]) && SELECTEDVALUE(gold_fact_production[ProductID]) IN {"OIL", "GAS", "COND"},
+			    CALCULATE(SUM(gold_fact_production[volume]), REMOVEFILTERS(gold_dim_date),
+			        gold_dim_date[month_start] > EDATE(m, -6), gold_dim_date[month_start] <= EDATE(m, -3)))
+		formatString: #,0
+		displayFolder: Production\Last 3M vs Prior 3M
+
+	/// Last 3M Volume - Prior 3M Volume for the selected product (OIL or COND in m3, GAS in e3m3), a missing window counted as 0; negative means production fell.
+	measure 'Last 3M vs Prior 3M Change' =
+			VAR l = [Last 3M Volume]
+			VAR p = [Prior 3M Volume]
+			RETURN IF(NOT ISBLANK(l) || NOT ISBLANK(p), l - p)
+		formatString: #,0
+		displayFolder: Production\Last 3M vs Prior 3M
+
+	/// Last 3M vs Prior 3M Change / Prior 3M Volume for the selected product; blank when the prior window has no volume.
+	measure 'Last 3M vs Prior 3M %' =
+			DIVIDE([Last 3M vs Prior 3M Change], [Prior 3M Volume])
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Production\Last 3M vs Prior 3M
+
+	/// Wells that produced oil, gas or condensate (volume > 0) before the last 3 months of the filter and not in those 3 months; an early warning only, not the AER inactive well definition (12 months), and a well can also disappear because it was transferred to another operator.
+	measure 'Recently Idle Wells (3+ months)' =
+			VAR m = MAX(gold_dim_date[month_start])
+			VAR recentStart = EDATE(m, -2)
+			VAR prodBefore = CALCULATETABLE(VALUES(gold_fact_production[well_key]), REMOVEFILTERS(gold_dim_date),
+			    gold_dim_date[month_start] < recentStart, gold_fact_production[volume] > 0, gold_fact_production[ProductID] IN {"OIL", "GAS", "COND"})
+			VAR prodRecent = CALCULATETABLE(VALUES(gold_fact_production[well_key]), REMOVEFILTERS(gold_dim_date),
+			    gold_dim_date[month_start] >= recentStart, gold_dim_date[month_start] <= m,
+			    gold_fact_production[volume] > 0, gold_fact_production[ProductID] IN {"OIL", "GAS", "COND"})
+			RETURN COUNTROWS(EXCEPT(prodBefore, prodRecent)) + 0
+		formatString: #,0
+		displayFolder: Well Activity
+
+	/// First month of the 3-month window used by Recently Idle Wells (3+ months), as yyyy-mm.
+	measure 'Idle Since' =
+			FORMAT(EDATE(MAX(gold_dim_date[month_start]), -2), "yyyy-mm")
+		displayFolder: Well Activity
+
+	/// Latest month up to the end of the filter in which the well (or selection) produced oil, gas or condensate (volume > 0).
+	measure 'Last Production Month' =
+			VAR m = MAX(gold_dim_date[month_start])
+			RETURN CALCULATE(MAX(gold_fact_production[production_month]), REMOVEFILTERS(gold_dim_date),
+			    gold_dim_date[month_start] <= m, gold_fact_production[volume] > 0, gold_fact_production[ProductID] IN {"OIL", "GAS", "COND"})
+		formatString: yyyy-mm
+		displayFolder: Well Activity
+
+	/// Operator of the well in its Last Production Month, taken from the row of that month (MAX(OperatorName) if several operators reported it).
+	measure 'Last Operator' =
+			VAR last = [Last Production Month]
+			RETURN CALCULATE(MAX(gold_fact_production[OperatorName]), REMOVEFILTERS(gold_dim_date),
+			    gold_dim_date[month_start] = last, gold_fact_production[volume] > 0, gold_fact_production[ProductID] IN {"OIL", "GAS", "COND"})
+		displayFolder: Well Activity
+
+	/// Average monthly oil + condensate volume (m3) of one well over the 3 months ending at its Last Production Month (fewer months if the window starts before the first month loaded); blank unless one well is in the filter.
+	measure 'Pre-Idle Avg Liquids (m3)' =
+			VAR last = [Last Production Month]
+			VAR months = CALCULATE(DISTINCTCOUNT(gold_dim_date[month_start]), REMOVEFILTERS(gold_dim_date),
+			    gold_dim_date[month_start] > EDATE(last, -3), gold_dim_date[month_start] <= last)
+			RETURN IF(HASONEVALUE(gold_dim_well[well_key]) && NOT ISBLANK(last),
+			    DIVIDE(CALCULATE(SUM(gold_fact_production[volume]) + 0, REMOVEFILTERS(gold_dim_date),
+			        gold_dim_date[month_start] > EDATE(last, -3), gold_dim_date[month_start] <= last,
+			        gold_fact_production[ProductID] IN {"OIL", "COND"}), months))
+		formatString: #,0.0
+		displayFolder: Well Activity
+
+	/// Average monthly gas volume (e3m3) of one well over the 3 months ending at its Last Production Month (fewer months if the window starts before the first month loaded); blank unless one well is in the filter.
+	measure 'Pre-Idle Avg Gas (e3m3)' =
+			VAR last = [Last Production Month]
+			VAR months = CALCULATE(DISTINCTCOUNT(gold_dim_date[month_start]), REMOVEFILTERS(gold_dim_date),
+			    gold_dim_date[month_start] > EDATE(last, -3), gold_dim_date[month_start] <= last)
+			RETURN IF(HASONEVALUE(gold_dim_well[well_key]) && NOT ISBLANK(last),
+			    DIVIDE(CALCULATE(SUM(gold_fact_production[volume]) + 0, REMOVEFILTERS(gold_dim_date),
+			        gold_dim_date[month_start] > EDATE(last, -3), gold_dim_date[month_start] <= last,
+			        gold_fact_production[ProductID] = "GAS"), months))
+		formatString: #,0.0
+		displayFolder: Well Activity
+
+	/// Yes if the well appears in Gold (any product, any volume) after its Last Production Month under an OperatorBAID other than the one(s) of that month, which points to a transfer rather than a shut-in; blank unless one well is in the filter.
+	measure 'Reported by Another Operator Later' =
+			VAR last = [Last Production Month]
+			VAR lastOps = CALCULATETABLE(VALUES(gold_fact_production[OperatorBAID]), REMOVEFILTERS(gold_dim_date),
+			    gold_dim_date[month_start] = last, gold_fact_production[volume] > 0, gold_fact_production[ProductID] IN {"OIL", "GAS", "COND"})
+			VAR laterOther = CALCULATE(COUNTROWS(gold_fact_production), REMOVEFILTERS(gold_dim_date), REMOVEFILTERS(gold_dim_operator),
+			    gold_dim_date[month_start] > last, NOT gold_fact_production[OperatorBAID] IN lastOps)
+			RETURN IF(HASONEVALUE(gold_dim_well[well_key]) && NOT ISBLANK(last), IF(laterOther > 0, "Yes", "No"))
+		displayFolder: Well Activity
+
+	/// Unit of the selected product for titles: e3m3 for GAS, m3 otherwise.
+	measure 'Product Unit Label' =
+			IF(SELECTEDVALUE(gold_fact_production[ProductID]) = "GAS", "e3m3", "m3")
+		isHidden
+		displayFolder: Formatting
+
+	/// Sort key for the drop tables: -[Last 3M vs Prior 3M Change], so the largest drop sorts first and blanks sort last.
+	measure 'Volume Drop Sort' =
+			-[Last 3M vs Prior 3M Change]
+		formatString: #,0
+		isHidden
+		displayFolder: Formatting
+
+	/// Title of the operator drop table with the selected product and its unit.
+	measure 'Operator Drop Title' =
+			"Top 10 operators by drop, last 3M vs prior 3M (" & SELECTEDVALUE(gold_fact_production[ProductID], "select one product") & ", " & [Product Unit Label] & ")"
+		isHidden
+		displayFolder: Formatting
+
+	/// Title of the well drop table with the selected product, its unit and the operator filter.
+	measure 'Well Drop Title' =
+			VAR who = IF(ISFILTERED(gold_dim_operator[operator_name]), SELECTEDVALUE(gold_dim_operator[operator_name], "selected operators"), "all operators")
+			RETURN "Top 10 wells by drop, " & who & " (" & SELECTEDVALUE(gold_fact_production[ProductID], "select one product") & ", " & [Product Unit Label] & ")"
+		isHidden
+		displayFolder: Formatting
 
 	column production_month
 		dataType: dateTime
