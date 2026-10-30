@@ -1,0 +1,224 @@
+table gold_fact_production
+	lineageTag: a7d59962-d657-445a-8791-8b1ef803ef3b
+	sourceLineageTag: [dbo].[gold_fact_production]
+
+	measure 'Total Gas' =
+			
+			CALCULATE (
+			    SUM ( gold_fact_production[volume] ),
+			    gold_fact_production[ProductID] = "GAS"
+			)
+		formatString: #,0
+		lineageTag: 9a91ef68-9782-4b6e-83db-7e0848243bd5
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure 'Producing Wells' =
+			
+			CALCULATE (
+			    DISTINCTCOUNT ( gold_fact_production[well_key] ),
+			    gold_fact_production[ProductID] = "GAS",
+			    gold_fact_production[volume] > 0
+			)
+		formatString: 0
+		lineageTag: 5cd0cdb8-3069-483d-9048-219e420c82a2
+
+		changedProperty = Name
+
+	measure 'Gas MoM %' =
+			
+			IF (
+			    HASONEVALUE ( gold_dim_date[year_month] ),
+			    VAR cur = [Total Gas]
+			    VAR prev = CALCULATE ( [Total Gas], DATEADD ( gold_dim_date[date], -1, MONTH ) )
+			    RETURN DIVIDE ( cur - prev, prev )
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: aea7e43f-4610-4c50-a650-e72fb9c18c06
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure 'Gas Rolling 3M' =
+			
+			IF (
+			    NOT ISBLANK ( [Total Gas] ),
+			    CALCULATE (
+			        [Total Gas],
+			        DATESINPERIOD ( gold_dim_date[date], MAX ( gold_dim_date[date] ), -3, MONTH )
+			    )
+			)
+		formatString: #,0
+		lineageTag: 04796ff0-d120-46a3-b38c-d25d59011d3d
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	measure 'Gas Rolling 3M Avg' =
+			
+			IF (
+			    NOT ISBLANK ( [Total Gas] ),
+			    VAR m = DATESINPERIOD ( gold_dim_date[date], MAX ( gold_dim_date[date] ), -3, MONTH )
+			    RETURN
+			        DIVIDE (
+			            CALCULATE ( [Total Gas], m ),
+			            CALCULATE ( DISTINCTCOUNT ( gold_dim_date[month_start] ), m )
+			        )
+			)
+		formatString: #,0
+		lineageTag: 2668885f-c8ce-42be-b0b6-45dd4cacc8fa
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+	column production_month
+		dataType: dateTime
+		isHidden
+		formatString: General Date
+		lineageTag: 3fe92fbb-7b6d-493e-b5fc-a15d6d1e954f
+		sourceLineageTag: production_month
+		summarizeBy: none
+		sourceColumn: production_month
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column well_key
+		dataType: string
+		isHidden
+		lineageTag: a3799105-1ac5-4756-a5a6-a5bf1be86b09
+		sourceLineageTag: well_key
+		summarizeBy: none
+		sourceColumn: well_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductID
+		dataType: string
+		lineageTag: f3960515-e5e8-4053-826f-a0ac076763c5
+		sourceLineageTag: ProductID
+		summarizeBy: none
+		sourceColumn: ProductID
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingFacilityID
+		dataType: string
+		isHidden
+		lineageTag: ed2ac723-8ab5-4a7c-bb07-c3efe27aaed1
+		sourceLineageTag: ReportingFacilityID
+		summarizeBy: none
+		sourceColumn: ReportingFacilityID
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperatorBAID
+		dataType: string
+		isHidden
+		lineageTag: 3fffb567-c97f-46d1-b840-b969eeb0903d
+		sourceLineageTag: OperatorBAID
+		summarizeBy: none
+		sourceColumn: OperatorBAID
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperatorName
+		dataType: string
+		lineageTag: 6f661178-dd0a-4d50-b12c-04475dab27f7
+		sourceLineageTag: OperatorName
+		summarizeBy: none
+		sourceColumn: OperatorName
+
+		annotation SummarizationSetBy = Automatic
+
+	column volume
+		dataType: double
+		isHidden
+		lineageTag: 095b82fe-f520-461c-9773-56a1dae0adcd
+		sourceLineageTag: volume
+		summarizeBy: sum
+		sourceColumn: volume
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column energy
+		dataType: double
+		lineageTag: 87091966-3b41-4d53-82c2-e81a94203fed
+		sourceLineageTag: energy
+		summarizeBy: sum
+		sourceColumn: energy
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column hours
+		dataType: int64
+		formatString: 0
+		lineageTag: 3fe29e36-23ea-4662-85ec-9feab697a3f6
+		sourceLineageTag: hours
+		summarizeBy: sum
+		sourceColumn: hours
+
+		annotation SummarizationSetBy = Automatic
+
+	column submission_date
+		dataType: dateTime
+		isHidden
+		formatString: General Date
+		lineageTag: 7b5fafd1-dca8-43b8-8d36-3469be2295f1
+		sourceLineageTag: submission_date
+		summarizeBy: none
+		sourceColumn: submission_date
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column _source_file
+		dataType: string
+		isHidden
+		lineageTag: cdea5c15-bea7-4b1b-b94b-2acfb3ffe004
+		sourceLineageTag: _source_file
+		summarizeBy: none
+		sourceColumn: _source_file
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column _gold_run_id
+		dataType: string
+		isHidden
+		lineageTag: 8f418a50-6b10-48cd-ba32-e48d6be05920
+		sourceLineageTag: _gold_run_id
+		summarizeBy: none
+		sourceColumn: _gold_run_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition gold_fact_production = entity
+		mode: directLake
+		source
+			entityName: gold_fact_production
+			schemaName: dbo
+			expressionSource: 'DirectLake - alberta_wells'
+

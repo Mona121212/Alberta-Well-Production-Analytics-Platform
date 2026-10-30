@@ -1,0 +1,56 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "24ac39a6ceec5bd8e619",
+    "position": {
+        "x": 1418.3762618537778,
+        "y": 137.82808198225757,
+        "z": 7003,
+        "height": 694.1523401651881,
+        "width": 438.5438972162741,
+        "tabOrder": 7003
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_dim_well"
+                                        }
+                                    },
+                                    "Property": "status_fluid"
+                                }
+                            },
+                            "queryRef": "gold_dim_well.status_fluid",
+                            "nativeQueryRef": "status_fluid"
+                        }
+                    ]
+                }
+            }
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "41ce5596b07cc9c0b7ea",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "gold_dim_well"
+                            }
+                        },
+                        "Property": "status_fluid"
+                    }
+                },
+                "type": "Categorical"
+            }
+        ]
+    }
+}

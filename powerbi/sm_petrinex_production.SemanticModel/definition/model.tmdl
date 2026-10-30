@@ -1,0 +1,27 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_QueryOrder = ["DirectLake - alberta_wells"]
+
+annotation PBI_ProTooling = ["DirectLakeOnOneLakeInWeb","WebModelingEdit"]
+
+ref table gold_dim_date
+ref table gold_dim_operator
+ref table gold_dim_well
+ref table gold_fact_production
+ref table dq_month_coverage
+ref table dq_results
+ref table dq_rule_test_results
+ref table dq_run_log
+ref table reconciliation_results
+ref table defect_log
+
+ref role Crude_Oil_Viewer
+

@@ -1,0 +1,89 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "e82d109e428176247aa7",
+    "position": {
+        "x": 105.45993602247016,
+        "y": 485.7548568307716,
+        "z": 5000,
+        "height": 554.6292378347696,
+        "width": 683.0321482016616,
+        "tabOrder": 5000
+    },
+    "visual": {
+        "visualType": "lineChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_dim_date"
+                                        }
+                                    },
+                                    "Property": "year_month"
+                                }
+                            },
+                            "queryRef": "gold_dim_date.year_month",
+                            "nativeQueryRef": "year_month",
+                            "active": true
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Total Gas"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Total Gas",
+                            "nativeQueryRef": "Total Gas"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Gas Rolling 3M Avg"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Gas Rolling 3M Avg",
+                            "nativeQueryRef": "Gas Rolling 3M Avg"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "gold_fact_production"
+                                    }
+                                },
+                                "Property": "Total Gas"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

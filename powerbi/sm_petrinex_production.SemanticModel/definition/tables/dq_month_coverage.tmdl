@@ -1,0 +1,87 @@
+table dq_month_coverage
+	lineageTag: d90c9832-ff32-41e6-af05-b187d042bc38
+	sourceLineageTag: [dbo].[dq_month_coverage]
+
+	measure 'Wells Producing' =
+			
+			VAR r = [Latest Run ID]
+			RETURN CALCULATE(SUM(dq_month_coverage[producing_wells]), dq_month_coverage[run_id] = r)
+		formatString: 0
+		lineageTag: 3ae973c3-ede8-48d7-9bc4-ae237b4e660d
+
+		changedProperty = Name
+
+	measure 'Wells Added' =
+			
+			VAR r = [Latest Run ID]
+			RETURN CALCULATE(SUM(dq_month_coverage[wells_added]), dq_month_coverage[run_id] = r)
+		formatString: 0
+		lineageTag: d4b9ea34-1346-496e-bcf9-bb2a7b29d0df
+
+		changedProperty = Name
+
+	measure 'Wells Dropped' =
+			
+			VAR r = [Latest Run ID]
+			RETURN CALCULATE(SUM(dq_month_coverage[wells_dropped]), dq_month_coverage[run_id] = r)
+		formatString: 0
+		lineageTag: 1062501e-8184-424b-813f-d7f59bddec42
+
+		changedProperty = Name
+
+	column run_id
+		dataType: string
+		lineageTag: 05065fb6-90b1-479c-8cb4-ef3b6295af62
+		sourceLineageTag: run_id
+		summarizeBy: none
+		sourceColumn: run_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column production_month
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e7de1fa9-8fd2-4871-b335-acd36c087b57
+		sourceLineageTag: production_month
+		summarizeBy: none
+		sourceColumn: production_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column producing_wells
+		dataType: int64
+		formatString: 0
+		lineageTag: 49ac7088-089d-4534-a920-89c25a225162
+		sourceLineageTag: producing_wells
+		summarizeBy: sum
+		sourceColumn: producing_wells
+
+		annotation SummarizationSetBy = Automatic
+
+	column wells_added
+		dataType: int64
+		formatString: 0
+		lineageTag: 876105de-6390-4d29-a8e6-6df89b13051d
+		sourceLineageTag: wells_added
+		summarizeBy: sum
+		sourceColumn: wells_added
+
+		annotation SummarizationSetBy = Automatic
+
+	column wells_dropped
+		dataType: int64
+		formatString: 0
+		lineageTag: dfc9db5a-a3c5-4135-95c4-f360e65fe8c8
+		sourceLineageTag: wells_dropped
+		summarizeBy: sum
+		sourceColumn: wells_dropped
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dq_month_coverage = entity
+		mode: directLake
+		source
+			entityName: dq_month_coverage
+			schemaName: dbo
+			expressionSource: 'DirectLake - alberta_wells'
+

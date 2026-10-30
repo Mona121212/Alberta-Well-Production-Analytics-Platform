@@ -1,0 +1,12 @@
+relationship 9956d90a-abf7-d58d-5519-a30ddf0123cc
+	fromColumn: gold_fact_production.production_month
+	toColumn: gold_dim_date.date
+
+relationship b4e0b4ad-fadf-6b00-5e12-1dbc5bf1bd00
+	fromColumn: gold_fact_production.OperatorBAID
+	toColumn: gold_dim_operator.OperatorBAID
+
+relationship 43f09649-4583-b0de-f955-a77b81237831
+	fromColumn: gold_fact_production.well_key
+	toColumn: gold_dim_well.well_key
+

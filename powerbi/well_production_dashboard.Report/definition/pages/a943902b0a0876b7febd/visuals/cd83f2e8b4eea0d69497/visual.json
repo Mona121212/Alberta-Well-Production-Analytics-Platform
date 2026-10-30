@@ -1,0 +1,315 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "cd83f2e8b4eea0d69497",
+    "position": {
+        "x": 1355,
+        "y": 530,
+        "z": 7002,
+        "height": 302.5,
+        "width": 565,
+        "tabOrder": 7002
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "defect_log"
+                                        }
+                                    },
+                                    "Property": "defect_id"
+                                }
+                            },
+                            "queryRef": "Sum(defect_log.defect_id)",
+                            "nativeQueryRef": "defect_id1"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "defect_log"
+                                        }
+                                    },
+                                    "Property": "found_date"
+                                }
+                            },
+                            "queryRef": "defect_log.found_date",
+                            "nativeQueryRef": "found_date"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "defect_log"
+                                        }
+                                    },
+                                    "Property": "area"
+                                }
+                            },
+                            "queryRef": "defect_log.area",
+                            "nativeQueryRef": "area"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "defect_log"
+                                        }
+                                    },
+                                    "Property": "severity"
+                                }
+                            },
+                            "queryRef": "defect_log.severity",
+                            "nativeQueryRef": "severity"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "defect_log"
+                                        }
+                                    },
+                                    "Property": "status"
+                                }
+                            },
+                            "queryRef": "defect_log.status",
+                            "nativeQueryRef": "status"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "defect_log"
+                                        }
+                                    },
+                                    "Property": "description"
+                                }
+                            },
+                            "queryRef": "defect_log.description",
+                            "nativeQueryRef": "description"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "defect_log"
+                                    }
+                                },
+                                "Property": "status"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ]
+            }
+        },
+        "objects": {
+            "values": [
+                {
+                    "properties": {
+                        "backColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Conditional": {
+                                            "Cases": [
+                                                {
+                                                    "Condition": {
+                                                        "Comparison": {
+                                                            "ComparisonKind": 0,
+                                                            "Left": {
+                                                                "Aggregation": {
+                                                                    "Expression": {
+                                                                        "Column": {
+                                                                            "Expression": {
+                                                                                "SourceRef": {
+                                                                                    "Entity": "defect_log"
+                                                                                }
+                                                                            },
+                                                                            "Property": "status"
+                                                                        }
+                                                                    },
+                                                                    "Function": 3
+                                                                }
+                                                            },
+                                                            "Right": {
+                                                                "Literal": {
+                                                                    "Value": "'Open'"
+                                                                }
+                                                            }
+                                                        },
+                                                        "Annotations": {
+                                                            "PowerBI.SQExprEvaluationKind": 1,
+                                                            "PowerBI.SQExprTextOperatorOption": 2
+                                                        }
+                                                    },
+                                                    "Value": {
+                                                        "Literal": {
+                                                            "Value": "'#E66C37'"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "Condition": {
+                                                        "Comparison": {
+                                                            "ComparisonKind": 0,
+                                                            "Left": {
+                                                                "Aggregation": {
+                                                                    "Expression": {
+                                                                        "Column": {
+                                                                            "Expression": {
+                                                                                "SourceRef": {
+                                                                                    "Entity": "defect_log"
+                                                                                }
+                                                                            },
+                                                                            "Property": "status"
+                                                                        }
+                                                                    },
+                                                                    "Function": 3
+                                                                }
+                                                            },
+                                                            "Right": {
+                                                                "Literal": {
+                                                                    "Value": "'Closed'"
+                                                                }
+                                                            }
+                                                        },
+                                                        "Annotations": {
+                                                            "PowerBI.SQExprEvaluationKind": 1,
+                                                            "PowerBI.SQExprTextOperatorOption": 2
+                                                        }
+                                                    },
+                                                    "Value": {
+                                                        "Literal": {
+                                                            "Value": "'#06F73E'"
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "defect_log.status"
+                    }
+                }
+            ]
+        },
+        "drillFilterOtherVisuals": true
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "a612d917e4a76a607c03",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "defect_log"
+                            }
+                        },
+                        "Property": "found_date"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "b34b9830f810b0242b8b",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "defect_log"
+                            }
+                        },
+                        "Property": "area"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "02771f95d1ae65ece084",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "defect_log"
+                            }
+                        },
+                        "Property": "severity"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "1606a1df2a14d269f3d7",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "defect_log"
+                            }
+                        },
+                        "Property": "status"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "708b04539c9ddd6fe117",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "defect_log"
+                            }
+                        },
+                        "Property": "description"
+                    }
+                },
+                "type": "Categorical"
+            },
+            {
+                "name": "886f24a0376911f06124",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "defect_log"
+                            }
+                        },
+                        "Property": "defect_id"
+                    }
+                },
+                "type": "Advanced"
+            }
+        ]
+    }
+}

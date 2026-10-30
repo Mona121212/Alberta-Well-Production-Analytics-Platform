@@ -1,0 +1,67 @@
+table defect_log
+	lineageTag: 8611f75a-a2fc-4858-afe1-21cd75885b64
+	sourceLineageTag: [dbo].[defect_log]
+
+	column defect_id
+		dataType: int64
+		formatString: 0
+		lineageTag: e267c8d4-42ba-44db-9098-9b8fb558ee14
+		sourceLineageTag: defect_id
+		summarizeBy: sum
+		sourceColumn: defect_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column found_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 576dea38-028c-4dfc-8efb-2de4061df143
+		sourceLineageTag: found_date
+		summarizeBy: none
+		sourceColumn: found_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column area
+		dataType: string
+		lineageTag: 8130f4b8-2641-410e-bd49-494735886ce5
+		sourceLineageTag: area
+		summarizeBy: none
+		sourceColumn: area
+
+		annotation SummarizationSetBy = Automatic
+
+	column severity
+		dataType: string
+		lineageTag: 303dca23-88c3-412a-80ed-541e1867c519
+		sourceLineageTag: severity
+		summarizeBy: none
+		sourceColumn: severity
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: 41f75dba-ce6b-4179-b420-a765b7862bf3
+		sourceLineageTag: status
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column description
+		dataType: string
+		lineageTag: 527e51d5-7f2d-4e33-afed-98aeba4dc70f
+		sourceLineageTag: description
+		summarizeBy: none
+		sourceColumn: description
+
+		annotation SummarizationSetBy = Automatic
+
+	partition defect_log = entity
+		mode: directLake
+		source
+			entityName: defect_log
+			schemaName: dbo
+			expressionSource: 'DirectLake - alberta_wells'
+

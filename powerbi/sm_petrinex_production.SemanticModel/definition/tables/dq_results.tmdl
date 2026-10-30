@@ -1,0 +1,74 @@
+table dq_results
+	lineageTag: 96a35b4d-0e1f-44ae-8165-a1f24f65d8f0
+	sourceLineageTag: [dbo].[dq_results]
+
+	measure 'Severity Order' =
+			
+			SWITCH(MAX(dq_results[severity]), "reject", 1, "warning", 2, "info", 3, 9)
+		formatString: 0
+		lineageTag: 679f3b1a-aa9c-4586-ab0b-7005f3e45707
+
+		changedProperty = Name
+
+	column run_id
+		dataType: string
+		lineageTag: 21027705-a069-41cd-91f3-2f59704137df
+		sourceLineageTag: run_id
+		summarizeBy: none
+		sourceColumn: run_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column layer
+		dataType: string
+		lineageTag: 88eca529-9f93-4339-bb99-7005629cd5b5
+		sourceLineageTag: layer
+		summarizeBy: none
+		sourceColumn: layer
+
+		annotation SummarizationSetBy = Automatic
+
+	column table_name
+		dataType: string
+		lineageTag: f83f82c1-3ff9-44af-9b1f-1639a6c091d5
+		sourceLineageTag: table_name
+		summarizeBy: none
+		sourceColumn: table_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column rule_name
+		dataType: string
+		lineageTag: f809aa16-fd43-40c8-822d-a97e2690b4d2
+		sourceLineageTag: rule_name
+		summarizeBy: none
+		sourceColumn: rule_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column severity
+		dataType: string
+		lineageTag: 6da5708c-57fa-429a-817f-6d792778b79d
+		sourceLineageTag: severity
+		summarizeBy: none
+		sourceColumn: severity
+
+		annotation SummarizationSetBy = Automatic
+
+	column rows_flagged
+		dataType: int64
+		formatString: 0
+		lineageTag: e2357936-998b-4ff1-a131-3af98ea8e329
+		sourceLineageTag: rows_flagged
+		summarizeBy: sum
+		sourceColumn: rows_flagged
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dq_results = entity
+		mode: directLake
+		source
+			entityName: dq_results
+			schemaName: dbo
+			expressionSource: 'DirectLake - alberta_wells'
+

@@ -26,3 +26,7 @@ deliverables/*/data.gpkg
 deliverables/*/wells.csv
 gis/well.qgz
 CLAUDE.md
+
+# Power BI project local cache (powerbi/)
+powerbi/**/.pbi/localSettings.json
+powerbi/**/.pbi/cache.abf

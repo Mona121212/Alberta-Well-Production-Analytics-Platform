@@ -1,0 +1,75 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "a4138c2a284611c10fe2",
+    "position": {
+        "x": 843.6794881797613,
+        "y": 572.0402590309744,
+        "z": 7000,
+        "height": 383.33333333333337,
+        "width": 455,
+        "tabOrder": 7000
+    },
+    "visual": {
+        "visualType": "clusteredColumnChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_dim_date"
+                                        }
+                                    },
+                                    "Property": "year_month"
+                                }
+                            },
+                            "queryRef": "gold_dim_date.year_month",
+                            "nativeQueryRef": "year_month",
+                            "active": true
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_fact_production"
+                                        }
+                                    },
+                                    "Property": "Gas MoM %"
+                                }
+                            },
+                            "queryRef": "gold_fact_production.Gas MoM %",
+                            "nativeQueryRef": "Gas MoM %"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "gold_fact_production"
+                                    }
+                                },
+                                "Property": "Gas MoM %"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "drillFilterOtherVisuals": true
+    }
+}

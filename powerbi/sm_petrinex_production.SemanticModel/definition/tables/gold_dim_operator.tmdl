@@ -1,0 +1,32 @@
+table gold_dim_operator
+	lineageTag: cc1b245f-f16a-4c36-a8b9-641df2219407
+	sourceLineageTag: [dbo].[gold_dim_operator]
+
+	column OperatorBAID
+		dataType: string
+		isHidden
+		lineageTag: 167b340c-03af-414f-a0b3-b4d788a0103f
+		sourceLineageTag: OperatorBAID
+		summarizeBy: none
+		sourceColumn: OperatorBAID
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column operator_name
+		dataType: string
+		lineageTag: a5b1ba48-c1d7-4b5e-8ad2-79dba61d12a0
+		sourceLineageTag: operator_name
+		summarizeBy: none
+		sourceColumn: operator_name
+
+		annotation SummarizationSetBy = Automatic
+
+	partition gold_dim_operator = entity
+		mode: directLake
+		source
+			entityName: gold_dim_operator
+			schemaName: dbo
+			expressionSource: 'DirectLake - alberta_wells'
+
