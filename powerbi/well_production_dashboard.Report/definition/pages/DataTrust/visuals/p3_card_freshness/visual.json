@@ -2,10 +2,10 @@
     "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
     "name": "p3_card_freshness",
     "position": {
-        "x": 896,
+        "x": 824,
         "y": 72,
         "z": 8,
-        "width": 368,
+        "width": 272,
         "height": 92,
         "tabOrder": 8
     },
@@ -28,62 +28,11 @@
                             },
                             "queryRef": "dq_run_log.Last Successful Run",
                             "nativeQueryRef": "Last Successful Run",
-                            "displayName": "Last successful run"
-                        },
-                        {
-                            "field": {
-                                "Measure": {
-                                    "Expression": {
-                                        "SourceRef": {
-                                            "Entity": "dq_run_log"
-                                        }
-                                    },
-                                    "Property": "Latest Production Month"
-                                }
-                            },
-                            "queryRef": "dq_run_log.Latest Production Month",
-                            "nativeQueryRef": "Latest Production Month",
-                            "displayName": "Latest month"
+                            "displayName": "Last successful run (UTC)"
                         }
                     ]
                 }
             }
-        },
-        "visualContainerObjects": {
-            "title": [
-                {
-                    "properties": {
-                        "show": {
-                            "expr": {
-                                "Literal": {
-                                    "Value": "true"
-                                }
-                            }
-                        },
-                        "fontSize": {
-                            "expr": {
-                                "Literal": {
-                                    "Value": "11D"
-                                }
-                            }
-                        },
-                        "bold": {
-                            "expr": {
-                                "Literal": {
-                                    "Value": "true"
-                                }
-                            }
-                        },
-                        "text": {
-                            "expr": {
-                                "Literal": {
-                                    "Value": "'Freshness'"
-                                }
-                            }
-                        }
-                    }
-                }
-            ]
         }
     }
 }
