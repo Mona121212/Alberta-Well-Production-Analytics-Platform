@@ -7,8 +7,8 @@ table dq_results
 			
 			SWITCH(MAX(dq_results[severity]), "reject", 1, "warning", 2, "info", 3, 9)
 		formatString: 0
-		displayFolder: Data Quality\Rules
 		isHidden
+		displayFolder: Data Quality\Rules
 		lineageTag: 679f3b1a-aa9c-4586-ab0b-7005f3e45707
 
 		changedProperty = Name
