@@ -731,9 +731,8 @@ A second review of all three pages led to these changes:
 - Data Trust: the known issues table shows all open high-severity defects (D-002, D-010) with wrapped text; the DQ
   rules table shows only the rules of the latest run (`Rows Flagged Latest` not blank; `Severity Order` alone had also
   listed rules of older runs), leaves out the monthly `wells_disappeared_*` and `wells_new_*` checks (page 2 shows
-  wells added and dropped) and the rule `sensor_malfunction_consecutive_neg` (written by the
-  `03_sensor_streaming_anomaly_detection` demo, not the Petrinex pipeline); reconciliation numbers have thousands
-  separators.
+  wells added and dropped); the rule `sensor_malfunction_consecutive_neg` of the sensor demo no longer appears (the
+  demo and its rows were removed, DEC-028); reconciliation numbers have thousands separators.
 - Run history is a table (run time, Silver rows, reconciliation tests passed / total, newest first) instead of a line
   chart: the number of tests grew from 5 to 9, and a rising line read as better data.
 
@@ -779,3 +778,29 @@ the DAX version looked at operator X's own rows (1,042 idle wells for one large 
 Verified on 2026-10-30, run `38b61620`: 9 of 9 reconciliation tests PASS, `gold_idle_wells` has 5,628 rows (the DAX
 measure gave 5,628 before the change), and all 28,140 values match the independent Spark result; 4 wells were
 reported by another operator after their last production month.
+
+## DEC-028 Remove the sensor anomaly demo notebook and its rows
+
+**Context.** `03_sensor_streaming_anomaly_detection` simulated pressure readings from Silver `PROD` rows (random
+values, about 5% forced negative) and appended its result to the production audit tables: one row per run in
+`dq_results` (layer "gold", severity "reject", although it read Silver and removed nothing) and the flagged rows in
+`rejected_records`, with the simulated pressure in the `volume` column. Its run IDs were not in `dq_run_log`, so a
+filter that did not pin the latest run showed the demo rule next to the Petrinex rules (the Data Trust page did, see
+DEC-026). All readings had the same timestamp, so "3 consecutive negative readings" had no defined order and the
+result changed on every run.
+
+**Decision.** Delete the notebook from the repo and the workspace, and delete its rows from the audit tables
+(rule `sensor_malfunction_consecutive_neg`). Delta versions before the delete, for `RESTORE TABLE ... TO VERSION AS
+OF`: `dq_results` 22, `rejected_records` 11 (after: 23 and 12). Rows: `dq_results` 263 -> 260 (3 demo runs),
+`rejected_records` 4,562 -> 4,538 (24 rows, all from those 3 runs). If streaming is shown again, rebuild it with
+Fabric Eventstream on a real or clearly separated simulated feed, writing to its own tables.
+
+**Alternatives.**
+- Fix the demo (deterministic timestamps, a seed, its own `demo_*` tables): keeps simulated data in the project and
+  still needs a story for why it exists; a real streaming source shows the skill better.
+- Keep the notebook and only filter the rule out of the report: leaves simulated rows in tables that are meant to be
+  the audit trail of the Petrinex pipeline.
+
+**Consequences.** `dq_results` and `rejected_records` hold only rows from `02_silver_transform`. The Data Trust page
+shows the same numbers as before (its visuals already read the latest run only); the report filter that excluded the
+demo rule was removed. The pipeline is three notebooks plus `load_defect_log`.

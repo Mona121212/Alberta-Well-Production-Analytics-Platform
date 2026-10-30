@@ -94,8 +94,8 @@ Run the notebooks in this order in the `well-production-mvp` workspace (Lakehous
 | 3 | `03_gold_transform` | `gold_dim_well`, `gold_fact_production`, `gold_dim_date`, `gold_dim_operator`, `gold_idle_wells`, `reconciliation_results` |
 
 `03_gold_transform` reads only Lakehouse tables. It takes the reject and in-scope flags and the run ID from
-`silver_petrinex_vol_flagged` (DEC-021) and stops if that table is out of date. `03_sensor_streaming_anomaly_detection`
-(optional demo) and `load_defect_log` run on their own; `explore_raw` is read-only exploration.
+`silver_petrinex_vol_flagged` (DEC-021) and stops if that table is out of date. `load_defect_log` runs on its own;
+`explore_raw` is read-only exploration.
 
 The defect log has one source, `config/defect_log.yaml` (DEC-024). After editing it:
 
@@ -256,7 +256,7 @@ packages and maps never run on bad data.
 ## Repository guide
 
 - `notebooks/` - Fabric notebooks: `01_bronze_transform`, `02_silver_transform`, `03_gold_transform`, plus
-  `03_sensor_streaming_anomaly_detection`, `load_defect_log` and `explore_raw`
+  `load_defect_log` and `explore_raw`
 - `gis/` - pipeline modules (`stage`, `convert`, `qa`, `qa_checks`, `liability`, `analysis`, `package`, `changes`,
   `maps`, `qgis_maps`, `run`)
 - `config/` - every setting, rule, mapping table, field dictionary and style
@@ -264,4 +264,4 @@ packages and maps never run on bad data.
 - `tests/gis/` - rule and module tests; `tests/test_defect_log.py` - defect log in sync with its yaml source;
   `tests/test_powerbi_files.py` - no credentials in `powerbi/`, every measure documented
 - `docs/` - `progress.md`, `final_report.md`, `st37_gis_exploration.md`, `defect_log.md`, maps, dashboard screenshots
-- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-027)
+- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-028)
