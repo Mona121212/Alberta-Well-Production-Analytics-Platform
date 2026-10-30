@@ -57,12 +57,12 @@
                                             "Entity": "gold_fact_production"
                                         }
                                     },
-                                    "Property": "Oil Rolling 3M (m3)"
+                                    "Property": "Oil Rolling 3M Avg (m3)"
                                 }
                             },
-                            "queryRef": "gold_fact_production.Oil Rolling 3M (m3)",
-                            "nativeQueryRef": "Oil Rolling 3M (m3)",
-                            "displayName": "Oil rolling 3M (m3)"
+                            "queryRef": "gold_fact_production.Oil Rolling 3M Avg (m3)",
+                            "nativeQueryRef": "Oil Rolling 3M Avg (m3)",
+                            "displayName": "Oil 3M average (m3)"
                         }
                     ]
                 }
@@ -121,7 +121,7 @@
                         }
                     },
                     "selector": {
-                        "metadata": "gold_fact_production.Oil Rolling 3M (m3)"
+                        "metadata": "gold_fact_production.Oil Rolling 3M Avg (m3)"
                     }
                 }
             ],
@@ -187,7 +187,7 @@
                         "text": {
                             "expr": {
                                 "Literal": {
-                                    "Value": "'Oil by month and rolling 3 months (m3)'"
+                                    "Value": "'Oil by month and 3-month average (m3)'"
                                 }
                             }
                         }

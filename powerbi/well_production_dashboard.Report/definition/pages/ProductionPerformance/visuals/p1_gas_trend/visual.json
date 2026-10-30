@@ -57,12 +57,12 @@
                                             "Entity": "gold_fact_production"
                                         }
                                     },
-                                    "Property": "Gas Rolling 3M"
+                                    "Property": "Gas Rolling 3M Avg"
                                 }
                             },
-                            "queryRef": "gold_fact_production.Gas Rolling 3M",
-                            "nativeQueryRef": "Gas Rolling 3M",
-                            "displayName": "Gas rolling 3M (e3m3)"
+                            "queryRef": "gold_fact_production.Gas Rolling 3M Avg",
+                            "nativeQueryRef": "Gas Rolling 3M Avg",
+                            "displayName": "Gas 3M average (e3m3)"
                         }
                     ]
                 }
@@ -121,7 +121,7 @@
                         }
                     },
                     "selector": {
-                        "metadata": "gold_fact_production.Gas Rolling 3M"
+                        "metadata": "gold_fact_production.Gas Rolling 3M Avg"
                     }
                 }
             ],
@@ -187,7 +187,7 @@
                         "text": {
                             "expr": {
                                 "Literal": {
-                                    "Value": "'Gas by month and rolling 3 months (e3m3)'"
+                                    "Value": "'Gas by month and 3-month average (e3m3)'"
                                 }
                             }
                         }

@@ -239,6 +239,16 @@ table gold_fact_production
 			    CALCULATE(MAX(gold_fact_production[OperatorName]), REMOVEFILTERS(gold_dim_date), gold_dim_date[month_start] = lastRow))
 		displayFolder: Production\Last 3M vs Prior 3M
 
+	/// Average monthly oil volume (m3) over the same 3-month window as Oil Rolling 3M (m3): rolling oil divided by the number of months of that window present in gold_dim_date (fewer than 3 at the start of the data), blank where the current period has no oil.
+	measure 'Oil Rolling 3M Avg (m3)' =
+			IF(
+			    NOT ISBLANK([Total Oil (m3)]),
+			    VAR m = DATESINPERIOD(gold_dim_date[date], MAX(gold_dim_date[date]), -3, MONTH)
+			    RETURN DIVIDE(CALCULATE([Total Oil (m3)], m), CALCULATE(DISTINCTCOUNT(gold_dim_date[month_start]), m))
+			)
+		formatString: #,0
+		displayFolder: Production\Time Intelligence
+
 	column production_month
 		dataType: dateTime
 		isHidden
