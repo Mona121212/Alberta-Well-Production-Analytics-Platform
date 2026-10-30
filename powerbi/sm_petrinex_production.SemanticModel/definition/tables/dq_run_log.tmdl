@@ -156,6 +156,13 @@ table dq_run_log
 		formatString: 0.00
 		displayFolder: Data Quality\Run
 
+	/// Reconciliation tests of each run in the filter as "passed / total" (distinct test_name with status PASS / all distinct test_name for that run_id); the number of tests grew from 5 to 9, so the total is shown.
+	measure 'Run Recon Result' =
+			VAR r = SELECTEDVALUE(dq_run_log[run_id])
+			VAR total = CALCULATE(DISTINCTCOUNT(reconciliation_results[test_name]), reconciliation_results[run_id] = r)
+			RETURN IF(total > 0, FORMAT([Run Recon Passed] + 0, "0") & " / " & FORMAT(total, "0"))
+		displayFolder: Data Quality\Run History
+
 	column run_id
 		dataType: string
 		lineageTag: ef78519c-ab69-44b4-8e74-4ed4f86bb6c2
@@ -167,7 +174,7 @@ table dq_run_log
 
 	column run_ts
 		dataType: dateTime
-		formatString: General Date
+		formatString: yyyy-mm-dd hh:nn
 		lineageTag: a8d36ce3-c5e9-403e-a2b5-8f0265edfc55
 		sourceLineageTag: run_ts
 		summarizeBy: none

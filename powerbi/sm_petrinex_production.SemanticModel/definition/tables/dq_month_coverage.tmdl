@@ -46,7 +46,7 @@ table dq_month_coverage
 
 	column production_month
 		dataType: dateTime
-		formatString: General Date
+		formatString: mmm yy
 		lineageTag: e7de1fa9-8fd2-4871-b335-acd36c087b57
 		sourceLineageTag: production_month
 		summarizeBy: none

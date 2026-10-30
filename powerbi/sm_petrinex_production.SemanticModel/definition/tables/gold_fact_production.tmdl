@@ -249,6 +249,42 @@ table gold_fact_production
 		formatString: #,0
 		displayFolder: Production\Time Intelligence
 
+	/// Title of the oil cards: "Oil, " and the latest month in the filter as mmm yyyy (MAX(gold_dim_date[month_start]), the same month as Latest Month Oil).
+	measure 'Oil Card Title' = "Oil, " & FORMAT(MAX(gold_dim_date[month_start]), "mmm yyyy")
+		isHidden
+		displayFolder: Formatting
+
+	/// Font colour of Oil MoM %: red when negative, green when positive, the default text colour otherwise.
+	measure 'Oil MoM Color' =
+			VAR x = [Oil MoM %]
+			RETURN SWITCH(TRUE(), x < 0, "#C62828", x > 0, "#2E7D32", "#252423")
+		isHidden
+		displayFolder: Formatting
+
+	/// Title of the gas cards: "Gas, " and the latest month in the filter as mmm yyyy (MAX(gold_dim_date[month_start]), the same month as Latest Month Gas).
+	measure 'Gas Card Title' = "Gas, " & FORMAT(MAX(gold_dim_date[month_start]), "mmm yyyy")
+		isHidden
+		displayFolder: Formatting
+
+	/// Font colour of Gas MoM %: red when negative, green when positive, the default text colour otherwise.
+	measure 'Gas MoM Color' =
+			VAR x = [Gas MoM %]
+			RETURN SWITCH(TRUE(), x < 0, "#C62828", x > 0, "#2E7D32", "#252423")
+		isHidden
+		displayFolder: Formatting
+
+	/// Title of the condensate cards: "Condensate, " and the latest month in the filter as mmm yyyy (MAX(gold_dim_date[month_start]), the same month as Latest Month Condensate).
+	measure 'Condensate Card Title' = "Condensate, " & FORMAT(MAX(gold_dim_date[month_start]), "mmm yyyy")
+		isHidden
+		displayFolder: Formatting
+
+	/// Font colour of Condensate MoM %: red when negative, green when positive, the default text colour otherwise.
+	measure 'Condensate MoM Color' =
+			VAR x = [Condensate MoM %]
+			RETURN SWITCH(TRUE(), x < 0, "#C62828", x > 0, "#2E7D32", "#252423")
+		isHidden
+		displayFolder: Formatting
+
 	column production_month
 		dataType: dateTime
 		isHidden

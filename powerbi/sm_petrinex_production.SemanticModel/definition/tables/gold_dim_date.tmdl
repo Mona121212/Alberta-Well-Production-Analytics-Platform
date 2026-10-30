@@ -59,7 +59,7 @@ table gold_dim_date
 
 	column month_start
 		dataType: dateTime
-		formatString: General Date
+		formatString: mmm yy
 		lineageTag: 576715f2-4178-492d-9279-44196e1e71d4
 		sourceLineageTag: month_start
 		summarizeBy: none

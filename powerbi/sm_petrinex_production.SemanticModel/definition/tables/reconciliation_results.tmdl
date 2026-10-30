@@ -22,7 +22,7 @@ table reconciliation_results
 
 	column expected
 		dataType: int64
-		formatString: 0
+		formatString: #,0
 		lineageTag: 4a9441d3-1fca-4044-b870-2fccadf90f97
 		sourceLineageTag: expected
 		summarizeBy: sum
@@ -32,7 +32,7 @@ table reconciliation_results
 
 	column actual
 		dataType: int64
-		formatString: 0
+		formatString: #,0
 		lineageTag: 71737ac3-9792-434d-9389-95b56867ee6a
 		sourceLineageTag: actual
 		summarizeBy: sum
