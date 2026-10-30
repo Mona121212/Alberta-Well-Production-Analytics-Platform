@@ -230,6 +230,15 @@ table gold_fact_production
 		isHidden
 		displayFolder: Formatting
 
+	/// Operator of one well for the drop tables: MAX(OperatorName) on the well's latest Gold row in the Last 3M and Prior 3M windows (6 months ending at the latest month of the filter); blank unless one well is in the filter, so it is evaluated only for the rows shown.
+	measure 'Well Operator' =
+			VAR m = MAX(gold_dim_date[month_start])
+			VAR lastRow = CALCULATE(MAX(gold_fact_production[production_month]), REMOVEFILTERS(gold_dim_date),
+			    gold_dim_date[month_start] > EDATE(m, -6), gold_dim_date[month_start] <= m)
+			RETURN IF(HASONEVALUE(gold_dim_well[well_key]) && NOT ISBLANK(lastRow),
+			    CALCULATE(MAX(gold_fact_production[OperatorName]), REMOVEFILTERS(gold_dim_date), gold_dim_date[month_start] = lastRow))
+		displayFolder: Production\Last 3M vs Prior 3M
+
 	column production_month
 		dataType: dateTime
 		isHidden

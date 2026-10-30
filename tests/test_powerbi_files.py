@@ -75,6 +75,6 @@ def measures():
 
 def test_every_measure_has_description_and_display_folder():
     found = measures()
-    assert len(found) == 48
+    assert len(found) == 49
     missing = [f"{t}[{name}]" for t, name, desc, folder in found if not desc or not folder]
     assert missing == [], f"measures without description or display folder: {missing}"
