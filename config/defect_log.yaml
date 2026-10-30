@@ -1,0 +1,217 @@
+# Project defect log: the single source (DEC-024).
+# - docs/defect_log.md: the table is built from this file by scripts/build_defect_log.py; the detail paragraphs are
+#   written by hand, and every metric below must appear in the paragraph of its defect (--check).
+# - Lakehouse table defect_log: loaded from Files/config/defect_log.yaml by notebooks/load_defect_log.ipynb.
+# After a change: python scripts/build_defect_log.py, then
+#   fab cp config/defect_log.yaml "well-production-mvp.Workspace/alberta_wells.Lakehouse/Files/config/"
+#   and run load_defect_log.
+#
+# status: Fixed = handled, the issue no longer affects the data; Mitigated = handled, but the issue still exists in
+# the source; Open = recorded, not handled. status_map gives the value written to defect_log.status: Mitigated stays
+# Mitigated so that the report measure Open Defects (status <> "Closed") still counts it.
+# found_date: the date the defect was first recorded in the repo.
+# metrics: scope is 12m (2025-07 to 2026-06), a single month (YYYY-MM), 2026-05..2026-06 (the first two months
+# loaded), max_month or min_month (the note names the month).
+
+data_scope:
+  petrinex_months: 2025-07 to 2026-06
+  petrinex_rows: 6481961
+  st37_production_string_rows: 658266
+  st37_bh_rows: 538629
+  statistics_run_id: 024b8cef
+
+status_map:
+  Fixed: Closed
+  Mitigated: Mitigated
+  Open: Open
+
+accepted_values:
+  status: [Fixed, Mitigated, Open]
+  severity: [high, medium, low]
+  area: [ingestion, silver, gold]
+
+defects:
+  - id: D-001
+    issue: Well IDs use different formats in the two sources
+    impact: A direct join matches nothing
+    handling: Normalization rule; 99.7% of Petrinex well keys match production_string (12 months)
+    status: Fixed
+    area: silver
+    severity: medium
+    found_date: 2026-10-01
+    metrics:
+      - {name: wi_well_keys, value: 166901, scope: 12m}
+      - {name: wi_well_keys_matched, value: 166433, scope: 12m}
+      - {name: match_rate, value: 99.7, unit: "%", scope: 12m}
+      - {name: match_rate_max, value: 99.98, unit: "%", scope: max_month, note: 2025-07}
+      - {name: match_rate_min, value: 99.72, unit: "%", scope: min_month, note: 2026-06}
+      - {name: wi_well_keys, value: 161098, scope: 2026-06, note: used by config/gis_liability.yaml}
+      - {name: wi_well_keys_matched, value: 160641, scope: 2026-06}
+      - {name: wi_well_keys_matched_before_uppercase, value: 160640, scope: 2026-06}
+      - {name: lowercase_w_rows, value: 12, scope: 12m, note: one well, one row per month}
+
+  - id: D-002
+    issue: Some producing wells are missing from ST37 `production_string`
+    impact: 0.14% of rows over 12 months, but up to 7.1% of gas and 22.7% of condensate volume in one month (June)
+    handling: Combined with `BH`, kept the volume, 9 placeholder wells; cause investigated in D-009
+    status: Mitigated
+    area: gold
+    severity: high
+    found_date: 2026-10-01
+    metrics:
+      - {name: prod_rows, value: 2908768, scope: 12m}
+      - {name: prod_rows_not_in_production_string, value: 4076, scope: 12m}
+      - {name: producing_wells, value: 144259, scope: 12m}
+      - {name: producing_wells_not_in_production_string, value: 446, scope: 12m}
+      - {name: of_which_in_bh, value: 437, scope: 12m}
+      - {name: producing_wells_in_dim_well, value: 144250, scope: 12m}
+      - {name: placeholder_wells, value: 9, scope: 12m}
+      - {name: placeholder_fact_rows, value: 147, scope: 12m}
+      - {name: gas_volume_share, value: 2.48, unit: "%", scope: 12m}
+      - {name: condensate_volume_share, value: 5.82, unit: "%", scope: 12m}
+      - {name: oil_volume_share, value: 0.67, unit: "%", scope: 12m}
+      - {name: gas_volume_share_min, value: 0.11, unit: "%", scope: min_month, note: 2025-07}
+      - {name: condensate_volume_share_min, value: 0.38, unit: "%", scope: min_month, note: 2025-08}
+      - {name: producing_wells_not_in_production_string, value: 423, scope: 2026-06}
+      - {name: prod_rows_not_in_production_string, value: 815, scope: 2026-06}
+      - {name: prod_rows, value: 241705, scope: 2026-06}
+      - {name: of_which_in_bh, value: 415, scope: 2026-06}
+      - {name: producing_wells, value: 135154, scope: 2026-06, note: used by config/gis_liability.yaml}
+      - {name: producing_wells_in_dim_well, value: 135146, scope: 2026-06}
+      - {name: placeholder_fact_rows, value: 23, scope: 2026-06}
+      - {name: gas_volume_share, value: 7.1, unit: "%", scope: 2026-06, note: highest month}
+      - {name: condensate_volume_share, value: 22.7, unit: "%", scope: 2026-06, note: highest month}
+
+  - id: D-003
+    issue: Negative volumes in adjustment activities
+    impact: Rejecting them would remove normal adjustments
+    handling: Negative check applies to `PROD` rows only; no `PROD` row is negative in any month
+    status: Fixed
+    area: silver
+    severity: low
+    found_date: 2026-10-01
+    metrics:
+      - {name: negative_values, value: 16958, scope: 12m}
+      - {name: diff, value: 13263, scope: 12m}
+      - {name: invadj, value: 1603, scope: 12m}
+      - {name: ldinvadj, value: 1032, scope: 12m}
+      - {name: frac, value: 947, scope: 12m}
+      - {name: proc, value: 58, scope: 12m}
+      - {name: shr, value: 55, scope: 12m}
+      - {name: negative_values_max, value: 1514, scope: max_month, note: 2025-09}
+      - {name: negative_values_min, value: 1310, scope: min_month, note: 2026-06}
+      - {name: diff, value: 1051, scope: 2026-06}
+
+  - id: D-004
+    issue: Masked values (`***`) in `Volume` and `Hours`
+    impact: 73 and 7,094 values cannot be cast (12 months)
+    handling: Raw value kept, flagged as masked
+    status: Mitigated
+    area: ingestion
+    severity: medium
+    found_date: 2026-10-01
+    metrics:
+      - {name: masked_volume, value: 73, scope: 12m}
+      - {name: masked_hours, value: 7094, scope: 12m}
+      - {name: masked_hours_prod, value: 2625, scope: 12m}
+      - {name: masked_hours_max, value: 1709, scope: max_month, note: 2026-06}
+      - {name: masked_hours_min, value: 6, scope: min_month, note: 2025-07 to 2025-09}
+      - {name: masked_volume_max, value: 15, scope: max_month, note: 2026-06}
+      - {name: masked_volume, value: 26, scope: 2026-05..2026-06}
+      - {name: masked_hours, value: 3075, scope: 2026-05..2026-06}
+      - {name: masked_hours_prod, value: 1128, scope: 2026-05..2026-06}
+
+  - id: D-005
+    issue: Whitespace-only and padded values
+    impact: Null checks miss them, joins fail
+    handling: Trim, empty to NULL in Silver
+    status: Fixed
+    area: silver
+    severity: low
+    found_date: 2026-10-01
+    metrics:
+      - {name: cci_code_null_after_trim, value: 6449828, scope: 12m}
+      - {name: rows, value: 6481961, scope: 12m}
+      - {name: cci_code_single_space, value: 6165365, scope: 12m}
+      - {name: cci_code_single_space_max, value: 527878, scope: max_month, note: 2025-10}
+      - {name: cci_code_single_space_min, value: 500395, scope: min_month, note: 2026-06}
+      - {name: cci_code_null_after_trim, value: 1055638, scope: 2026-05..2026-06}
+      - {name: rows, value: 1061082, scope: 2026-05..2026-06}
+
+  - id: D-006
+    issue: My cast-failure check compared a column with itself
+    impact: The check always showed 0
+    handling: Rebuilt with raw columns
+    status: Fixed
+    area: silver
+    severity: medium
+    found_date: 2026-10-01
+    metrics:
+      - {name: masked_volume, value: 73, scope: 12m}
+      - {name: masked_hours, value: 7094, scope: 12m}
+      - {name: unexpected_cast_failures, value: 0, scope: 12m}
+      - {name: masked_volume, value: 26, scope: 2026-05..2026-06}
+      - {name: masked_hours, value: 3075, scope: 2026-05..2026-06}
+
+  - id: D-007
+    issue: Exact duplicate rows in Petrinex volumes
+    impact: Duplicated rows would double count volume
+    handling: Reject rule `exact_duplicate`; 0 rows flagged in 12 months
+    status: Fixed
+    area: silver
+    severity: low
+    found_date: 2026-10-21
+    metrics:
+      - {name: exact_duplicate_rows, value: 0, scope: 12m}
+      - {name: logged_runs_checked, value: 5, scope: 12m, note: dq_results 2026-10-03 to 2026-10-28}
+
+  - id: D-008
+    issue: Duplicate keys when `FromToID` is masked
+    impact: Rows with a masked `FromToID` cannot be told apart by key
+    handling: Warning rule `duplicate_key_masked_fromto`, rows kept
+    status: Mitigated
+    area: silver
+    severity: low
+    found_date: 2026-10-21
+    metrics:
+      - {name: rows, value: 72, scope: 12m}
+      - {name: key_groups, value: 36, scope: 12m}
+      - {name: rows_max, value: 10, scope: max_month, note: "2025-11, 2026-01, 2026-04"}
+      - {name: rows_min, value: 0, scope: min_month, note: 2025-07}
+
+  - id: D-009
+    issue: Producing wells missing from `production_string` grow every month
+    impact: Missing wells rise from 19 (2025-07) to 423 (2026-06); likely cause of D-002
+    handling: Recorded only; the ST37 snapshot is not older than Petrinex, cause not confirmed
+    status: Open
+    area: silver
+    severity: medium
+    found_date: 2026-10-29
+    metrics:
+      - {name: missing_wells_first_month, value: 19, scope: 2025-07}
+      - {name: missing_wells_last_month, value: 423, scope: 2026-06}
+      - {name: missing_wells, value: 446, scope: 12m}
+      - {name: spudded_2025_or_later, value: 415, scope: 12m}
+      - {name: in_bh, value: 437, scope: 12m}
+      - {name: recent_producing_wells_in_production_string, value: 1683, scope: 12m, note: spudded 2025-07 or later}
+      - {name: recent_producing_wells_not_in_production_string, value: 404, scope: 12m, note: spudded 2025-07 or later}
+
+  - id: D-010
+    issue: "`hours_above_month_max` rejects valid November rows (daylight saving time)"
+    impact: 166 `PROD` rows and 3.06% of November oil volume are missing from Gold
+    handling: Recorded only; the rule uses days x 24 and does not allow the extra DST hour
+    status: Open
+    area: silver
+    severity: high
+    found_date: 2026-10-29
+    metrics:
+      - {name: rows_rejected, value: 509, scope: 2025-11}
+      - {name: reported_hours, value: 721, scope: 2025-11}
+      - {name: rule_max_hours, value: 720, scope: 2025-11}
+      - {name: wells, value: 507, scope: 2025-11}
+      - {name: prod_rows_rejected, value: 166, scope: 2025-11}
+      - {name: oil_rows_rejected, value: 152, scope: 2025-11}
+      - {name: oil_volume_rejected, value: 376518.5, scope: 2025-11, note: m3}
+      - {name: oil_volume_share, value: 3.06, unit: "%", scope: 2025-11}
+      - {name: steam_injection_rows, value: 282, scope: 2025-11}
+      - {name: rows_rejected_other_months, value: 0, scope: 12m}
