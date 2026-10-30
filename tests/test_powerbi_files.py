@@ -14,7 +14,7 @@ FORBIDDEN = {
     "secret": r"(?i)client_?secret|\bsecret\s*[=:]",
     "storage key": r"(?i)accountkey\s*=|sharedaccesssignature|\bsig=",
     "token": r"(?i)\bbearer\s+[a-z0-9._-]{20,}",
-    "tenant": r"(?i)tenant(id)?\W{1,3}[0-9a-f]{8}-",
+    "tenant": r"(?i)tenant(id)?\W{1,6}[0-9a-f]{8}-",
     "email": r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}",
 }
 
