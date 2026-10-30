@@ -84,20 +84,17 @@ table gold_fact_production
 		changedProperty = FormatString
 
 	/// Total oil volume in Gold (m3): sum of gold_fact_production[volume] where ProductID = "OIL".
-	measure 'Total Oil (m3)' =
-			CALCULATE(SUM(gold_fact_production[volume]), gold_fact_production[ProductID] = "OIL")
+	measure 'Total Oil (m3)' = CALCULATE(SUM(gold_fact_production[volume]), gold_fact_production[ProductID] = "OIL")
 		formatString: #,0
 		displayFolder: Production
 
 	/// Total condensate volume in Gold (m3): sum of gold_fact_production[volume] where ProductID = "COND".
-	measure 'Total Condensate (m3)' =
-			CALCULATE(SUM(gold_fact_production[volume]), gold_fact_production[ProductID] = "COND")
+	measure 'Total Condensate (m3)' = CALCULATE(SUM(gold_fact_production[volume]), gold_fact_production[ProductID] = "COND")
 		formatString: #,0
 		displayFolder: Production
 
 	/// Total produced water volume in Gold (m3): sum of gold_fact_production[volume] where ProductID = "WATER".
-	measure 'Total Water (m3)' =
-			CALCULATE(SUM(gold_fact_production[volume]), gold_fact_production[ProductID] = "WATER")
+	measure 'Total Water (m3)' = CALCULATE(SUM(gold_fact_production[volume]), gold_fact_production[ProductID] = "WATER")
 		formatString: #,0
 		displayFolder: Production
 
@@ -202,8 +199,7 @@ table gold_fact_production
 		displayFolder: Production\Last 3M vs Prior 3M
 
 	/// Last 3M vs Prior 3M Change / Prior 3M Volume for the selected product; blank when the prior window has no volume.
-	measure 'Last 3M vs Prior 3M %' =
-			DIVIDE([Last 3M vs Prior 3M Change], [Prior 3M Volume])
+	measure 'Last 3M vs Prior 3M %' = DIVIDE([Last 3M vs Prior 3M Change], [Prior 3M Volume])
 		formatString: 0.0%;-0.0%;0.0%
 		displayFolder: Production\Last 3M vs Prior 3M
 
@@ -221,8 +217,7 @@ table gold_fact_production
 		displayFolder: Well Activity
 
 	/// First month of the 3-month window used by Recently Idle Wells (3+ months), as yyyy-mm.
-	measure 'Idle Since' =
-			FORMAT(EDATE(MAX(gold_dim_date[month_start]), -2), "yyyy-mm")
+	measure 'Idle Since' = FORMAT(EDATE(MAX(gold_dim_date[month_start]), -2), "yyyy-mm")
 		displayFolder: Well Activity
 
 	/// Latest month up to the end of the filter in which the well (or selection) produced oil, gas or condensate (volume > 0).
@@ -275,21 +270,18 @@ table gold_fact_production
 		displayFolder: Well Activity
 
 	/// Unit of the selected product for titles: e3m3 for GAS, m3 otherwise.
-	measure 'Product Unit Label' =
-			IF(SELECTEDVALUE(gold_fact_production[ProductID]) = "GAS", "e3m3", "m3")
+	measure 'Product Unit Label' = IF(SELECTEDVALUE(gold_fact_production[ProductID]) = "GAS", "e3m3", "m3")
 		isHidden
 		displayFolder: Formatting
 
 	/// Sort key for the drop tables: -[Last 3M vs Prior 3M Change], so the largest drop sorts first and blanks sort last.
-	measure 'Volume Drop Sort' =
-			-[Last 3M vs Prior 3M Change]
+	measure 'Volume Drop Sort' = -[Last 3M vs Prior 3M Change]
 		formatString: #,0
 		isHidden
 		displayFolder: Formatting
 
 	/// Title of the operator drop table with the selected product and its unit.
-	measure 'Operator Drop Title' =
-			"Top 10 operators by drop, last 3M vs prior 3M (" & SELECTEDVALUE(gold_fact_production[ProductID], "select one product") & ", " & [Product Unit Label] & ")"
+	measure 'Operator Drop Title' = "Top 10 operators by drop, last 3M vs prior 3M (" & SELECTEDVALUE(gold_fact_production[ProductID], "select one product") & ", " & [Product Unit Label] & ")"
 		isHidden
 		displayFolder: Formatting
 

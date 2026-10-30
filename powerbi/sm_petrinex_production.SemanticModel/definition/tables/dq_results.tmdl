@@ -14,8 +14,7 @@ table dq_results
 		changedProperty = Name
 
 	/// Background colour of a DQ rule row by severity: reject red, warning amber, info grey.
-	measure 'Severity Color' =
-			SWITCH(MAX(dq_results[severity]), "reject", "#F8D7D5", "warning", "#FDEBC8", "info", "#ECECEC", "#FFFFFF")
+	measure 'Severity Color' = SWITCH(MAX(dq_results[severity]), "reject", "#F8D7D5", "warning", "#FDEBC8", "info", "#ECECEC", "#FFFFFF")
 		isHidden
 		displayFolder: Formatting
 
