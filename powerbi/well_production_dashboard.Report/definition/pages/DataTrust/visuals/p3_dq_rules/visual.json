@@ -376,63 +376,6 @@
                 }
             },
             {
-                "name": "p3_rules_no_sensor_demo",
-                "field": {
-                    "Column": {
-                        "Expression": {
-                            "SourceRef": {
-                                "Entity": "dq_results"
-                            }
-                        },
-                        "Property": "rule_name"
-                    }
-                },
-                "type": "Categorical",
-                "filter": {
-                    "Version": 2,
-                    "From": [
-                        {
-                            "Name": "d",
-                            "Entity": "dq_results",
-                            "Type": 0
-                        }
-                    ],
-                    "Where": [
-                        {
-                            "Condition": {
-                                "Not": {
-                                    "Expression": {
-                                        "In": {
-                                            "Expressions": [
-                                                {
-                                                    "Column": {
-                                                        "Expression": {
-                                                            "SourceRef": {
-                                                                "Source": "d"
-                                                            }
-                                                        },
-                                                        "Property": "rule_name"
-                                                    }
-                                                }
-                                            ],
-                                            "Values": [
-                                                [
-                                                    {
-                                                        "Literal": {
-                                                            "Value": "'sensor_malfunction_consecutive_neg'"
-                                                        }
-                                                    }
-                                                ]
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    ]
-                }
-            },
-            {
                 "name": "p3_rules_latest_run",
                 "field": {
                     "Measure": {
