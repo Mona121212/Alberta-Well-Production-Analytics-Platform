@@ -65,7 +65,7 @@ step reads Parquet or the standardized GeoPackage.
 pip install -r requirements.txt
 python -m gis.run --mode sample          # whole track on a Calgary-region sample (about 1-2 minutes)
 python -m gis.run --mode full            # whole province (about 8-10 minutes)
-python -m pytest tests                   # GIS rule tests, defect log and Power BI file checks
+python -m pytest tests                   # GIS rule tests, defect log, Power BI and pipeline file checks
 ```
 
 `gis.run` writes `gis/output/<mode>/run_log.txt` and `run_manifest.json` (git commit, per-step status and runtime, row
@@ -84,18 +84,63 @@ Maps need a local QGIS (path in `config/gis_maps.yaml`); without it `gis.run` sk
 
 ### Fabric pipeline
 
-Run the notebooks in this order in the `well-production-mvp` workspace (Lakehouse `alberta_wells`), for example
-`fab job run "well-production-mvp.Workspace/02_silver_transform.Notebook"`:
+The entry point is the Data Pipeline `pl_well_production_monthly` in the `well-production-mvp` workspace (Lakehouse
+`alberta_wells`, DEC-029). Its definition is in `fabric/pl_well_production_monthly.DataPipeline/`; the workspace,
+notebook, model and connection IDs it uses are in `config/fabric_items.json`.
 
-| Order | Notebook | Writes |
-|---|---|---|
-| 1 | `01_bronze_transform` | `bronze_petrinex_vol`, `bronze_st37_production_string`, `bronze_st37_bh`, `pipeline_run_log` |
-| 2 | `02_silver_transform` | `silver_dim_well`, `silver_petrinex_vol`, `silver_petrinex_vol_flagged`, `dq_results`, `rejected_records`, `dq_rule_test_results`, `dq_month_coverage`, `dq_run_log` |
-| 3 | `03_gold_transform` | `gold_dim_well`, `gold_fact_production`, `gold_dim_date`, `gold_dim_operator`, `gold_idle_wells`, `reconciliation_results` |
+```mermaid
+flowchart LR
+    B[Bronze<br/>01_bronze_transform] -- Succeeded --> S[Silver<br/>02_silver_transform]
+    S -- Succeeded --> G[Gold<br/>03_gold_transform]
+    G -- Succeeded --> R[Refresh<br/>sm_petrinex_production]
+```
+
+| Order | Activity | Runs | Writes | Timeout |
+|---|---|---|---|---|
+| 1 | Bronze | `01_bronze_transform` | `bronze_petrinex_vol`, `bronze_st37_production_string`, `bronze_st37_bh`, `pipeline_run_log` | 1 h |
+| 2 | Silver | `02_silver_transform` | `silver_dim_well`, `silver_petrinex_vol`, `silver_petrinex_vol_flagged`, `dq_results`, `rejected_records`, `dq_rule_test_results`, `dq_month_coverage`, `dq_run_log` | 1 h |
+| 3 | Gold | `03_gold_transform` | `gold_dim_well`, `gold_fact_production`, `gold_dim_date`, `gold_dim_operator`, `gold_idle_wells`, `reconciliation_results` | 1 h |
+| 4 | Refresh | semantic model refresh of `sm_petrinex_production` (waits for the refresh to finish) | the Direct Lake model | 30 min |
+
+Each activity runs only if the one before it **succeeded**; there are no retries and no Failed or Completed branches,
+so a failure stops the run and the pipeline shows as Failed. Each notebook raises on its own failures: 01 if a file
+fails to load or its row count does not match, 02 if a DQ rule test fails, 03 if a reconciliation test fails
+(DEC-022).
+
+Run it (about 23 minutes for the 12 months):
+
+```text
+fab job run "well-production-mvp.Workspace/pl_well_production_monthly.DataPipeline" --timeout 10800
+```
+
+or open the pipeline in Fabric and select **Run**. Run history: **Monitor** in the left bar of the Fabric portal,
+filter on item type *Data pipeline* and `pl_well_production_monthly`; open a run to see each activity's status,
+duration and error, and the notebook's Spark snapshot from the Bronze, Silver or Gold activity. Each notebook also
+writes its own run log (`pipeline_run_log`, `dq_run_log`, `reconciliation_results`).
+
+**Schedule: off.** The pipeline reloads the files already in `Files/raw/`; it does not download new Petrinex or ST37
+files, so a monthly schedule would only rerun the same data. The rule for a 13th month is not decided yet either:
+the project keeps 12 months (MoM and rolling 3-month measures, no YoY), and dropping the oldest month or keeping 13 is
+a design choice still to make. To turn it on once both are in place: open the pipeline, **Schedule** > **On**,
+repeat **Monthly**, pick a day after Petrinex publishes the month, time zone *Mountain Time*, **Apply**. Record the
+schedule in DECISIONS.md.
+
+**Debugging.** A single notebook can still be run on its own, for example
+`fab job run "well-production-mvp.Workspace/02_silver_transform.Notebook"`. `01_bronze_transform` has one parameter,
+`ONLY_SOURCE` (default `None`, every source); `-P ONLY_SOURCE:string=petrinex_vol` reloads one source. A reloaded
+file replaces its own rows in one Delta commit (`replaceWhere` on `_source_file`).
 
 `03_gold_transform` reads only Lakehouse tables. It takes the reject and in-scope flags and the run ID from
-`silver_petrinex_vol_flagged` (DEC-021) and stops if that table is out of date. `load_defect_log` runs on its own;
-`explore_raw` is read-only exploration.
+`silver_petrinex_vol_flagged` (DEC-021) and stops if that table is out of date. `load_defect_log` is not in the
+pipeline: it only runs after `config/defect_log.yaml` changes (below). `explore_raw` is read-only exploration.
+
+To change the pipeline, edit `fabric/pl_well_production_monthly.DataPipeline/pipeline-content.json`, run
+`python -m pytest tests/test_fabric_pipeline.py`, then:
+
+```text
+fab import "well-production-mvp.Workspace/pl_well_production_monthly.DataPipeline" -i fabric/pl_well_production_monthly.DataPipeline -f
+fab export "well-production-mvp.Workspace/pl_well_production_monthly.DataPipeline" -o <tmp> -f   # copy the files back into fabric/
+```
 
 The defect log has one source, `config/defect_log.yaml` (DEC-024). After editing it:
 
@@ -261,7 +306,10 @@ packages and maps never run on bad data.
   `maps`, `qgis_maps`, `run`)
 - `config/` - every setting, rule, mapping table, field dictionary and style
 - `powerbi/` - semantic model (TMDL) and dashboard (PBIR), deployed with `fab import` (DEC-025)
+- `fabric/` - Data Pipeline `pl_well_production_monthly` (Bronze -> Silver -> Gold -> model refresh), deployed with
+  `fab import` (DEC-029)
 - `tests/gis/` - rule and module tests; `tests/test_defect_log.py` - defect log in sync with its yaml source;
-  `tests/test_powerbi_files.py` - no credentials in `powerbi/`, every measure documented
+  `tests/test_powerbi_files.py` - no credentials in `powerbi/`, every measure documented;
+  `tests/test_fabric_pipeline.py` - pipeline order, Succeeded-only dependencies, target items, no credentials
 - `docs/` - `progress.md`, `final_report.md`, `st37_gis_exploration.md`, `defect_log.md`, maps, dashboard screenshots
-- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-028)
+- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-029)

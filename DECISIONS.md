@@ -804,3 +804,97 @@ Fabric Eventstream on a real or clearly separated simulated feed, writing to its
 **Consequences.** `dq_results` and `rejected_records` hold only rows from `02_silver_transform`. The Data Trust page
 shows the same numbers as before (its visuals already read the latest run only); the report filter that excluded the
 demo rule was removed. The pipeline is three notebooks plus `load_defect_log`.
+
+---
+
+## DEC-029 Orchestrate the monthly run with a Fabric Data Pipeline
+
+**Date:** 2026-11-01
+
+**Context.** The three notebooks and the semantic model refresh were started by hand, one after another. Nothing
+stopped the next step when the one before it failed, apart from the person running them. `01_bronze_transform` also
+had three problems that only mattered once something else would rely on its outcome:
+- Every file was loaded inside `try/except`. A failure was written to `pipeline_run_log` but the notebook still
+  finished as Succeeded, so a scheduler would have gone on to Silver with a missing month.
+- `ONLY_SOURCE = "petrinex_vol"` was hard-coded, so a normal run skipped both ST37 tables.
+- A reloaded file was replaced with `DELETE ... WHERE _source_file = ...` and then an append: two Delta commits. If
+  the append failed (a bad file, a timeout, a lost session), the old rows were already gone and Bronze was short by
+  one month until someone noticed.
+
+**Decision.**
+- New Data Pipeline `pl_well_production_monthly` with four activities: Bronze (`01_bronze_transform`), Silver
+  (`02_silver_transform`), Gold (`03_gold_transform`), each with a 1-hour timeout, then Refresh (semantic model
+  refresh of `sm_petrinex_production` through the workspace connection `pbi_semantic_model_refresh`,
+  `waitOnCompletion = true`, 30-minute timeout).
+- Each activity depends on the previous one with the condition **Succeeded** only. Retry is 0 and there are no
+  Failed, Completed or Skipped branches. Every notebook already raises when its own checks fail (DEC-022), so a
+  Succeeded activity means its checks passed, and the first failure stops the run with the pipeline marked Failed.
+  Retrying would rerun the same files against the same tests; the failures this project has seen were data or code
+  problems that a retry would not fix.
+- The definition is in the repo, `fabric/pl_well_production_monthly.DataPipeline/`, and deployed with `fab import`
+  like the notebooks and the Power BI items (DEC-025). After an import the item is exported and the service's format
+  copied back, so the repo matches the workspace. The item and connection IDs the pipeline uses are listed in
+  `config/fabric_items.json`; `tests/test_fabric_pipeline.py` checks the definition against that file (order,
+  Succeeded-only dependencies, timeouts, no retry, the right notebooks and model, no `load_defect_log`, no
+  credentials).
+- `01_bronze_transform` fixes:
+  - Every file is still tried and logged, so one bad file does not hide problems in the others, but after the loop
+    the notebook raises if any file is `FAILED` or `MISMATCH`. The pipeline stops before Silver.
+  - `ONLY_SOURCE` moved to a parameter cell with default `None` (every source in `config/sources.json`). Loading one
+    source is still possible for debugging, and an unknown name raises.
+  - A reloaded file is written with `mode("overwrite")` and `replaceWhere "_source_file = '<file>'"`. Delta removes
+    the file's old rows and adds the new ones in **one commit**: readers see either the old rows or the new ones,
+    never neither, and if the write fails nothing is committed and the old rows stay. The ST37 tables keep a full
+    `overwrite`, which is already one commit.
+- `load_defect_log` is not in the pipeline. It loads `config/defect_log.yaml` (DEC-024), which changes when a defect
+  is reviewed, not when a month of data arrives; running it monthly would reload the same yaml, and putting it in
+  the chain would let a yaml typo stop the data run.
+- The monthly schedule stays off. The pipeline reloads the files already in `Files/raw/`; it does not download new
+  Petrinex or ST37 files, so a schedule would only rerun the same data. The rule for the 13th month (drop the oldest
+  month to keep 12, or keep a longer window and add YoY) is not decided. The README describes how to turn the
+  schedule on once both exist.
+
+**Alternatives.**
+- A driver notebook calling `notebookutils.notebook.run()` for each step: one Spark session, but the steps do not show
+  as separate activities in Monitor, a timeout ends the whole driver, and the model refresh needs REST calls and
+  token handling in code.
+- `notebookutils.notebook.runMultiple()` with a DAG: same visibility problem, and no built-in semantic model refresh.
+- Failed or Completed branches with clean-up or notification activities: there is nothing to clean up (each notebook
+  writes its results before it raises, and Delta time travel covers Gold, DEC-022), and a notification needs a
+  recipient and a channel first (below).
+- Keep `DELETE` + append inside a `try` that restores the old rows: more code, and a restore can fail too. One
+  `replaceWhere` commit removes the window instead of handling it.
+- Fabric Git integration for the pipeline: the workspace is not connected to Git (DEC-025); one deployment path for
+  every item is easier to follow.
+
+**Consequences.**
+- One command (`fab job run ...pl_well_production_monthly.DataPipeline`) or one **Run** in the portal runs the whole
+  month, and Fabric Monitor keeps the run history with per-activity status, duration and errors.
+- A failed step leaves the steps after it not run. Because Refresh depends on Gold succeeding, the model is not
+  refreshed after a failed Gold run; Gold tables are still overwritten before the reconciliation tests (DEC-022), so
+  a Direct Lake model that reframes automatically can still see them until they are restored.
+- Running `01_bronze_transform` on its own now loads every source, about 10 minutes on the 12 months.
+- Failure notification is not set up yet. Options when it is needed: an Office 365 Outlook or Teams activity on the
+  **Failed** condition of each activity (or one on the last activity with *Completed* and an expression on the
+  pipeline status), which adds the branches avoided above and needs a mailbox or channel; or Fabric Activator on
+  the job events of the pipeline item (*Job failed*), which needs no change to the pipeline definition and is the
+  preferred path.
+- The trial capacity (FTL4) admits few Spark sessions at a time. A notebook started a few seconds after a very short
+  one can be refused with `TooManyRequestsForCapacity` (HTTP 430) before its code runs, and with retry 0 that fails
+  the run. The real steps run for minutes and did not hit it; if it happens, rerun the pipeline.
+
+Verified in Fabric on 2026-11-01 (temporary notebooks and items were read-only on the production tables and deleted
+afterwards):
+- `01_bronze_transform` alone, all sources (run `72075a6a`, about 10 minutes): `bronze_petrinex_vol` 6,481,961,
+  `bronze_st37_production_string` 658,266, `bronze_st37_bh` 538,629, all unchanged; each of the 14 `_source_file`
+  values holds only rows of the new run, and no table has exact duplicate rows.
+- Success path, pipeline job `6fe68e03`: Bronze 8.8 min, Silver 10.2 min, Gold 3.1 min, Refresh 0.3 min, all
+  Succeeded, 22.7 minutes in total. Before and after: Bronze and Silver 6,481,961 rows, `gold_fact_production`
+  2,908,544, `gold_idle_wells` 5,628, `silver_dim_well` 664,984, `gold_dim_well` 664,993; no duplicate rows; one new
+  run in `dq_run_log` (`38b61620` -> `8994ed6c`); 9 of 9 reconciliation tests PASS. A DAX query on the Data Trust page
+  measures returned the same values as before (6.48 M Silver rows, reject rate, 46,503 flagged rows, the same 32
+  rule rows, 9 / 9, 5 open defects, 12 months, latest month 2026-06); only the run ID and run time changed.
+- Failure path, a temporary copy of the pipeline with a one-line notebook that succeeds as step 1 and a notebook that
+  only raises as step 2 (job `27cb7d8c`): step 1 Succeeded, step 2 Failed with the raised error, Gold and Refresh did
+  not run (no activity runs, no model refresh), and the pipeline run is Failed. The first attempts of this test hit
+  the HTTP 430 above on step 2; the test notebooks were then given small sessions (`%%configure`).
