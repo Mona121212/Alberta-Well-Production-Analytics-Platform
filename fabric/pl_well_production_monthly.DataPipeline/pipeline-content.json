@@ -1,0 +1,103 @@
+{
+    "properties": {
+        "description": "Monthly run of the medallion pipeline: Bronze -> Silver -> Gold -> semantic model refresh. Each step runs only if the previous one succeeded.",
+        "activities": [
+            {
+                "name": "Bronze",
+                "description": "01_bronze_transform: load raw Petrinex and ST37 files into Bronze tables",
+                "type": "TridentNotebook",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "5ba9f1af-b8d3-4d30-94d0-421ef2bacc64",
+                    "workspaceId": "18648095-dedb-4673-a167-142f5948505e"
+                }
+            },
+            {
+                "name": "Silver",
+                "description": "02_silver_transform: clean, conform, run DQ rules and rule tests",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Bronze",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "757029b9-6ac5-46ea-ba5a-b0648be52d33",
+                    "workspaceId": "18648095-dedb-4673-a167-142f5948505e"
+                }
+            },
+            {
+                "name": "Gold",
+                "description": "03_gold_transform: build the star schema and run reconciliation tests",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Silver",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "44f34cbf-65e7-4529-a001-6cadfc542f75",
+                    "workspaceId": "18648095-dedb-4673-a167-142f5948505e"
+                }
+            },
+            {
+                "name": "Refresh",
+                "description": "Refresh the Direct Lake semantic model sm_petrinex_production",
+                "type": "PBISemanticModelRefresh",
+                "dependsOn": [
+                    {
+                        "activity": "Gold",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.00:30:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "method": "post",
+                    "groupId": "18648095-dedb-4673-a167-142f5948505e",
+                    "datasetId": "3dbbbf11-62be-4c49-ac5e-e9df5a8943ea",
+                    "commitMode": "Transactional",
+                    "waitOnCompletion": true,
+                    "operationType": "SemanticModelRefresh"
+                },
+                "externalReferences": {
+                    "connection": "fb6797fd-16d2-4813-92d3-87a6b5ccbacf"
+                }
+            }
+        ]
+    }
+}
