@@ -8,6 +8,7 @@ Writes to data/sensor/ (not in Git):
 Then upload both parquet files to the Lakehouse and run sensor_load_backfill:
   fab cp data/sensor/backfill_2025-11.parquet "well-production-mvp.Workspace/alberta_wells.Lakehouse/Files/raw/sensor/"
   fab cp data/sensor/sensor_asset_hierarchy.parquet "well-production-mvp.Workspace/alberta_wells.Lakehouse/Files/raw/sensor/"
+The truth file goes to the same folder; 04_sensor_silver and 05_sensor_gold test against it (DEC-034).
 
 Run: python scripts/sensor_backfill.py
 """
