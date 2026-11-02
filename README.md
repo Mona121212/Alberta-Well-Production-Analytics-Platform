@@ -102,8 +102,10 @@ flowchart LR
 | 3 | Gold | `03_gold_transform` | `gold_dim_well`, `gold_fact_production`, `gold_dim_date`, `gold_dim_operator`, `gold_idle_wells`, `reconciliation_results` | 1 h |
 | 4 | Refresh | semantic model refresh of `sm_petrinex_production` (waits for the refresh to finish) | the Direct Lake model | 30 min |
 
-Each activity runs only if the one before it **succeeded**; there are no retries and no Failed or Completed branches,
-so a failure stops the run and the pipeline shows as Failed. Each notebook raises on its own failures: 01 if a file
+Each activity runs only if the one before it **succeeded**; there are no Failed or Completed branches. Each activity
+is retried once after 300 seconds, mainly for HTTP 430 (`TooManyRequestsForCapacity`) on the trial capacity; the
+notebooks overwrite their data tables, so a retry does not duplicate rows (DEC-029). A step that fails twice stops
+the run and the pipeline shows as Failed. Each notebook raises on its own failures: 01 if a file
 fails to load or its row count does not match, 02 if a DQ rule test fails, 03 if a reconciliation test fails
 (DEC-022).
 

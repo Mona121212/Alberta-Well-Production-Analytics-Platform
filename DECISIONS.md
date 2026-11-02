@@ -826,17 +826,27 @@ had three problems that only mattered once something else would rely on its outc
   (`02_silver_transform`), Gold (`03_gold_transform`), each with a 1-hour timeout, then Refresh (semantic model
   refresh of `sm_petrinex_production` through the workspace connection `pbi_semantic_model_refresh`,
   `waitOnCompletion = true`, 30-minute timeout).
-- Each activity depends on the previous one with the condition **Succeeded** only. Retry is 0 and there are no
-  Failed, Completed or Skipped branches. Every notebook already raises when its own checks fail (DEC-022), so a
-  Succeeded activity means its checks passed, and the first failure stops the run with the pipeline marked Failed.
-  Retrying would rerun the same files against the same tests; the failures this project has seen were data or code
-  problems that a retry would not fix.
+- Each activity depends on the previous one with the condition **Succeeded** only, and there are no Failed,
+  Completed or Skipped branches. Every notebook already raises when its own checks fail (DEC-022), so a Succeeded
+  activity means its checks passed, and a step that still fails after its retry stops the run with the pipeline
+  marked Failed.
+- Each activity has **1 retry after 300 seconds**. The trial capacity (FTL4) admits few Spark sessions at a time and
+  can refuse a notebook with `TooManyRequestsForCapacity` (HTTP 430) before its code runs (seen in the failure test
+  below); five minutes is enough for the capacity to release the earlier session. A retry is safe because the
+  notebooks are idempotent on their data: Bronze reloads each file with `replaceWhere` or a full `overwrite`; Gold
+  and the other Silver tables are overwritten; `silver_petrinex_vol` deletes the rows of the files it loads and then
+  appends them, so a rerun gives the same rows (this is still two commits, the pattern fixed in 01; a failure between
+  them is repaired by the retry, and moving it to `replaceWhere` is a follow-up). The audit tables
+  (`pipeline_run_log`, `dq_results`, `rejected_records`, `dq_month_coverage`, `dq_run_log`,
+  `reconciliation_results`) are appended per run ID, so a failed attempt can leave its own run's rows next to the
+  retry's; the report reads the latest finished run (`dq_run_log`, written only at the end of a successful 02), so
+  those rows do not change what it shows.
 - The definition is in the repo, `fabric/pl_well_production_monthly.DataPipeline/`, and deployed with `fab import`
   like the notebooks and the Power BI items (DEC-025). After an import the item is exported and the service's format
   copied back, so the repo matches the workspace. The item and connection IDs the pipeline uses are listed in
   `config/fabric_items.json`; `tests/test_fabric_pipeline.py` checks the definition against that file (order,
-  Succeeded-only dependencies, timeouts, no retry, the right notebooks and model, no `load_defect_log`, no
-  credentials).
+  Succeeded-only dependencies, timeouts, 1 retry after 300 seconds, the right notebooks and model, no
+  `load_defect_log`, no credentials).
 - `01_bronze_transform` fixes:
   - Every file is still tried and logged, so one bad file does not hide problems in the others, but after the loop
     the notebook raises if any file is `FAILED` or `MISMATCH`. The pipeline stops before Silver.
@@ -879,9 +889,9 @@ had three problems that only mattered once something else would rely on its outc
   pipeline status), which adds the branches avoided above and needs a mailbox or channel; or Fabric Activator on
   the job events of the pipeline item (*Job failed*), which needs no change to the pipeline definition and is the
   preferred path.
-- The trial capacity (FTL4) admits few Spark sessions at a time. A notebook started a few seconds after a very short
-  one can be refused with `TooManyRequestsForCapacity` (HTTP 430) before its code runs, and with retry 0 that fails
-  the run. The real steps run for minutes and did not hit it; if it happens, rerun the pipeline.
+- A transient HTTP 430 costs five minutes instead of a failed run. A real failure (a file that does not load, a
+  failed DQ rule test or reconciliation test) fails twice: the run takes up to one more attempt of that step plus
+  five minutes before it shows as Failed, and the audit tables hold both attempts.
 
 Verified in Fabric on 2026-11-01 (temporary notebooks and items were read-only on the production tables and deleted
 afterwards):
