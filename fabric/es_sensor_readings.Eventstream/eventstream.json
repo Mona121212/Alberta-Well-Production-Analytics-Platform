@@ -1,0 +1,57 @@
+{
+    "sources": [
+        {
+            "id": "6d1b13cc-397b-4620-a62a-b2c0a75c86b3",
+            "name": "sensor_simulator",
+            "type": "CustomEndpoint",
+            "properties": {}
+        }
+    ],
+    "destinations": [
+        {
+            "id": "367f13fd-d7fa-4965-87e3-7b406265239e",
+            "name": "to_lakehouse",
+            "type": "Lakehouse",
+            "properties": {
+                "workspaceId": "18648095-dedb-4673-a167-142f5948505e",
+                "itemId": "670be7a1-52ab-44b7-89f4-f81b3ee3451b",
+                "schema": "dbo",
+                "deltaTable": "bronze_sensor_readings",
+                "inputSerialization": {
+                    "type": "Json",
+                    "properties": {
+                        "encoding": "UTF8"
+                    }
+                }
+            },
+            "inputNodes": [
+                {
+                    "name": "es_sensor_readings-stream"
+                }
+            ],
+            "inputSchemas": [
+                {
+                    "name": "es_sensor_readings-stream",
+                    "schema": {
+                        "columns": []
+                    }
+                }
+            ]
+        }
+    ],
+    "streams": [
+        {
+            "id": "365dd374-5f4d-4543-97b8-1ab7b002b28a",
+            "name": "es_sensor_readings-stream",
+            "type": "DefaultStream",
+            "properties": {},
+            "inputNodes": [
+                {
+                    "name": "sensor_simulator"
+                }
+            ]
+        }
+    ],
+    "operators": [],
+    "compatibilityLevel": "1.1"
+}

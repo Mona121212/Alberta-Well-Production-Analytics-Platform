@@ -7,6 +7,7 @@
     "load_defect_log": "6e0345d0-5f94-4c96-997e-da06ef7ad478"
   },
   "semantic_model": {"name": "sm_petrinex_production", "id": "3dbbbf11-62be-4c49-ac5e-e9df5a8943ea"},
+  "eventstream": {"name": "es_sensor_readings", "id": "f18f3a9f-4f88-4003-8b10-6ce2a82dc875"},
   "connections": {"pbi_semantic_model_refresh": "fb6797fd-16d2-4813-92d3-87a6b5ccbacf"},
   "pipeline": {
     "name": "pl_well_production_monthly",
