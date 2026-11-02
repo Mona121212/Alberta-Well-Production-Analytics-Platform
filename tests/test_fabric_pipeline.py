@@ -41,10 +41,11 @@ def test_no_failed_or_completed_branches():
 
 
 @pytest.mark.parametrize("step", STEPS, ids=[s["activity"] for s in STEPS])
-def test_timeout_and_no_retry(step):
+def test_timeout_and_retry(step):
     policy = by_name(step["activity"])["policy"]
     assert policy["timeout"] == step["timeout"]
-    assert policy["retry"] == 0
+    assert policy["retry"] == ITEMS["pipeline"]["retry"] == 1
+    assert policy["retryIntervalInSeconds"] == ITEMS["pipeline"]["retry_interval_seconds"] == 300
 
 
 @pytest.mark.parametrize("step", [s for s in STEPS if "notebook" in s], ids=lambda s: s["activity"])
