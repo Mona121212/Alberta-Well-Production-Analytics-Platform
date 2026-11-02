@@ -1,0 +1,48 @@
+{
+    "properties": {
+        "description": "Sensor Silver and Gold: 04_sensor_silver -> 05_sensor_gold. Gold runs only if Silver succeeded, so Spark jobs never overlap.",
+        "activities": [
+            {
+                "name": "SensorSilver",
+                "description": "04_sensor_silver: merge history and live feed, flag quality, quarantine duplicates, run rule tests",
+                "type": "TridentNotebook",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 1,
+                    "retryIntervalInSeconds": 300,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "925ddaeb-6d64-40b3-94af-a13c9689b32a",
+                    "workspaceId": "18648095-dedb-4673-a167-142f5948505e"
+                }
+            },
+            {
+                "name": "SensorGold",
+                "description": "05_sensor_gold: hourly values, downtime events, reconciliation with Petrinex, 4 reconciliation tests",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "SensorSilver",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 1,
+                    "retryIntervalInSeconds": 300,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "f47a2182-5035-472b-8e3a-c61af6bf69d2",
+                    "workspaceId": "18648095-dedb-4673-a167-142f5948505e"
+                }
+            }
+        ]
+    }
+}
