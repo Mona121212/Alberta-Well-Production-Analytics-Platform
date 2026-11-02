@@ -10,6 +10,8 @@
   "connections": {"pbi_semantic_model_refresh": "fb6797fd-16d2-4813-92d3-87a6b5ccbacf"},
   "pipeline": {
     "name": "pl_well_production_monthly",
+    "retry": 1,
+    "retry_interval_seconds": 300,
     "steps": [
       {"activity": "Bronze", "notebook": "01_bronze_transform", "timeout": "0.01:00:00"},
       {"activity": "Silver", "notebook": "02_silver_transform", "timeout": "0.01:00:00"},
