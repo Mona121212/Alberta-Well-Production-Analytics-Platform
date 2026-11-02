@@ -1,0 +1,22 @@
+{
+  "workspace": {"name": "well-production-mvp", "id": "18648095-dedb-4673-a167-142f5948505e"},
+  "notebooks": {
+    "01_bronze_transform": "5ba9f1af-b8d3-4d30-94d0-421ef2bacc64",
+    "02_silver_transform": "757029b9-6ac5-46ea-ba5a-b0648be52d33",
+    "03_gold_transform": "44f34cbf-65e7-4529-a001-6cadfc542f75",
+    "load_defect_log": "6e0345d0-5f94-4c96-997e-da06ef7ad478"
+  },
+  "semantic_model": {"name": "sm_petrinex_production", "id": "3dbbbf11-62be-4c49-ac5e-e9df5a8943ea"},
+  "connections": {"pbi_semantic_model_refresh": "fb6797fd-16d2-4813-92d3-87a6b5ccbacf"},
+  "pipeline": {
+    "name": "pl_well_production_monthly",
+    "retry": 1,
+    "retry_interval_seconds": 300,
+    "steps": [
+      {"activity": "Bronze", "notebook": "01_bronze_transform", "timeout": "0.01:00:00"},
+      {"activity": "Silver", "notebook": "02_silver_transform", "timeout": "0.01:00:00"},
+      {"activity": "Gold", "notebook": "03_gold_transform", "timeout": "0.01:00:00"},
+      {"activity": "Refresh", "semantic_model": "sm_petrinex_production", "connection": "pbi_semantic_model_refresh", "timeout": "0.00:30:00"}
+    ]
+  }
+}
