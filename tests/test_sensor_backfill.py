@@ -1,0 +1,238 @@
+"""PI-style simulated sensors, stage 1 (DEC-032): config, 721-hour grid, hierarchy, backfill generator, quality flags
+and the reconciliation estimate. All readings are simulated; the anomaly wells are set on purpose in config/sensor.json.
+Run: python -m pytest tests"""
+import copy
+from collections import Counter
+
+import numpy as np
+import pandas as pd
+import pytest
+
+from sensor.config import hour_grid_utc, load_config, tag_name, well_tag_codes
+from sensor.generate import generate_backfill
+from sensor.hierarchy import build_hierarchy
+from sensor.quality import classify
+from sensor.reconcile import reconcile
+
+CFG = load_config()
+GRID = hour_grid_utc(CFG)
+HIERARCHY = build_hierarchy(CFG)
+ANOMALIES = {a["well_key"]: a["volume_bias_pct"] for a in CFG["anomaly_wells"]["wells"]}
+
+
+@pytest.fixture(scope="module")
+def backfill():
+    readings, truth = generate_backfill(CFG)
+    classified = classify(readings, HIERARCHY, GRID, CFG)
+    return readings, truth, classified
+
+
+# Config ---------------------------------------------------------------------------------------------------------
+
+def test_config_wells_and_facilities():
+    wells = CFG["wells"]
+    assert 30 <= len(wells) <= 50
+    assert len({w["well_key"] for w in wells}) == len(wells)
+    assert len({w["facility_id"] for w in wells}) >= 6
+    assert {w["product"] for w in wells} == {"OIL", "GAS"}
+    assert all(w["petrinex_volume"] > 0 and 0 < w["petrinex_hours"] <= 744 for w in wells)
+
+
+def test_config_anomaly_wells_are_selected_wells():
+    assert 2 <= len(ANOMALIES) <= 3
+    assert set(ANOMALIES) <= {w["well_key"] for w in CFG["wells"]}
+    assert all(abs(b) > CFG["reconciliation"]["threshold_pct"] for b in ANOMALIES.values())
+    assert CFG["generator"]["normal_volume_bias_max_pct"] < CFG["reconciliation"]["threshold_pct"]
+
+
+def test_config_tags_have_units_and_ranges():
+    for t in CFG["tags"]:
+        assert t["unit"] and t["attribute"]
+        assert t["physical_range"][0] <= t["normal_range"][0] <= t["normal_range"][1] <= t["physical_range"][1]
+    for w in CFG["wells"]:
+        assert len(well_tag_codes(CFG, w)) == 5
+
+
+# 721 hours ------------------------------------------------------------------------------------------------------
+
+def test_month_has_721_hours_in_utc():
+    assert len(GRID) == CFG["month"]["expected_hours"] == 721
+    assert GRID[0] == pd.Timestamp("2025-11-01T06:00Z")          # local midnight, MDT (UTC-6)
+    assert GRID[-1] == pd.Timestamp("2025-12-01T06:00Z")         # local 23:00 on Nov 30, MST (UTC-7)
+    assert str(GRID.tz) == "UTC"
+    assert (GRID[1:] - GRID[:-1] == pd.Timedelta(hours=1)).all()
+
+
+def test_local_clock_repeats_one_hour_on_nov_2():
+    local = GRID.tz_convert(CFG["month"]["timezone"])
+    assert local[0].strftime("%Y-%m-%d %H:%M") == "2025-11-01 00:00"
+    assert local[-1].strftime("%Y-%m-%d %H:%M") == "2025-11-30 23:00"
+    wall = Counter(local.strftime("%Y-%m-%d %H:%M"))
+    assert [k for k, v in wall.items() if v > 1] == ["2025-11-02 01:00"]
+
+
+# Hierarchy ------------------------------------------------------------------------------------------------------
+
+def test_hierarchy_levels_and_paths():
+    counts = HIERARCHY["node_type"].value_counts().to_dict()
+    n_wells = len(CFG["wells"])
+    assert counts == {"facility": len({w["facility_id"] for w in CFG["wells"]}), "well": n_wells, "tag": 5 * n_wells}
+    assert HIERARCHY["af_path"].is_unique
+    tags = HIERARCHY[HIERARCHY["node_type"] == "tag"]
+    assert tags["tag_name"].is_unique
+    assert set(tags["parent_path"]) == set(HIERARCHY.loc[HIERARCHY["node_type"] == "well", "af_path"])
+    assert tags["af_path"].str.startswith(CFG["af"]["root"] + "\\").all()
+    assert tags["af_path"].str.contains(r"\|").all()
+    assert tags[["unit", "physical_min", "normal_max"]].notna().all().all()
+
+
+# Generator ------------------------------------------------------------------------------------------------------
+
+def test_generator_is_reproducible(backfill):
+    readings, truth, _ = backfill
+    again, truth_again = generate_backfill(CFG)
+    pd.testing.assert_frame_equal(readings, again)
+    assert truth == truth_again
+
+
+def test_other_seed_gives_other_readings(backfill):
+    other = copy.deepcopy(CFG)
+    other["seed"] += 1
+    readings, _ = generate_backfill(other)
+    assert not readings["value"].equals(backfill[0]["value"])
+
+
+def test_row_count_and_keys(backfill):
+    readings, truth, _ = backfill
+    n_missing = sum(1 for i in truth["injections"] if i["kind"] == "missing")
+    assert len(readings) == 5 * len(CFG["wells"]) * 721 - n_missing
+    assert not readings.duplicated(["tag_name", "ts_utc"]).any()
+    assert readings[["tag_name", "ts_utc", "value"]].notna().all().all()
+    assert set(readings["tag_name"]) == set(HIERARCHY["tag_name"].dropna())
+    assert readings["ts_utc"].between(GRID[0], GRID[-1]).all()
+
+
+def test_injection_counts_match_config(backfill):
+    _, truth, _ = backfill
+    inj = CFG["injections"]
+    per_well = Counter((i["well_key"], i["kind"]) for i in truth["injections"])
+    for w in CFG["wells"]:
+        assert per_well[(w["well_key"], "out_of_range")] == inj["out_of_range_per_well"]
+        assert per_well[(w["well_key"], "frozen")] == inj["frozen_runs_per_well"]
+        assert per_well[(w["well_key"], "missing")] == inj["missing_per_well"]
+
+
+def test_true_volume_is_petrinex_volume_plus_bias(backfill):
+    _, truth, _ = backfill
+    max_bias = CFG["generator"]["normal_volume_bias_max_pct"]
+    for t in truth["wells"]:
+        expected_bias = ANOMALIES.get(t["well_key"])
+        if expected_bias is None:
+            assert abs(t["volume_bias_pct"]) <= max_bias
+        else:
+            assert t["volume_bias_pct"] == expected_bias
+        assert t["true_volume"] == pytest.approx(t["petrinex_volume"] * (1 + t["volume_bias_pct"] / 100), rel=1e-6)
+
+
+def test_downtime_events_are_shut_in_and_do_not_overlap(backfill):
+    readings, truth, _ = backfill
+    by_tag = readings.set_index(["tag_name", "ts_utc"])["value"]
+    wells = {w["well_key"]: w for w in CFG["wells"]}
+    for key, events in pd.DataFrame(truth["downtime_events"]).groupby("well_key"):
+        w = wells[key]
+        spans = sorted((pd.Timestamp(e.start_utc), pd.Timestamp(e.end_utc)) for e in events.itertuples())
+        assert all(prev_end < start for (_, prev_end), (start, _) in zip(spans, spans[1:]))
+        total = int(events["hours"].sum())
+        gap = 721 - w["petrinex_hours"]
+        if gap >= CFG["downtime"]["min_event_hours"]:
+            assert total == gap
+        for start, end in spans:
+            hours = pd.date_range(start, end, freq="h", inclusive="left")
+            for code in ["RUN", f"FLOW_{w['product']}"]:
+                vals = by_tag.loc[tag_name(CFG, w, code)].reindex(hours).dropna()
+                assert (vals == 0).all(), (key, code, start)
+
+
+# Quality flags --------------------------------------------------------------------------------------------------
+
+def tiny(values, code="TP"):
+    """One well, one tag, hourly values from the grid start (None = missing reading)."""
+    cfg = copy.deepcopy(CFG)
+    cfg["wells"] = [CFG["wells"][0] | {"product": "GAS"}]
+    h = build_hierarchy(cfg)
+    grid = GRID[:len(values)]
+    name = tag_name(cfg, cfg["wells"][0], code)
+    readings = pd.DataFrame({"tag_name": name, "ts_utc": grid, "value": values}).dropna()
+    out = classify(readings, h, grid, cfg)
+    return out[out["tag_name"] == name].reset_index(drop=True)
+
+
+def test_quality_bad_for_missing_and_out_of_physical_range():
+    out = tiny([3000.0, None, -9999.0, 25000.0, 3001.0])
+    assert list(out["quality"]) == ["Good", "Bad", "Bad", "Bad", "Good"]
+    assert list(out["quality_reason"]) == ["", "missing", "outside_physical_range", "outside_physical_range", ""]
+
+
+def test_quality_questionable_outside_normal_range():
+    out = tiny([3000.0, 12000.0, 3000.5])
+    assert list(out["quality"]) == ["Good", "Questionable", "Good"]
+
+
+def test_frozen_needs_min_points():
+    n = CFG["quality"]["frozen_min_points"]
+    frozen = tiny([3000.0] + [3100.0] * n + [3200.0])
+    assert list(frozen["quality"]) == ["Good"] + ["Questionable"] * n + ["Good"]
+    short = tiny([3000.0] + [3100.0] * (n - 1) + [3200.0])
+    assert (short["quality"] == "Good").all()
+
+
+def test_zero_flow_and_run_status_are_not_frozen():
+    n = CFG["quality"]["frozen_min_points"]
+    assert (tiny([0.0] * (n + 2), code="FLOW_GAS")["quality"] == "Good").all()
+    assert (tiny([1.0] * (n + 2), code="RUN")["quality"] == "Good").all()
+
+
+def test_missing_reading_breaks_a_frozen_run():
+    n = CFG["quality"]["frozen_min_points"]
+    out = tiny([3100.0] * (n - 1) + [None] + [3100.0] * (n - 1))
+    assert set(out["quality"]) == {"Good", "Bad"}
+
+
+def test_injected_bad_readings_are_flagged_exactly(backfill):
+    _, truth, classified = backfill
+    reasons = Counter(classified["quality_reason"])
+    kinds = Counter(i["kind"] for i in truth["injections"])
+    run_points = sum(i["hours"] + 1 for i in truth["injections"] if i["kind"] == "frozen")  # + the original value
+    assert reasons["missing"] == kinds["missing"]
+    assert reasons["outside_physical_range"] == kinds["out_of_range"]
+    assert reasons["frozen"] == run_points
+    assert reasons["outside_normal_range"] == 0
+    assert len(classified) == 5 * len(CFG["wells"]) * 721            # flagged, not deleted
+
+
+# Reconciliation -------------------------------------------------------------------------------------------------
+
+def test_reconciliation_flags_exactly_the_configured_anomaly_wells(backfill):
+    rec = reconcile(backfill[2], CFG)
+    assert set(rec.loc[rec["needs_investigation"], "well_key"]) == set(ANOMALIES)
+    normal = rec[~rec["needs_investigation"]]
+    assert normal["difference_pct"].abs().max() < CFG["reconciliation"]["threshold_pct"]
+    for key, bias in ANOMALIES.items():
+        assert rec.set_index("well_key").loc[key, "difference_pct"] == pytest.approx(bias, abs=1.0)
+
+
+def test_estimate_uses_good_flow_zero_when_shut_in_and_daily_mean_otherwise():
+    cfg = copy.deepcopy(CFG)
+    well = CFG["wells"][0] | {"product": "GAS", "petrinex_volume": 1.0}
+    cfg["wells"] = [well]
+    h = build_hierarchy(cfg)
+    grid = GRID[:6]                                     # same local day
+    flow = [48.0, 48.0, 0.0, -9999.0, None, 24.0]       # Good, Good, shut in, Bad, missing, Good
+    run = [1.0, 1.0, 0.0, 1.0, 1.0, 1.0]
+    readings = pd.concat([
+        pd.DataFrame({"tag_name": tag_name(cfg, well, "FLOW_GAS"), "ts_utc": grid, "value": flow}),
+        pd.DataFrame({"tag_name": tag_name(cfg, well, "RUN"), "ts_utc": grid, "value": run})]).dropna()
+    rec = reconcile(classify(readings, h, grid, cfg), cfg)
+    day_mean = np.mean([48.0, 48.0, 24.0])
+    assert rec.loc[0, "sensor_volume"] == pytest.approx((48 + 48 + 0 + day_mean + day_mean + 24) / 24)
+    assert rec.loc[0, "hours_filled"] == 2

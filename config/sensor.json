@@ -1,0 +1,215 @@
+{
+  "_about": "PI-style simulated wellhead sensors (DEC-032). Every reading is simulated; the monthly volumes and hours in wells are real Petrinex values from gold_fact_production (a frozen snapshot). This is not AVEVA PI System.",
+  "month": {
+    "production_month": "2025-11",
+    "timezone": "America/Edmonton",
+    "expected_hours": 721
+  },
+  "seed": 20251101,
+  "selection": {
+    "products": [
+      "OIL",
+      "GAS"
+    ],
+    "min_hours": 600,
+    "min_volume": {
+      "OIL": 30,
+      "GAS": 100
+    },
+    "facilities_per_product": 4,
+    "wells_per_facility": 5,
+    "seed": 20251101,
+    "source": {
+      "table": "gold_fact_production",
+      "gold_run_id": "57f84a9c",
+      "production_month": "2025-11"
+    }
+  },
+  "af": {
+    "root": "\\\\PI-style\\Alberta",
+    "tag_name_pattern": "{facility_id}.{well_key}.{tag_code}"
+  },
+  "tags": [
+    {
+      "code": "TP",
+      "attribute": "Tubing Pressure",
+      "unit": "kPa",
+      "kind": "analog",
+      "physical_range": [0, 20000],
+      "normal_range": [50, 10000],
+      "frozen_check": true
+    },
+    {
+      "code": "CP",
+      "attribute": "Casing Pressure",
+      "unit": "kPa",
+      "kind": "analog",
+      "physical_range": [0, 20000],
+      "normal_range": [50, 10000],
+      "frozen_check": true
+    },
+    {
+      "code": "TEMP",
+      "attribute": "Wellhead Temperature",
+      "unit": "degC",
+      "kind": "analog",
+      "physical_range": [-50, 150],
+      "normal_range": [-40, 90],
+      "frozen_check": true
+    },
+    {
+      "code": "FLOW_OIL",
+      "attribute": "Oil Flow Rate",
+      "unit": "m3/d",
+      "kind": "analog",
+      "product": "OIL",
+      "physical_range": [0, 2000],
+      "normal_range": [0, 1000],
+      "frozen_check": true
+    },
+    {
+      "code": "FLOW_GAS",
+      "attribute": "Gas Flow Rate",
+      "unit": "e3m3/d",
+      "kind": "analog",
+      "product": "GAS",
+      "physical_range": [0, 500],
+      "normal_range": [0, 200],
+      "frozen_check": true
+    },
+    {
+      "code": "RUN",
+      "attribute": "Run Status",
+      "unit": "state",
+      "kind": "digital",
+      "physical_range": [0, 1],
+      "normal_range": [0, 1],
+      "frozen_check": false
+    }
+  ],
+  "generator": {
+    "sample_interval_minutes": 60,
+    "flow_hourly_noise_pct": 3.0,
+    "normal_volume_bias_max_pct": 1.0,
+    "pressure_kpa": {
+      "OIL": {
+        "tubing": 600,
+        "casing": 1200
+      },
+      "GAS": {
+        "tubing": 3000,
+        "casing": 4500
+      }
+    },
+    "pressure_noise_pct": 1.0,
+    "shut_in_build_hours": 6,
+    "temperature_degc": {
+      "OIL": 35,
+      "GAS": 20,
+      "ambient": 0,
+      "noise": 0.3,
+      "cooling_hours": 6
+    },
+    "decimals": {
+      "TP": 1,
+      "CP": 1,
+      "TEMP": 1,
+      "FLOW_OIL": 3,
+      "FLOW_GAS": 3,
+      "RUN": 0
+    }
+  },
+  "downtime": {
+    "_note": "If Petrinex hours leave at least min_event_hours of the month unproduced, the simulated downtime equals 721 - Petrinex hours; otherwise random_total_hours. Split into events_per_well events.",
+    "events_per_well": [1, 3],
+    "min_event_hours": 2,
+    "random_total_hours": [2, 12],
+    "detect_min_hours": 2,
+    "flow_off_below": {
+      "OIL": 0.01,
+      "GAS": 0.01
+    },
+    "lost_volume_lookback_hours": 24
+  },
+  "injections": {
+    "_note": "Deliberate bad readings on analog tags in running hours. They replace the reading only; the true volume of the hour is unchanged.",
+    "out_of_range_per_well": 2,
+    "out_of_range_value": -9999.0,
+    "frozen_runs_per_well": 1,
+    "frozen_run_hours": 8,
+    "missing_per_well": 6
+  },
+  "quality": {
+    "states": [
+      "Good",
+      "Questionable",
+      "Bad"
+    ],
+    "bad": [
+      "outside physical_range",
+      "missing reading (no data)"
+    ],
+    "questionable": [
+      "outside normal_range",
+      "frozen: the same value for frozen_min_points or more consecutive readings"
+    ],
+    "frozen_min_points": 6,
+    "frozen_ignore_values": [
+      0
+    ]
+  },
+  "reconciliation": {
+    "hourly_volume": "rate / 24 for a Good flow reading; 0 for an hour with a Good RUN = 0 reading; otherwise the mean Good flow rate of the running hours of the same local day / 24 (the month mean if that day has none)",
+    "threshold_pct": 5.0
+  },
+  "anomaly_wells": {
+    "_note": "Deliberately simulated differences between the sensor volume and the real Petrinex volume. Reconciliation is expected to flag exactly these wells: this tests the detection logic, it is not a finding about the real data.",
+    "wells": [
+      {"well_key": "100153106216W500", "volume_bias_pct": 15.0},
+      {"well_key": "108082607606W402", "volume_bias_pct": -20.0},
+      {"well_key": "100160407605W500", "volume_bias_pct": 25.0}
+    ]
+  },
+  "wells": [
+    {"well_key": "100011504716W500", "facility_id": "ABBT0112255", "product": "GAS", "petrinex_volume": 100.7, "petrinex_hours": 697},
+    {"well_key": "100051404716W502", "facility_id": "ABBT0112255", "product": "GAS", "petrinex_volume": 544.6, "petrinex_hours": 623},
+    {"well_key": "100053204715W502", "facility_id": "ABBT0112255", "product": "GAS", "petrinex_volume": 403.1, "petrinex_hours": 696},
+    {"well_key": "100111404716W500", "facility_id": "ABBT0112255", "product": "GAS", "petrinex_volume": 185.6, "petrinex_hours": 701},
+    {"well_key": "100121604816W500", "facility_id": "ABBT0112255", "product": "GAS", "petrinex_volume": 121.0, "petrinex_hours": 720},
+    {"well_key": "100060206503W600", "facility_id": "ABBT0143321", "product": "GAS", "petrinex_volume": 228.1, "petrinex_hours": 720},
+    {"well_key": "100061706502W600", "facility_id": "ABBT0143321", "product": "GAS", "petrinex_volume": 297.2, "petrinex_hours": 720},
+    {"well_key": "100102706403W600", "facility_id": "ABBT0143321", "product": "GAS", "petrinex_volume": 115.8, "petrinex_hours": 720},
+    {"well_key": "100111206605W600", "facility_id": "ABBT0143321", "product": "GAS", "petrinex_volume": 115.2, "petrinex_hours": 720},
+    {"well_key": "102131106504W600", "facility_id": "ABBT0143321", "product": "GAS", "petrinex_volume": 150.2, "petrinex_hours": 720},
+    {"well_key": "100133106216W500", "facility_id": "ABBT0162714", "product": "GAS", "petrinex_volume": 398.5, "petrinex_hours": 706},
+    {"well_key": "100143106216W500", "facility_id": "ABBT0162714", "product": "GAS", "petrinex_volume": 333.3, "petrinex_hours": 702},
+    {"well_key": "100153106216W500", "facility_id": "ABBT0162714", "product": "GAS", "petrinex_volume": 763.2, "petrinex_hours": 710},
+    {"well_key": "100163106216W500", "facility_id": "ABBT0162714", "product": "GAS", "petrinex_volume": 552.3, "petrinex_hours": 709},
+    {"well_key": "100163606217W500", "facility_id": "ABBT0162714", "product": "GAS", "petrinex_volume": 267.8, "petrinex_hours": 712},
+    {"well_key": "100011104006W500", "facility_id": "ABBT9670164", "product": "GAS", "petrinex_volume": 148.1, "petrinex_hours": 672},
+    {"well_key": "100110604005W502", "facility_id": "ABBT9670164", "product": "GAS", "petrinex_volume": 116.9, "petrinex_hours": 624},
+    {"well_key": "100133603906W500", "facility_id": "ABBT9670164", "product": "GAS", "petrinex_volume": 105.4, "petrinex_hours": 720},
+    {"well_key": "102060504005W502", "facility_id": "ABBT9670164", "product": "GAS", "petrinex_volume": 106.7, "petrinex_hours": 720},
+    {"well_key": "102163103905W500", "facility_id": "ABBT9670164", "product": "GAS", "petrinex_volume": 252.7, "petrinex_hours": 624},
+    {"well_key": "100011203902W400", "facility_id": "ABBT0053340", "product": "OIL", "petrinex_volume": 63.9, "petrinex_hours": 714},
+    {"well_key": "104021003902W400", "facility_id": "ABBT0053340", "product": "OIL", "petrinex_volume": 39.9, "petrinex_hours": 717},
+    {"well_key": "104150303902W400", "facility_id": "ABBT0053340", "product": "OIL", "petrinex_volume": 50.8, "petrinex_hours": 717},
+    {"well_key": "105041103902W400", "facility_id": "ABBT0053340", "product": "OIL", "petrinex_volume": 74.5, "petrinex_hours": 717},
+    {"well_key": "106090203902W400", "facility_id": "ABBT0053340", "product": "OIL", "petrinex_volume": 60.4, "petrinex_hours": 714},
+    {"well_key": "100010607605W400", "facility_id": "ABBT0067303", "product": "OIL", "petrinex_volume": 4097.9, "petrinex_hours": 720},
+    {"well_key": "102052707606W405", "facility_id": "ABBT0067303", "product": "OIL", "petrinex_volume": 3782.4, "petrinex_hours": 719},
+    {"well_key": "108082607606W402", "facility_id": "ABBT0067303", "product": "OIL", "petrinex_volume": 8322.8, "petrinex_hours": 720},
+    {"well_key": "114011607606W400", "facility_id": "ABBT0067303", "product": "OIL", "petrinex_volume": 7699.6, "petrinex_hours": 720},
+    {"well_key": "114021207606W400", "facility_id": "ABBT0067303", "product": "OIL", "petrinex_volume": 3561.0, "petrinex_hours": 720},
+    {"well_key": "100010506603W600", "facility_id": "ABBT0137426", "product": "OIL", "petrinex_volume": 67.9, "petrinex_hours": 696},
+    {"well_key": "100080506603W602", "facility_id": "ABBT0137426", "product": "OIL", "petrinex_volume": 55.7, "petrinex_hours": 696},
+    {"well_key": "100082506503W602", "facility_id": "ABBT0137426", "product": "OIL", "petrinex_volume": 365.9, "petrinex_hours": 716},
+    {"well_key": "100160106604W600", "facility_id": "ABBT0137426", "product": "OIL", "petrinex_volume": 62.7, "petrinex_hours": 718},
+    {"well_key": "102161206604W600", "facility_id": "ABBT0137426", "product": "OIL", "petrinex_volume": 42.8, "petrinex_hours": 720},
+    {"well_key": "100080807605W503", "facility_id": "ABBT0158376", "product": "OIL", "petrinex_volume": 389.6, "petrinex_hours": 717},
+    {"well_key": "100140807605W503", "facility_id": "ABBT0158376", "product": "OIL", "petrinex_volume": 395.6, "petrinex_hours": 718},
+    {"well_key": "100160407605W500", "facility_id": "ABBT0158376", "product": "OIL", "petrinex_volume": 322.0, "petrinex_hours": 713},
+    {"well_key": "100160807605W502", "facility_id": "ABBT0158376", "product": "OIL", "petrinex_volume": 519.5, "petrinex_hours": 714},
+    {"well_key": "102160407605W500", "facility_id": "ABBT0158376", "product": "OIL", "petrinex_volume": 313.8, "petrinex_hours": 718}
+  ]
+}

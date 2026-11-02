@@ -1011,3 +1011,75 @@ with `config/defect_log.yaml`, and nothing showed that the tests pass on a clean
 **Consequences.** Every pull request shows whether the tests and the defect log check pass, on a clean Linux
 install. A failed check does not block merging by itself; a branch protection rule on `main` would make it required.
 CI does not prove that the Fabric notebooks run; that still needs a pipeline run.
+
+---
+
+## DEC-032 PI-style simulated sensors for 40 real wells, reconciled with Petrinex (stage 1)
+
+**Date:** 2026-11-02
+
+**Context.** Petrinex gives one volume per well per month. Production engineers work from hourly wellhead data in a
+historian (tags, an asset hierarchy, quality flags, event frames) and check it against reported volumes. The project
+has no access to real sensor data or to a historian, so the module simulates the sensors. It is built in four
+stages; this entry covers stage 1 (configuration, well selection, asset hierarchy, 2025-11 hourly history, local
+tests). Later stages add their own decisions.
+
+**Decision.**
+- **PI-style, not PI System.** The module uses the concepts of AVEVA PI System (PI points / tags with units, AF
+  element hierarchy and paths, value quality, UTC storage, event frames, summaries) on Fabric tables. Every reading is
+  simulated by `sensor/` in this repository; no PI software, PI API or PI data is used, and the README and the
+  config say so. Claiming a PI integration would be false, and the concepts are what transfers to a real historian.
+- **Real volumes, simulated readings.** `sensor_select_wells` picks 40 wells from `gold_fact_production` for 2025-11:
+  wells with one reporting facility, at least 600 hours and enough OIL or GAS volume; for each product, 4 facilities
+  with at least 5 such wells, ranked by a seeded hash, and 5 wells per facility (8 facilities, 20 oil and 20 gas
+  wells, Gold run `57f84a9c`). Placeholder wells are excluded. The list with each well's real Petrinex volume and
+  hours is frozen in `config/sensor.json`, so the generator and the tests run anywhere, including CI, without
+  Fabric; stage 3 reconciles against `gold_fact_production` itself.
+- **How the simulation matches Petrinex.** Each well's true monthly volume is its Petrinex volume x (1 + bias): a
+  random bias of at most 1% for most wells and a configured bias for 3 anomaly wells (+15%, -20%, +25%). Hourly
+  volumes are noisy (3%) but rescaled to add up to that true volume exactly. Downtime equals 721 - Petrinex hours
+  when that leaves at least 2 hours (for example 98 hours for a well that reported 623), otherwise 2 to 12 random
+  hours, in 1 to 3 events.
+- **The anomaly wells are deliberate.** They are set in `config/sensor.json` to test the reconciliation, which must
+  flag exactly them (threshold 5%). This tests the detection logic; it is not a finding about the real data.
+- **Deliberate bad readings, flagged, not deleted.** Per well: 2 out-of-range values, 1 frozen run of 8 hours, 6
+  missing readings, on analog tags in running hours. They replace the reading only; the true volume is unchanged.
+  The quality flag follows PI practice: Bad for a missing reading (PI "No Data") or a value outside the physical
+  range, Questionable for a value outside the normal range or the same value for 6 or more readings (0 flow while
+  shut in and the run status are not checked), Good otherwise. Keeping the rows lets the report show where data is
+  bad and lets the rules change later without regenerating or reloading anything; aggregates use Good readings only.
+- **2025-11.** It is the month where daylight saving time ends, so it has 721 local hours: a direct test of the time
+  handling that D-010 got wrong, and the month whose oil volumes D-010 restored.
+- **UTC storage.** Timestamps are stored in UTC: one instant per reading, no repeated local hour on Nov 2, and the
+  same convention as PI and Eventstream. Local time is derived for display and for local-day rules. The grid runs
+  from 2025-11-01T06:00Z to 2025-12-01T07:00Z (exclusive): 721 hours, tested.
+- **Monthly sensor volume.** Per hour: a Good flow reading / 24; 0 if the run status is a Good 0; otherwise the mean
+  Good flow rate of the running hours of the same local day / 24.
+- **Loading.** `scripts/sensor_backfill.py` generates the files locally (seeded, reproducible), they are uploaded
+  with `fab cp`, and `sensor_load_backfill` loads `sensor_asset_hierarchy` and `bronze_sensor_backfill`. Its checks
+  run before anything is written: keys not null, `(tag_name, ts_utc)` unique, timestamps inside the local month,
+  every tag in the hierarchy, every well in `gold_dim_well`, unique AF paths and tag names, 5 tags per well, 721
+  hours. Failed rows go to `sensor_load_rejects` and the notebook raises (DEC-022); the file reload uses
+  `replaceWhere` (DEC-029). It is not part of a pipeline.
+
+**Alternatives.**
+- A real historian or a public sensor dataset: none is available for these wells, and an unrelated public dataset
+  could not be reconciled with Petrinex.
+- Generate the data in a Fabric notebook from Gold at run time: no frozen snapshot in the repo, but the generator
+  could not be tested locally or in CI, and every run would need capacity on the trial.
+- Delete bad readings in Silver: simpler aggregates, but the evidence of bad data is gone and a rule change would need
+  the raw data again.
+- Store local time: readable, but 2025-11-02 01:00 happens twice and the sort order breaks.
+
+**Consequences.** Verified on 2026-11-02:
+- Local: 20 tests in `tests/test_sensor_backfill.py` (reproducible output, 721 hours with the repeated 01:00 on
+  Nov 2, hierarchy levels and paths, injection counts, true volume = Petrinex x (1 + bias), downtime events
+  shut in and not overlapping, quality rules on constructed readings, exact counts of flagged readings, and the
+  reconciliation flags exactly the 3 anomaly wells with the other 37 within 0.99%).
+- Fabric: `sensor_load_backfill` run `16ffcc77` loaded 143,960 readings (40 x 5 x 721 - 240 missing) and 248
+  hierarchy nodes (8 facilities, 40 wells, 200 tags); 0 duplicate keys, 721 hours from 2025-11-01 06:00 UTC to
+  2025-12-01 06:00 UTC, rows in = rows out. A test copy of the notebook with a bad file (a duplicate key, an
+  unknown tag, a timestamp outside the month and a null tag) failed with the 5 rows and their reasons and left
+  `bronze_sensor_backfill` at version 0; its outputs went to temporary files that were deleted.
+- Quality of the history: 143,520 Good, 360 Questionable (40 frozen runs x 9 readings), 320 Bad (240 missing, 80 out
+  of range) on the full grid of 144,200 expected readings.
