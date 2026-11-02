@@ -22,7 +22,7 @@ missing from its paragraph.
 | D-007 | Exact duplicate rows in Petrinex volumes | Duplicated rows would double count volume | Reject rule `exact_duplicate`; 0 rows flagged in 12 months | low | Fixed |
 | D-008 | Duplicate keys when `FromToID` is masked | Rows with a masked `FromToID` cannot be told apart by key | Warning rule `duplicate_key_masked_fromto`, rows kept | low | Mitigated |
 | D-009 | Producing wells missing from `production_string` grow every month | Missing wells rise from 19 (2025-07) to 423 (2026-06); likely cause of D-002 | Recorded only; the ST37 snapshot is not older than Petrinex, cause not confirmed | medium | Open |
-| D-010 | `hours_above_month_max` rejects valid November rows (daylight saving time) | 166 `PROD` rows and 3.06% of November oil volume are missing from Gold | Recorded only; the rule uses days x 24 and does not allow the extra DST hour | high | Open |
+| D-010 | `hours_above_month_max` rejects valid November rows (daylight saving time) | 166 `PROD` rows and 3.06% of November oil volume were missing from Gold | Fixed (DEC-030): the month maximum is max(days x 24, America/Edmonton clock hours), set in config/silver.json; 0 rows rejected by the rule, 2025-11 oil restored | high | Fixed |
 
 <!-- END GENERATED: defect table -->
 
@@ -88,8 +88,13 @@ rejects in 12 months are in 2025-11 (0 in every other month), and every one repo
 Alberta moved its clocks back on 2025-11-02, so that month had 721 hours. The rows belong to 507 wells. 282 are steam
 injection rows (outside the Gold scope), but 166 are `PROD` rows, so Gold drops them: 152 oil rows with 376,518.5 m3,
 3.06% of the in-scope oil volume for 2025-11, which also lowers the MoM measures for 2025-11 and 2025-12. Most
-operators still report 720 hours for that month. In 2026-03 (one hour shorter) the rule cannot catch a 744, which is
-one hour too many. Recorded only, not fixed.
+operators still report 720 hours for that month (103,574 rows). In 2026-03 (743 clock hours) 100,092 rows report 744
+and 4,377 report 743: reporters use both days x 24 and the real clock hours.
+**Fixed on 2026-11-02 (DEC-030).** The maximum is now max(days x 24, clock hours in America/Edmonton), set in
+`config/silver.json`: 721 for 2025-11, 744 for 2026-03, days x 24 for every other month, so both habits pass and no
+month gets a lower limit than before. Run `57f84a9c` rejects 0 rows with the rule in every month, Gold gains the 166
+`PROD` rows (152 oil rows, 376,518.5 m3; the other 11 months are unchanged), and Oil MoM goes from -3.98% to -0.95%
+for 2025-11 and from 4.97% to 1.76% for 2025-12. Rule tests: 721 and 744 pass, 722 and 745 are rejected.
 
 ## Known limitations
 

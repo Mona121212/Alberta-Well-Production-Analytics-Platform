@@ -1,0 +1,10 @@
+{
+  "dq_rules": {
+    "hours_above_month_max": {
+      "description": "Reject a row whose Hours is above the maximum for its production month (D-010, DEC-030). days_x_24: days in month x 24. local_clock_hours: hours between local midnight on the 1st of the month and of the next month in the time zone (721 in a month where daylight saving time ends, 743 where it starts). max_of_calendar_and_clock: the larger of the two, so both reporting habits pass.",
+      "method": "max_of_calendar_and_clock",
+      "timezone": "America/Edmonton",
+      "accepted_methods": ["days_x_24", "local_clock_hours", "max_of_calendar_and_clock"]
+    }
+  }
+}

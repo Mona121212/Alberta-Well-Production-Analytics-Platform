@@ -198,9 +198,9 @@ defects:
 
   - id: D-010
     issue: "`hours_above_month_max` rejects valid November rows (daylight saving time)"
-    impact: 166 `PROD` rows and 3.06% of November oil volume are missing from Gold
-    handling: Recorded only; the rule uses days x 24 and does not allow the extra DST hour
-    status: Open
+    impact: 166 `PROD` rows and 3.06% of November oil volume were missing from Gold
+    handling: "Fixed (DEC-030): the month maximum is max(days x 24, America/Edmonton clock hours), set in config/silver.json; 0 rows rejected by the rule, 2025-11 oil restored"
+    status: Fixed
     area: silver
     severity: high
     found_date: 2026-10-29
@@ -215,3 +215,10 @@ defects:
       - {name: oil_volume_share, value: 3.06, unit: "%", scope: 2025-11}
       - {name: steam_injection_rows, value: 282, scope: 2025-11}
       - {name: rows_rejected_other_months, value: 0, scope: 12m}
+      - {name: rows_reporting_720_hours, value: 103574, scope: 2025-11}
+      - {name: rows_reporting_744_hours, value: 100092, scope: 2026-03, note: days x 24; clock hours are 743}
+      - {name: rows_reporting_743_hours, value: 4377, scope: 2026-03}
+      - {name: oil_mom_before_fix, value: -3.98, unit: "%", scope: 2025-11}
+      - {name: oil_mom_after_fix, value: -0.95, unit: "%", scope: 2025-11}
+      - {name: oil_mom_before_fix, value: 4.97, unit: "%", scope: 2025-12}
+      - {name: oil_mom_after_fix, value: 1.76, unit: "%", scope: 2025-12}
