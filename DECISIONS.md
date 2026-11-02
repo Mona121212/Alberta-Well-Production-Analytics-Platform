@@ -908,3 +908,67 @@ afterwards):
   only raises as step 2 (job `27cb7d8c`): step 1 Succeeded, step 2 Failed with the raised error, Gold and Refresh did
   not run (no activity runs, no model refresh), and the pipeline run is Failed. The first attempts of this test hit
   the HTTP 430 above on step 2; the test notebooks were then given small sessions (`%%configure`).
+
+---
+
+## DEC-030 Month hour limit: the larger of days x 24 and Alberta clock hours (fixes D-010)
+
+**Date:** 2026-11-02
+
+**Context.** `hours_above_month_max` in `02_silver_transform` rejected a row when `Hours` was above days x 24. A
+month in which daylight saving time ends has one hour more: Alberta (America/Edmonton) moved its clocks back on
+2025-11-02, so 2025-11 had 721 hours. The rule rejected all 509 rows that reported 721 hours, 166 of them `PROD`
+rows, and Gold lost 152 oil rows with 376,518.5 m3 (3.06% of the month's oil), which also distorted Oil MoM for
+2025-11 and 2025-12 (D-010). In the month where DST starts (2026-03, 743 clock hours) the opposite applies.
+
+A read-only profile of `silver_petrinex_vol_flagged` (run `8994ed6c`) before the change showed that reporters use
+both conventions:
+- 2025-11 (720 by days x 24, 721 by the clock): 103,574 rows report 720 and 509 report 721 (from 30 reporting
+  facilities).
+- 2026-03 (744 by days x 24, 743 by the clock): 100,092 rows report 744 and 4,377 report 743. The 744 rows include
+  93,062 `PROD` rows and 4,570,265.4 m3 of in-scope oil.
+- No month has a row above the larger of the two limits.
+
+**Decision.**
+- The maximum hours of a month is `max(days x 24, clock hours)`, where the clock hours are the real elapsed time from
+  local midnight on the 1st to local midnight on the 1st of the next month in America/Edmonton (computed with
+  `zoneinfo` from the timestamps, not the wall clock). That gives 721 for 2025-11, 744 for 2026-03 and days x 24 for
+  every other month.
+- The method and the time zone are in `config/silver.json` (`method: max_of_calendar_and_clock`,
+  `timezone: America/Edmonton`). `days_x_24` (the old rule) and `local_clock_hours` (strict clock hours) stay
+  accepted values, so the rule can be switched without a code change; the notebook raises on any other value.
+- The notebook computes the limit per production month in Python and looks it up with a literal map, for the months
+  in the data plus the two DST months the rule tests use.
+- Four constructed rule tests in `dq_rule_test_results`: 2025-11 with 721 hours passes and 722 is rejected; 2026-03
+  with 744 passes and 745 is rejected. `rows_kept_for_gold` goes from 3 to 5. `tests/test_silver_config.py` checks
+  the config and runs the notebook's own `month_hour_limit` function locally.
+
+**Why accept both habits.** The rule is there to catch impossible hours, not to choose between two reasonable ways
+of counting a month. Strict clock hours would have rejected the 100,092 March rows that report 744, more than the
+509 rows the old rule got wrong, and 93,062 of them are production rows. Taking the larger limit never lowers the
+limit of any month, so no row that passed before can fail now; the cost is that a March row that over-reports by
+exactly one hour (744 against 743 clock hours) is not caught, which cannot be told apart from the days x 24 habit
+anyway.
+
+**Alternatives.**
+- `local_clock_hours`: correct by the clock, but rejects the common days x 24 habit in March (100,092 rows).
+- Keep days x 24 and add 1 hour of tolerance in every month: also accepts 721, but lets through 1 extra hour in the
+  other 10 months, where there is no DST reason for it.
+- Spark `to_utc_timestamp` arithmetic in a column expression: no lookup map, but harder to read and to test without
+  Spark; `zoneinfo` on 12 months is clearer and is tested locally.
+
+**Consequences.** Verified in Fabric on 2026-11-02 through `pl_well_production_monthly` (job `b55d7f5d`, 26.9 min;
+the Silver activity hit HTTP 430 once and succeeded on its retry after 300 seconds, DEC-029). New run `57f84a9c`:
+- `hours_above_month_max` flags 0 rows in every month (509 before). 2025-11 rejected rows go from 512 to 3 (the 3
+  are other rules); the other 11 months keep exactly the same rejected counts.
+- Gold, compared with `VERSION AS OF 10` by month and product (96 month-product cells): only 2025-11 changes, OIL
+  +152 rows and +376,518.5 m3 (11,932,349.8 to 12,308,868.3), GAS +8, COND +4, BRKWTR +1, FSHWTR +1 (166 rows);
+  every other cell has a difference of 0. `gold_fact_production` 2,908,544 to 2,908,710 rows. Bronze and Silver stay
+  at 6,481,961 rows. `gold_idle_wells` keeps 5,628 rows with the same wells.
+- 9 of 9 reconciliation tests PASS; all 11 rule tests PASS.
+- Dashboard after the refresh: Oil MoM 2025-11 from -3.98% to -0.95% and 2025-12 from 4.97% to 1.76%, equal to the
+  values computed from Gold before the run; the other months are unchanged (differences below 1e-8 m3 come from
+  floating-point summation order in DAX). Rows Flagged 46,503 to 45,994 (-509). D-010 is Fixed (Closed in
+  `defect_log`) and Open Defects goes from 5 to 4.
+- Follow-up, not done here: `02_silver_transform` still reloads `silver_petrinex_vol` with DELETE then append (two
+  commits); it should use `replaceWhere` like `01_bronze_transform` (DEC-029).

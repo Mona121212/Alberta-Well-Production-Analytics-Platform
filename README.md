@@ -157,6 +157,12 @@ A failed test stops the run (DEC-022): `02_silver_transform` stops if a DQ rule 
 if any reconciliation test fails or if the 02 run that wrote the flags did not finish. Results are stored before the
 error, in `dq_rule_test_results` and `reconciliation_results`.
 
+Silver rule settings are in `config/silver.json`, uploaded like the other config files
+(`fab cp config/silver.json "well-production-mvp.Workspace/alberta_wells.Lakehouse/Files/config/"`). It sets how
+`hours_above_month_max` gets the maximum hours of a month: `max_of_calendar_and_clock` takes the larger of days x 24
+and the clock hours in America/Edmonton (721 in November 2025, 744 in March 2026), so both reporting habits pass
+(D-010, DEC-030).
+
 `gold_fact_production` is partitioned by `production_month`, one file per month (DEC-023).
 
 ## Power BI dashboard
@@ -312,6 +318,7 @@ packages and maps never run on bad data.
   `fab import` (DEC-029)
 - `tests/gis/` - rule and module tests; `tests/test_defect_log.py` - defect log in sync with its yaml source;
   `tests/test_powerbi_files.py` - no credentials in `powerbi/`, every measure documented;
-  `tests/test_fabric_pipeline.py` - pipeline order, Succeeded-only dependencies, target items, no credentials
+  `tests/test_fabric_pipeline.py` - pipeline order, Succeeded-only dependencies, target items, no credentials;
+  `tests/test_silver_config.py` - month hour limit of `hours_above_month_max` (D-010)
 - `docs/` - `progress.md`, `final_report.md`, `st37_gis_exploration.md`, `defect_log.md`, maps, dashboard screenshots
-- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-029)
+- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-030)
