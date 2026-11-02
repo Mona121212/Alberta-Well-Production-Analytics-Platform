@@ -1,5 +1,7 @@
 # Alberta Well Production Analytics Platform
 
+[![CI](https://github.com/Mona121212/Alberta-Well-Production-Analytics-Platform/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Mona121212/Alberta-Well-Production-Analytics-Platform/actions/workflows/ci.yml)
+
 Two tracks built on the same public data:
 
 - **Fabric pipeline** (`notebooks/`): Petrinex monthly production and AER well data through a Bronze / Silver / Gold
@@ -67,6 +69,11 @@ python -m gis.run --mode sample          # whole track on a Calgary-region sampl
 python -m gis.run --mode full            # whole province (about 8-10 minutes)
 python -m pytest tests                   # GIS rule tests, defect log, Power BI and pipeline file checks
 ```
+
+GitHub Actions (`.github/workflows/ci.yml`, DEC-031) runs on every push and pull request with Python 3.12
+(`.python-version`): it installs `requirements.txt`, runs `python -m pytest tests` and
+`python scripts/build_defect_log.py --check`. It needs no Fabric credentials and no files in `data/`; the Fabric side
+is checked by the pipeline's own DQ rule tests and reconciliation tests.
 
 `gis.run` writes `gis/output/<mode>/run_log.txt` and `run_manifest.json` (git commit, per-step status and runtime, row
 counts per layer, QA summary, reconciliation results). Single steps: `python -m gis.<step> --mode sample`
@@ -313,6 +320,7 @@ packages and maps never run on bad data.
 - `gis/` - pipeline modules (`stage`, `convert`, `qa`, `qa_checks`, `liability`, `analysis`, `package`, `changes`,
   `maps`, `qgis_maps`, `run`)
 - `config/` - every setting, rule, mapping table, field dictionary and style
+- `.github/workflows/ci.yml` - CI: pytest and the defect log check on every push and pull request (DEC-031)
 - `powerbi/` - semantic model (TMDL) and dashboard (PBIR), deployed with `fab import` (DEC-025)
 - `fabric/` - Data Pipeline `pl_well_production_monthly` (Bronze -> Silver -> Gold -> model refresh), deployed with
   `fab import` (DEC-029)
@@ -321,4 +329,4 @@ packages and maps never run on bad data.
   `tests/test_fabric_pipeline.py` - pipeline order, Succeeded-only dependencies, target items, no credentials;
   `tests/test_silver_config.py` - month hour limit of `hours_above_month_max` (D-010)
 - `docs/` - `progress.md`, `final_report.md`, `st37_gis_exploration.md`, `defect_log.md`, maps, dashboard screenshots
-- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-030)
+- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-031)

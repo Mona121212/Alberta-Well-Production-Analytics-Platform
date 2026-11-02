@@ -1,4 +1,5 @@
 # Local GIS track (gis/). The Fabric notebooks use the Fabric Spark runtime instead.
+# Python 3.12 (.python-version, also used by CI).
 # pyogrio wheels bundle GDAL with the OpenFileGDB driver, so no separate GDAL install is needed.
 geopandas>=1.0
 pyogrio>=0.13

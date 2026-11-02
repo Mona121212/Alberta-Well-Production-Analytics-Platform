@@ -972,3 +972,42 @@ the Silver activity hit HTTP 430 once and succeeded on its retry after 300 secon
   `defect_log`) and Open Defects goes from 5 to 4.
 - Follow-up, not done here: `02_silver_transform` still reloads `silver_petrinex_vol` with DELETE then append (two
   commits); it should use `replaceWhere` like `01_bronze_transform` (DEC-029).
+
+---
+
+## DEC-031 CI on GitHub Actions: local tests only
+
+**Date:** 2026-11-02
+
+**Context.** The 113 tests and the defect log check (`scripts/build_defect_log.py --check`) only ran when someone
+ran them locally, on one Windows machine. A change could be pushed with a failing test or a defect table out of sync
+with `config/defect_log.yaml`, and nothing showed that the tests pass on a clean install.
+
+**Decision.**
+- `.github/workflows/ci.yml` runs on every push, every pull request and on demand: install `requirements.txt`, run
+  `python -m pytest tests -v`, then `python scripts/build_defect_log.py --check`. One job on `ubuntu-latest`, 15-minute
+  timeout, read-only token, older runs of the same ref cancelled.
+- The Python version is in `.python-version` (3.12, the version of the local `.venv`); `actions/setup-python` reads
+  it, and `requirements.txt` points to it.
+- No system packages and no skipped tests. The pyogrio, pyproj and shapely wheels bundle GDAL, PROJ and GEOS, and
+  every test builds its own rows or reads committed files under `config/`, `notebooks/`, `powerbi/` and `fabric/`;
+  none reads `data/` or `gis/output/`, and `tests/gis/test_maps.py` checks QGIS output parsing without QGIS. Checked
+  before writing the workflow in a fresh clone (no `data/`, no `.venv`) with a new virtual environment: 113 passed,
+  defect log check PASS (geopandas 1.2.0, pyogrio 0.13.0 with GDAL 3.12.4).
+- No secrets. CI does not call Fabric; the Fabric side is checked by the DQ rule tests in `02_silver_transform` and
+  the reconciliation tests in `03_gold_transform` when the Data Pipeline runs (DEC-022, DEC-029).
+- README shows the CI badge for `main`.
+
+**Alternatives.**
+- Install GDAL from apt or use conda: not needed while the wheels bundle it, and slower.
+- Pin every package version (a lock or constraints file): reproducible runs, but upstream breaking changes would only
+  show up when someone updates the pins. With `>=` ranges CI installs the latest compatible versions, so it can turn
+  red because of a new release; that is accepted for now, and a constraints file is the fix if it happens often.
+- Run the Fabric pipeline from CI: needs a service principal secret in GitHub, Fabric capacity on every push, and
+  changes production tables; the portfolio workspace has one capacity and manual deployment (DEC-025, DEC-029).
+- Test on Windows as well: the project is developed on Windows, but CI on Linux also catches path case and encoding
+  assumptions; one OS keeps the run short.
+
+**Consequences.** Every pull request shows whether the tests and the defect log check pass, on a clean Linux
+install. A failed check does not block merging by itself; a branch protection rule on `main` would make it required.
+CI does not prove that the Fabric notebooks run; that still needs a pipeline run.
