@@ -1083,3 +1083,51 @@ tests). Later stages add their own decisions.
   `bronze_sensor_backfill` at version 0; its outputs went to temporary files that were deleted.
 - Quality of the history: 143,520 Good, 360 Questionable (40 frozen runs x 9 readings), 320 Bad (240 missing, 80 out
   of range) on the full grid of 144,200 expected readings.
+
+## DEC-033 Live sensor feed through Fabric Eventstream, with a run manifest (stage 2)
+
+**Context.** Stage 2 of the PI-style sensors (DEC-032) needs a live feed into the Lakehouse, with the disorder a real
+feed has, and a way to prove nothing was lost on the way. The simulated readings have no source table to compare with,
+and the Eventstream custom endpoint is secured by a connection string that must stay out of the repository.
+
+**Decision.**
+- **Path.** `scripts/sensor_simulator.py` -> Eventstream `es_sensor_readings` (custom endpoint source `sensor_simulator`)
+  -> Lakehouse destination `bronze_sensor_readings`, JSON events, no operators. One reading per tag per minute: 200 tags,
+  so 200 readings a minute. Bronze keeps the feed as it arrived.
+- **Late and duplicate readings on purpose.** 1% of the readings are sent 2 to 5 samples late and 1% are sent twice (same
+  `tag_name`, `ts_utc` and value, 0 or 1 sample later). The share is exact and set in `config/sensor.json`. Events carry
+  no flag for this, as in a real feed; Silver has to find them from the key and the timestamps (stage 3).
+- **The run is planned up front from a seed**, so `--dry-run` and the tests see exactly what a real run sends, with no
+  network and no connection string.
+- **A run manifest is the control total.** Each real run writes the events sent and the expected unique readings,
+  duplicates, late readings and sum of values to `data/sensor/stream_runs/`. `sensor_check_stream` compares them with
+  Bronze for that `run_id`, writes bad rows to `sensor_load_rejects` and a row to `pipeline_run_log`, and raises on any
+  difference. Each event carries `run_id` and `sent_utc`, so runs can be separated and lateness measured.
+- **Secrets.** The connection string is read only from the environment variable named in the config and is never
+  printed or written; error messages are redacted. The exported definition holds no secret, and
+  `tests/test_fabric_eventstream.py` checks that on every push.
+- **Deactivate between runs.** The source and destination are activated for a run and deactivated afterwards in the
+  workspace, so the trial capacity is not used while nothing is sent.
+
+**Alternatives.**
+- A flag on late and duplicate events: easier for Silver, but it would test nothing a real feed requires.
+- Eventstream operators to remove duplicates in flight: Bronze would no longer be the feed as it arrived, and a rule
+  change could not be replayed.
+- Checking counts only in the Eventstream UI: no record, not reproducible, and no check of values.
+- A Spark Structured Streaming notebook reading the endpoint: more control, but it holds capacity for the whole run on a
+  trial that runs one Spark job at a time.
+
+**Consequences.** Verified on 2026-11-02:
+- Run `20261102T205813Z`, 15 ticks from 20:58:13 to 21:12:13 UTC: 3,030 events sent, 3,030 rows in
+  `bronze_sensor_readings`, 3,000 distinct keys, 30 duplicates, 30 late, sum of values 2,845,670.113, 0 null keys,
+  200 tags. `sensor_check_stream` completed (job `03779f06`), and a separate local count of the table's Delta files gave
+  the same numbers. The sum of values was added to this run's manifest afterwards by replaying its seeded plan, which
+  reproduced every other count; later runs write it directly.
+- Eventstream adds `EventProcessedUtcTime`, `PartitionId` and `EventEnqueuedUtcTime`. `ts_utc` and `sent_utc` arrive as
+  strings, so Silver must cast them. The destination writes in batches: run the check a few minutes after the last send.
+  An early run fails with a count mismatch and clears on a re-run.
+- Stream readings use the backfill's base levels, but all wells are running and no bad readings or anomaly bias are
+  injected: the feed tests transport and ordering, while quality rules and reconciliation with Petrinex stay on the
+  backfill.
+- The manifest is local (`data/` is not in Git) and uploaded with `fab cp`. If a send fails after the service received a
+  batch, the manifest counts short and the check flags the difference rather than hiding it.

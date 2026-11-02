@@ -170,6 +170,18 @@
       {"well_key": "100160407605W500", "volume_bias_pct": 25.0}
     ]
   },
+  "stream": {
+    "_note": "Live feed for Eventstream (DEC-033). late_pct and duplicate_pct are shares of the unique readings, sent late or twice on purpose. Delays are in samples.",
+    "eventstream": "es_sensor_readings",
+    "bronze_table": "bronze_sensor_readings",
+    "connection_string_env": "SENSOR_EVENTHUB_CONNECTION_STRING",
+    "source": "stream",
+    "sample_interval_seconds": 60,
+    "late_pct": 1.0,
+    "late_delay_samples": [2, 5],
+    "duplicate_pct": 1.0,
+    "duplicate_delay_samples": [0, 1]
+  },
   "wells": [
     {"well_key": "100011504716W500", "facility_id": "ABBT0112255", "product": "GAS", "petrinex_volume": 100.7, "petrinex_hours": 697},
     {"well_key": "100051404716W502", "facility_id": "ABBT0112255", "product": "GAS", "petrinex_volume": 544.6, "petrinex_hours": 623},
