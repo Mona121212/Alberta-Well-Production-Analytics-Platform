@@ -258,8 +258,26 @@ fab job run "well-production-mvp.Workspace/sensor_load_backfill.Notebook"
 ```
 
 `sensor_load_backfill` checks keys, uniqueness, the month bounds, the 721 hours and that every tag and well exists
-before it writes; failed rows go to `sensor_load_rejects` and the notebook stops with Bronze unchanged. Stages 2 to 4
-(live stream through Eventstream, Silver and Gold with event frames and reconciliation, and a Power BI page) follow.
+before it writes; failed rows go to `sensor_load_rejects` and the notebook stops with Bronze unchanged.
+
+Stage 2 adds the live feed: `scripts/sensor_simulator.py` sends one reading per tag per minute to the Eventstream
+`es_sensor_readings` (custom endpoint source), which writes JSON events to `bronze_sensor_readings`. About 1% of the
+readings arrive late and 1% arrive twice, on purpose and without a flag, for Silver to handle. The definition is in
+`fabric/es_sensor_readings.Eventstream/`, and a test checks it holds no secret. The connection string is read only from
+the environment variable `SENSOR_EVENTHUB_CONNECTION_STRING`; it is never printed or stored. Activate the source and
+destination before a run and deactivate them afterwards.
+
+```text
+python scripts/sensor_simulator.py --dry-run --duration-minutes 15            # plans the run; sends nothing
+python scripts/sensor_simulator.py --duration-minutes 15                      # writes data/sensor/stream_runs/ (not in Git)
+fab cp data/sensor/stream_runs/<file>.json "well-production-mvp.Workspace/alberta_wells.Lakehouse/Files/raw/sensor/stream_runs/"
+fab job run "well-production-mvp.Workspace/sensor_check_stream.Notebook"      # a few minutes after the last send
+```
+
+`sensor_check_stream` reconciles the run's manifest with Bronze (rows, distinct keys, duplicates, late rows, sum of
+values) and raises on any difference. The first 15 minute run sent 3,030 events and Bronze holds 3,030: 3,000 unique
+readings, 30 duplicates, 30 late. Stages 3 and 4 (Silver and Gold with event frames and reconciliation, and a Power BI
+page) follow.
 
 ## Outputs
 
