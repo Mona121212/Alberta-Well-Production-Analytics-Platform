@@ -12,3 +12,5 @@ openpyxl>=3.1
 pytest>=8.0
 scipy>=1.11
 matplotlib>=3.8
+# Sends the simulated sensor stream to Fabric Eventstream (scripts/sensor_simulator.py).
+azure-eventhub>=5.15
