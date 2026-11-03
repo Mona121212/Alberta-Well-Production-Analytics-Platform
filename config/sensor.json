@@ -182,6 +182,22 @@
     "duplicate_pct": 1.0,
     "duplicate_delay_samples": [0, 1]
   },
+  "layers": {
+    "_note": "Tables and files of the sensor Silver and Gold notebooks (DEC-034).",
+    "bronze_backfill_table": "bronze_sensor_backfill",
+    "bronze_stream_table": "bronze_sensor_readings",
+    "hierarchy_table": "sensor_asset_hierarchy",
+    "silver_table": "silver_sensor_readings",
+    "rejects_table": "sensor_silver_rejects",
+    "quality_tests_table": "sensor_quality_test_results",
+    "hourly_table": "gold_sensor_hourly",
+    "downtime_table": "gold_downtime_events",
+    "reconciliation_table": "gold_sensor_reconciliation",
+    "reconciliation_results_table": "sensor_reconciliation_results",
+    "production_fact_table": "gold_fact_production",
+    "truth_file": "/lakehouse/default/Files/raw/sensor/backfill_2025-11_truth.json",
+    "stream_manifests": "/lakehouse/default/Files/raw/sensor/stream_runs/stream_run_*.json"
+  },
   "wells": [
     {"well_key": "100011504716W500", "facility_id": "ABBT0112255", "product": "GAS", "petrinex_volume": 100.7, "petrinex_hours": 697},
     {"well_key": "100051404716W502", "facility_id": "ABBT0112255", "product": "GAS", "petrinex_volume": 544.6, "petrinex_hours": 623},

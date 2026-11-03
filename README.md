@@ -239,10 +239,10 @@ finding about the real data.
 |---|---|
 | PI Point (tag) and its engineering units | `tag_name` (`<facility>.<well>.<code>`), `unit` in `sensor_asset_hierarchy` |
 | AF element hierarchy and attributes | `sensor_asset_hierarchy`: facility -> well -> tag, AF style paths such as `\PI-style\Alberta\ABBT0053340\100011203902W400\|Casing Pressure` |
-| PI Data Archive | `bronze_sensor_backfill` (2025-11 hourly history), later `bronze_sensor_readings` (stream) and `silver_sensor_readings` |
+| PI Data Archive | `bronze_sensor_backfill` (2025-11 hourly history), `bronze_sensor_readings` (stream), merged in `silver_sensor_readings` |
 | Value quality and digital states (No Data, bad input) | Quality flag Good / Questionable / Bad: missing or outside the physical range is Bad, outside the normal range or frozen is Questionable; flagged, never deleted |
-| Event frames | `gold_downtime_events` (stage 3): one row per shut-in, with duration and lost volume |
-| Summary calculations / Asset Analytics | `gold_sensor_hourly` (stage 3): hourly values from Good readings only |
+| Event frames | `gold_downtime_events`: one row per shut-in, with duration and lost volume |
+| Summary calculations / Asset Analytics | `gold_sensor_hourly`: hourly values from Good readings only |
 | PI interface / connector | `scripts/sensor_simulator.py` via Fabric Eventstream (stage 2) |
 
 Stage 1 (this part) builds the configuration, the well selection, the asset hierarchy and the 2025-11 hourly
@@ -276,8 +276,31 @@ fab job run "well-production-mvp.Workspace/sensor_check_stream.Notebook"      # 
 
 `sensor_check_stream` reconciles the run's manifest with Bronze (rows, distinct keys, duplicates, late rows, sum of
 values) and raises on any difference. The first 15 minute run sent 3,030 events and Bronze holds 3,030: 3,000 unique
-readings, 30 duplicates, 30 late. Stages 3 and 4 (Silver and Gold with event frames and reconciliation, and a Power BI
-page) follow.
+readings, 30 duplicates, 30 late.
+
+Stage 3 builds Silver and Gold with the Data Pipeline `pl_sensor_hourly` (`04_sensor_silver` -> `05_sensor_gold`, defined
+in `fabric/pl_sensor_hourly.DataPipeline/`). Silver merges the history and the feed, keeps the first copy of each reading,
+quarantines the rest in `sensor_silver_rejects`, and keeps missing readings as Bad rows. Gold writes `gold_sensor_hourly`,
+`gold_downtime_events` and `gold_sensor_reconciliation`, which compares each well's sensor volume with its real Petrinex
+volume in `gold_fact_production`.
+
+```text
+fab cp data/sensor/backfill_2025-11_truth.json "well-production-mvp.Workspace/alberta_wells.Lakehouse/Files/raw/sensor/"
+fab cp config/sensor.json "well-production-mvp.Workspace/alberta_wells.Lakehouse/Files/config/"
+fab job run "well-production-mvp.Workspace/pl_sensor_hourly.DataPipeline"     # with the Eventstream deactivated
+```
+
+| Reconciliation test (`sensor_reconciliation_results`) | Expected | Actual |
+|---|---|---|
+| Bronze rows = rows received in Silver + rejects | 146,990 | 146,990 |
+| Tags whose Good count or sum of Good values differs between Silver and `gold_sensor_hourly` | 0 | 0 |
+| Downtime events differing from the simulation's truth file | 0 | 0 |
+| Wells flagged or configured as anomalies, but not both | 0 | 0 |
+
+The 3 wells flagged for investigation are the 3 set on purpose in `config/sensor.json` (+15%, -20%, +25%); the other 37
+are within 0.99%. This tests the detection logic; it is not a finding about the real data. The results stay out of
+`reconciliation_results`, which the Data Trust page reads for the Petrinex pipeline (DEC-034). Stage 4 (a Power BI page)
+follows.
 
 ## Outputs
 

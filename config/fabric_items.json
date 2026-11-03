@@ -4,7 +4,18 @@
     "01_bronze_transform": "5ba9f1af-b8d3-4d30-94d0-421ef2bacc64",
     "02_silver_transform": "757029b9-6ac5-46ea-ba5a-b0648be52d33",
     "03_gold_transform": "44f34cbf-65e7-4529-a001-6cadfc542f75",
-    "load_defect_log": "6e0345d0-5f94-4c96-997e-da06ef7ad478"
+    "load_defect_log": "6e0345d0-5f94-4c96-997e-da06ef7ad478",
+    "04_sensor_silver": "925ddaeb-6d64-40b3-94af-a13c9689b32a",
+    "05_sensor_gold": "f47a2182-5035-472b-8e3a-c61af6bf69d2"
+  },
+  "sensor_pipeline": {
+    "name": "pl_sensor_hourly",
+    "retry": 1,
+    "retry_interval_seconds": 300,
+    "steps": [
+      {"activity": "SensorSilver", "notebook": "04_sensor_silver", "timeout": "0.01:00:00"},
+      {"activity": "SensorGold", "notebook": "05_sensor_gold", "timeout": "0.01:00:00"}
+    ]
   },
   "semantic_model": {"name": "sm_petrinex_production", "id": "3dbbbf11-62be-4c49-ac5e-e9df5a8943ea"},
   "eventstream": {"name": "es_sensor_readings", "id": "f18f3a9f-4f88-4003-8b10-6ce2a82dc875"},
