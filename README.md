@@ -290,7 +290,7 @@ fab cp config/sensor.json "well-production-mvp.Workspace/alberta_wells.Lakehouse
 fab job run "well-production-mvp.Workspace/pl_sensor_hourly.DataPipeline"     # with the Eventstream deactivated
 ```
 
-| Reconciliation test (`reconciliation_results`) | Expected | Actual |
+| Reconciliation test (`sensor_reconciliation_results`) | Expected | Actual |
 |---|---|---|
 | Bronze rows = rows received in Silver + rejects | 146,990 | 146,990 |
 | Tags whose Good count or sum of Good values differs between Silver and `gold_sensor_hourly` | 0 | 0 |
@@ -298,7 +298,8 @@ fab job run "well-production-mvp.Workspace/pl_sensor_hourly.DataPipeline"     # 
 | Wells flagged or configured as anomalies, but not both | 0 | 0 |
 
 The 3 wells flagged for investigation are the 3 set on purpose in `config/sensor.json` (+15%, -20%, +25%); the other 37
-are within 0.99%. This tests the detection logic; it is not a finding about the real data. Stage 4 (a Power BI page)
+are within 0.99%. This tests the detection logic; it is not a finding about the real data. The results stay out of
+`reconciliation_results`, which the Data Trust page reads for the Petrinex pipeline (DEC-034). Stage 4 (a Power BI page)
 follows.
 
 ## Outputs

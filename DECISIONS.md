@@ -1156,10 +1156,17 @@ set to differ from Petrinex are flagged.
   the mean running rate of the 24 hours before (the month's mean if there are none). `gold_sensor_reconciliation`: sensor
   volume against `gold_fact_production` itself, not the snapshot in the config, flagged above 5%. Downtime and
   reconciliation use the history only, since the feed covers minutes and has no shut-ins.
-- **Four reconciliation tests**, stored in `reconciliation_results` with the Petrinex tests' schema, the notebook stopping
-  after writing them if one fails: (1) Bronze rows = received Silver rows + rejects; (2) by tag, Good count and sum of Good
+- **Four reconciliation tests**, stored in `sensor_reconciliation_results` with the Petrinex tests' schema, the notebook
+  stopping after writing them if one fails: (1) Bronze rows = received Silver rows + rejects; (2) by tag, Good count and sum of Good
   values in Silver = `gold_sensor_hourly`; (3) downtime events = the truth file, in both directions; (4) flagged wells = the
   configured anomaly wells, in both directions.
+- **Sensor and monthly audit results are stored apart, for the same reason as DEC-028.** `reconciliation_results`,
+  `dq_results`, `dq_run_log`, `dq_rule_test_results` and `rejected_records` are the audit trail of the Petrinex pipeline, and
+  simulated data does not belong in them. The Data Trust page reads `reconciliation_results`, and its tile shows 9 / 9 for
+  that pipeline. `tests/test_sensor_silver_gold.py` checks the two sensor notebooks do not write to these tables.
+- **`pipeline_run_log` stays shared.** It is an operational log with a `source` column, not an audit result. It is not in
+  the semantic model, no visual uses it, the Petrinex notebooks only write it (`01_bronze_transform` displays its own
+  `run_id`), and `05_sensor_gold` filters it on `source = 'sensor'`.
 - **Rule tests stop before Silver is replaced**, and Gold refuses a Silver run with no SUCCESS row in `pipeline_run_log`.
   Rule results have their own table, `sensor_quality_test_results`, because `dq_rule_test_results` is overwritten by
   `02_silver_transform`.
@@ -1177,13 +1184,25 @@ set to differ from Petrinex are flagged.
 - Silver as separate history and feed tables: simpler casts, but every consumer would have to union them.
 - Compare with `config/sensor.json` instead of `gold_fact_production`: no dependency on the fact table, but a change in
   Gold would go unnoticed.
+- Keep the sensor tests in `reconciliation_results` and rely on the report's `run_id` filter: the page shows the same
+  numbers today, but any filter that does not pin the latest run would mix simulated tests with Petrinex ones (DEC-028).
 
-**Consequences.** Verified on 2026-11-02:
+**Consequences.** Verified on 2026-11-02 and 2026-11-03:
 - `pl_sensor_hourly` job `6d4ab28f`, data run `bcc22566`, completed. All 11 rule tests and all 4 reconciliation tests PASS
   (test 1: 146,990 = 146,990). Silver holds 147,200 rows = 146,990 Bronze - 30 rejects + 240 missing.
-- The first `SensorGold` attempt failed with HTTP 430 (`TooManyRequestsForCapacity`), 1 second after Silver ended, before
-  any of its code ran, and the retry 5 minutes later succeeded. This is the failure DEC-029 expects. The activities did not
-  overlap, but a session can still hold capacity just after its activity ends, so expect this retry on the trial.
+- That first run wrote its 4 tests to `reconciliation_results`. They were deleted on 2026-11-03: Delta version 12 -> 13
+  (`RESTORE TABLE reconciliation_results TO VERSION AS OF 12` undoes it), 76 -> 72 rows, 4 rows deleted, 0 copied. The
+  one-off notebook that ran the delete did not write its result file, for a reason not established (a cancel was sent just
+  after the commit); the commit's metrics and a fresh read of version 13 confirm the result.
+- After the change, `pl_sensor_hourly` job `2449155e`, data run `68066f83`, completed: all 4 tests PASS in
+  `sensor_reconciliation_results` (test 1: 146,990 = 146,990), and `reconciliation_results` still has 72 rows, none from a
+  sensor run. After a model refresh, DAX returns the same as before the delete: Recon tests passed 9 / 9, latest run
+  `57f84a9c`, and 8 runs in Run history, none from the sensors.
+- `pipeline_run_log` has 114 rows, 5 of them from the sensors (`source` starting with `sensor`). They do not reach the report.
+- In both runs the first `SensorGold` attempt failed with HTTP 430 (`TooManyRequestsForCapacity`) within seconds of Silver
+  ending, before any of its code ran, and the retry 5 minutes later succeeded. This is the failure DEC-029 expects. The
+  activities did not overlap, but a session can still hold capacity just after its activity ends, so expect this retry on the
+  trial.
 - Flagged wells, equal to the configured anomalies: `100153106216W500` (+15.00%), `108082607606W402` (-20.00%),
   `100160407605W500` (+25.00%). The other 37 are within 0.99%. These differences are simulated on purpose.
 - 58 downtime events, 668 hours, equal to the truth file.
