@@ -193,6 +193,7 @@
     "hourly_table": "gold_sensor_hourly",
     "downtime_table": "gold_downtime_events",
     "reconciliation_table": "gold_sensor_reconciliation",
+    "reconciliation_results_table": "sensor_reconciliation_results",
     "production_fact_table": "gold_fact_production",
     "truth_file": "/lakehouse/default/Files/raw/sensor/backfill_2025-11_truth.json",
     "stream_manifests": "/lakehouse/default/Files/raw/sensor/stream_runs/stream_run_*.json"

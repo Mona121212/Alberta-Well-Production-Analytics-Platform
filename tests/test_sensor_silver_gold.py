@@ -151,7 +151,14 @@ def test_gold_runs_exactly_the_four_reconciliation_tests():
 
 def test_gold_writes_results_before_it_stops():
     code = source("05_sensor_gold")
-    assert code.index('saveAsTable("reconciliation_results")') < code.index("raise ValueError(f\"Reconciliation failed")
+    assert code.index('saveAsTable(L["reconciliation_results_table"])') < code.index("raise ValueError(f\"Reconciliation failed")
+
+
+def test_sensor_results_stay_out_of_the_petrinex_audit_tables():
+    assert LAYERS["reconciliation_results_table"] == "sensor_reconciliation_results"
+    for name in NOTEBOOKS:
+        for table in ("reconciliation_results", "dq_results", "dq_run_log", "dq_rule_test_results", "rejected_records"):
+            assert f'saveAsTable("{table}")' not in source(name)
 
 
 def test_gold_refuses_a_silver_run_that_did_not_finish():
