@@ -1,0 +1,119 @@
+table gold_downtime_events
+	sourceLineageTag: [dbo].[gold_downtime_events]
+
+	/// Number of shut-ins in gold_downtime_events for the wells in the filter. A selected event row does not narrow it, so the card shows the whole well.
+	measure 'Downtime Events' = CALCULATE(COUNTROWS(gold_downtime_events), REMOVEFILTERS(gold_downtime_events[start_local], gold_downtime_events[end_local]))
+		formatString: #,0
+		displayFolder: Well Operations\Downtime
+
+	/// Sum of duration_hours in gold_downtime_events for the wells in the filter. A selected event row does not narrow it, so the card shows the whole well.
+	measure 'Downtime Hours' = CALCULATE(SUM(gold_downtime_events[duration_hours]), REMOVEFILTERS(gold_downtime_events[start_local], gold_downtime_events[end_local]))
+		formatString: #,0
+		displayFolder: Well Operations\Downtime
+
+	/// Estimated lost oil volume in m3: sum of lost_volume of the oil wells' shut-ins. 0 for a selected gas well.
+	measure 'Lost Oil (m3)' = IF(NOT ISBLANK([Downtime Events]), CALCULATE(SUM(gold_downtime_events[lost_volume]), gold_downtime_events[product] = "OIL", REMOVEFILTERS(gold_downtime_events[start_local], gold_downtime_events[end_local])) + 0)
+		formatString: #,0.0
+		displayFolder: Well Operations\Downtime
+
+	/// Estimated lost gas volume in e3m3: sum of lost_volume of the gas wells' shut-ins. 0 for a selected oil well.
+	measure 'Lost Gas (e3m3)' = IF(NOT ISBLANK([Downtime Events]), CALCULATE(SUM(gold_downtime_events[lost_volume]), gold_downtime_events[product] = "GAS", REMOVEFILTERS(gold_downtime_events[start_local], gold_downtime_events[end_local])) + 0)
+		formatString: #,0.0
+		displayFolder: Well Operations\Downtime
+
+	/// Hours of the shut-ins in the row of the event table: sum of duration_hours, keeping the row's start and end.
+	measure 'Event Hours' = SUM(gold_downtime_events[duration_hours])
+		formatString: #,0
+		displayFolder: Well Operations\Downtime
+
+	/// Estimated lost volume of the row of the event table with its unit: m3 for oil, e3m3 for gas.
+	measure 'Event Lost Volume' =
+			VAR v = SUM(gold_downtime_events[lost_volume])
+			RETURN IF(NOT ISBLANK(v), FORMAT(v, "#,0.0") & IF(SELECTEDVALUE(gold_downtime_events[product]) = "GAS", " e3m3", " m3"))
+		displayFolder: Well Operations\Downtime
+
+	column event_id
+		dataType: string
+		sourceLineageTag: event_id
+		summarizeBy: none
+		sourceColumn: event_id
+
+	column well_key
+		dataType: string
+		isHidden
+		sourceLineageTag: well_key
+		summarizeBy: none
+		sourceColumn: well_key
+
+	column facility_id
+		dataType: string
+		sourceLineageTag: facility_id
+		summarizeBy: none
+		sourceColumn: facility_id
+
+	column product
+		dataType: string
+		sourceLineageTag: product
+		summarizeBy: none
+		sourceColumn: product
+
+	column start_utc
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn
+		sourceLineageTag: start_utc
+		summarizeBy: none
+		sourceColumn: start_utc
+
+	column end_utc
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn
+		sourceLineageTag: end_utc
+		summarizeBy: none
+		sourceColumn: end_utc
+
+	column start_local
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn
+		sourceLineageTag: start_local
+		summarizeBy: none
+		sourceColumn: start_local
+
+	column end_local
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn
+		sourceLineageTag: end_local
+		summarizeBy: none
+		sourceColumn: end_local
+
+	column duration_hours
+		dataType: int64
+		sourceLineageTag: duration_hours
+		summarizeBy: none
+		sourceColumn: duration_hours
+
+	column rate_used
+		dataType: double
+		sourceLineageTag: rate_used
+		summarizeBy: none
+		sourceColumn: rate_used
+
+	column lost_volume
+		dataType: double
+		sourceLineageTag: lost_volume
+		summarizeBy: none
+		sourceColumn: lost_volume
+
+	column _run_id
+		dataType: string
+		isHidden
+		sourceLineageTag: _run_id
+		summarizeBy: none
+		sourceColumn: _run_id
+
+	partition gold_downtime_events = entity
+		mode: directLake
+		source
+			entityName: gold_downtime_events
+			schemaName: dbo
+			expressionSource: 'DirectLake - alberta_wells'
+

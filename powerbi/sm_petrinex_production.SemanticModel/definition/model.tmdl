@@ -23,6 +23,10 @@ ref table dq_run_log
 ref table reconciliation_results
 ref table defect_log
 ref table gold_idle_wells
+ref table gold_sensor_hourly
+ref table gold_downtime_events
+ref table gold_sensor_reconciliation
+ref table gold_sensor_tags
 
 ref role Crude_Oil_Viewer
 

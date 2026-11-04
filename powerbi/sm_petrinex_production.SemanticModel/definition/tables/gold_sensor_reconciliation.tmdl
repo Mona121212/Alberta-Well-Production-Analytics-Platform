@@ -1,0 +1,168 @@
+table gold_sensor_reconciliation
+	sourceLineageTag: [dbo].[gold_sensor_reconciliation]
+
+	/// Monthly oil volume estimated from the simulated sensors, in m3: sum of sensor_volume for oil.
+	measure 'Sensor Oil (m3)' = CALCULATE(SUM(gold_sensor_reconciliation[sensor_volume]), gold_sensor_reconciliation[product] = "OIL")
+		formatString: #,0.0
+		displayFolder: Well Operations\Reconciliation
+
+	/// Monthly gas volume estimated from the simulated sensors, in e3m3: sum of sensor_volume for gas.
+	measure 'Sensor Gas (e3m3)' = CALCULATE(SUM(gold_sensor_reconciliation[sensor_volume]), gold_sensor_reconciliation[product] = "GAS")
+		formatString: #,0.0
+		displayFolder: Well Operations\Reconciliation
+
+	/// Monthly volume estimated from the simulated sensors in the row's product unit: sum of sensor_volume.
+	measure 'Sensor Volume' = SUM(gold_sensor_reconciliation[sensor_volume])
+		formatString: #,0.0
+		displayFolder: Well Operations\Reconciliation
+
+	/// Monthly volume reported to Petrinex in the row's product unit: sum of reported_volume.
+	measure 'Reported Volume' = SUM(gold_sensor_reconciliation[reported_volume])
+		formatString: #,0.0
+		displayFolder: Well Operations\Reconciliation
+
+	/// Unit of the row's volumes: m3 for oil, e3m3 for gas. Blank across both products.
+	measure 'Volume Unit' = SWITCH(SELECTEDVALUE(gold_sensor_reconciliation[product]), "OIL", "m3", "GAS", "e3m3")
+		displayFolder: Well Operations\Reconciliation
+
+	/// (Sensor volume - reported volume) / reported volume. Blank across both products, because m3 of oil and e3m3 of gas do not add up.
+	measure 'Reported vs Sensor Diff %' = IF(HASONEVALUE(gold_sensor_reconciliation[product]), DIVIDE([Sensor Volume] - [Reported Volume], [Reported Volume]))
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Well Operations\Reconciliation
+
+	/// Absolute value of Reported vs Sensor Diff %, the sort order of the reconciliation table.
+	measure 'Abs Diff %' =
+			VAR d = [Reported vs Sensor Diff %]
+			RETURN IF(NOT ISBLANK(d), ABS(d))
+		formatString: 0.00%
+		displayFolder: Well Operations\Reconciliation
+
+	/// Number of wells in the filter with needs_investigation = true: above the threshold in config/sensor.json. 0 when a selected well is not flagged.
+	measure 'Wells to Investigate' =
+			VAR wells = COUNTROWS(gold_sensor_reconciliation)
+			RETURN IF(NOT ISBLANK(wells), CALCULATE(COUNTROWS(gold_sensor_reconciliation), gold_sensor_reconciliation[needs_investigation] = TRUE()) + 0)
+		formatString: #,0
+		displayFolder: Well Operations\Reconciliation
+
+	/// Share of Good readings of the well's flow tag in the month (flow_good_ratio_pct), the basis of likely_cause. Blank across several wells.
+	measure 'Flow Good Ratio %' = IF(HASONEVALUE(gold_sensor_reconciliation[well_key]), DIVIDE(AVERAGE(gold_sensor_reconciliation[flow_good_ratio_pct]), 100))
+		formatString: 0.00%
+		displayFolder: Well Operations\Reconciliation
+
+	/// Font color of a reconciliation row: red when the well needs investigation.
+	measure 'Recon Row Color' = IF(CALCULATE(COUNTROWS(gold_sensor_reconciliation), gold_sensor_reconciliation[needs_investigation] = TRUE()) > 0, "#C62828", "#252423")
+		isHidden
+		displayFolder: Formatting
+
+	/// 1 for a well with simulated sensors; visual filter of the well selector, which would otherwise list every well in gold_dim_well.
+	measure 'Sensor Well Flag' = IF(NOT ISEMPTY(gold_sensor_reconciliation), 1)
+		formatString: 0
+		isHidden
+		displayFolder: Formatting
+
+	column production_month
+		dataType: dateTime
+		formatString: yyyy-mm
+		sourceLineageTag: production_month
+		summarizeBy: none
+		sourceColumn: production_month
+
+	column well_key
+		dataType: string
+		isHidden
+		sourceLineageTag: well_key
+		summarizeBy: none
+		sourceColumn: well_key
+
+	column facility_id
+		dataType: string
+		sourceLineageTag: facility_id
+		summarizeBy: none
+		sourceColumn: facility_id
+
+	column product
+		dataType: string
+		sourceLineageTag: product
+		summarizeBy: none
+		sourceColumn: product
+
+	column sensor_volume
+		dataType: double
+		sourceLineageTag: sensor_volume
+		summarizeBy: none
+		sourceColumn: sensor_volume
+
+	column reported_volume
+		dataType: double
+		sourceLineageTag: reported_volume
+		summarizeBy: none
+		sourceColumn: reported_volume
+
+	column difference
+		dataType: double
+		sourceLineageTag: difference
+		summarizeBy: none
+		sourceColumn: difference
+
+	column difference_pct
+		dataType: double
+		sourceLineageTag: difference_pct
+		summarizeBy: none
+		sourceColumn: difference_pct
+
+	column hours_filled
+		dataType: int64
+		sourceLineageTag: hours_filled
+		summarizeBy: none
+		sourceColumn: hours_filled
+
+	column flow_good_ratio_pct
+		dataType: double
+		sourceLineageTag: flow_good_ratio_pct
+		summarizeBy: none
+		sourceColumn: flow_good_ratio_pct
+
+	column sensor_downtime_hours
+		dataType: int64
+		sourceLineageTag: sensor_downtime_hours
+		summarizeBy: none
+		sourceColumn: sensor_downtime_hours
+
+	column downtime_events
+		dataType: int64
+		sourceLineageTag: downtime_events
+		summarizeBy: none
+		sourceColumn: downtime_events
+
+	column reported_hours
+		dataType: int64
+		sourceLineageTag: reported_hours
+		summarizeBy: none
+		sourceColumn: reported_hours
+
+	column needs_investigation
+		dataType: boolean
+		sourceLineageTag: needs_investigation
+		summarizeBy: none
+		sourceColumn: needs_investigation
+
+	column likely_cause
+		dataType: string
+		sourceLineageTag: likely_cause
+		summarizeBy: none
+		sourceColumn: likely_cause
+
+	column _run_id
+		dataType: string
+		isHidden
+		sourceLineageTag: _run_id
+		summarizeBy: none
+		sourceColumn: _run_id
+
+	partition gold_sensor_reconciliation = entity
+		mode: directLake
+		source
+			entityName: gold_sensor_reconciliation
+			schemaName: dbo
+			expressionSource: 'DirectLake - alberta_wells'
+
