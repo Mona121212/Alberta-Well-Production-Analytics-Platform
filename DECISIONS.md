@@ -743,6 +743,8 @@ A second review of all three pages led to these changes:
 | Production Performance | Asset and operations team | Is production rising or falling, and where is the drop? | Which operator or well to look at first; whether a drop is broad or concentrated | Every measure recomputed with Spark SQL by month, for 10 operators and for all operators per product; Gas MoM % identical before and after its rewrite | 12 months; drop tables need one product and 6 prior months; transfers show as drops | Revenue, YoY, decline curves, BOE totals |
 | Well Activity & Idle Wells | Asset team, liability or abandonment planning | Which wells stopped producing, and which could become a liability? | Which idle wells to review first (by pre-idle volume); shut-in or transfer | `gold_idle_wells` row count tested against a Spark SQL recount in every 03 run; all 28,140 values matched an independent Spark result | 3-month window, not the AER 12-month definition; wells idle before 2025-07 are not visible; well counts per month are all Alberta | AER inactive status, closure cost estimates |
 | Data Trust | Data team | Can this month's data be published? | Publish or hold the month; which defect or rule to fix first | Cards read the same `reconciliation_results`, `dq_results` and `dq_run_log` rows the pipeline tests write; defect list comes from `config/defect_log.yaml` | Shows the latest finished run only; a run that stopped on a failed test is not in `dq_run_log` | Row-level drill-through into rejected records |
+| Well Operations (DEC-035) | Production engineer | Which wells were down, how much was lost, and do sensor volumes match the reported volumes? | Which well to look at first; check the sensor or check production | 1,674 values compared between Spark and DAX, 0 differences; the Spark health numbers read Silver, not Gold | One simulated month for 40 wells; anomalies and faults are injected on purpose; lost volume is an estimate | Real-time alarms, sums across products |
+| Sensor Health (DEC-035) | Production engineer, instrument maintenance | Which sensors need maintenance? | Which well and tag to service first | Same comparison, including all 200 tags; 11 rule tests compare the counts with what was injected | Simulated readings; hourly history only, the live feed is not plotted | Maintenance cost, sensor vendor or model |
 
 ---
 
@@ -1214,3 +1216,117 @@ set to differ from Petrinex are flagged.
 - `sensor_silver_rejects` and `sensor_quality_test_results` append per run, keyed by `run_id`, so they grow on each run.
 - The truth file must be in `Files/raw/sensor/`: a real historian would have none, and tests 3 and the history rule tests
   exist only because this data is simulated.
+
+---
+
+## DEC-035 Well Operations and Sensor Health pages, with a sensor fault against a production mismatch (stage 4)
+
+**Date:** 2026-11-04
+
+**Context.** Stage 4 of the PI-style sensors (DEC-032 to DEC-034) gives the Gold tables a user: a production engineer who
+asks which wells were down, how much was lost, and whether the volume the sensors imply matches what was reported. A
+difference has two possible causes that need different people: a sensor that froze or dropped out, or real production that
+does not match the report. The first data could not show this: the three anomaly wells had healthy sensors, and bad readings
+were spread evenly, so sensor health barely differed between wells.
+
+**All of this data is simulated, and every anomaly and fault is injected on purpose in `config/sensor.json`.** Only the
+Petrinex volumes are real. These pages show that the logic finds what was planted. They are not findings about these wells.
+
+**Decision.**
+- **Two pages, not one.** Well Operations answers the daily question; Sensor Health answers "which sensors need
+  maintenance?". One page could not hold the event, reconciliation and two health tables at a readable size.
+- **What each visual answers.**
+
+| Page | Visual | Question it answers |
+|---|---|---|
+| Well Operations | Well selector | Which well am I looking at? Lists only the 40 sensor wells |
+| Well Operations | Cards: downtime events, downtime hours | How much downtime was there? |
+| Well Operations | Cards: lost oil (m3), lost gas (e3m3) | How much volume was lost? Kept apart because the units differ |
+| Well Operations | Card: wells to investigate | How many wells need a follow-up? |
+| Well Operations | Card: Good ratio | Can I trust the readings behind these numbers? |
+| Well Operations | Top 10 wells by downtime hours | Which wells were down the most? |
+| Well Operations | Flow trend | Did the well's flow change, and which readings are not Good? |
+| Well Operations | Tubing and casing pressure trend | Do the pressures agree with the flow? |
+| Well Operations | Downtime events, longest first | When did each shut-in start and end, and what did it lose? |
+| Well Operations | Sensor against reported volume | Which wells do not reconcile, and is the sensor or production the likely cause? |
+| Sensor Health | Cards: Good ratio, frozen, out of range, missing | How healthy are the sensors, and how do they fail? |
+| Sensor Health | Flow and pressure trends | What did the failure look like over the month? |
+| Sensor Health | Sensor health by well | Which well has the worst sensors? |
+| Sensor Health | Sensor health by tag | Which sensor on which well needs maintenance? |
+
+- **Sensor fault against production mismatch.** Well `100140807605W503` gets a flow meter fault: 120 frozen hours and 96
+  missing hours while the true rate runs 1.4 times higher. The fill rule (daily mean of Good readings) cannot see the higher rate, so
+  the sensor volume comes out -11.11% against Petrinex. The three anomaly wells keep healthy sensors and differ by +15%, -20%
+  and +25%. `likely_cause` separates them for flagged wells only: `Check sensor first` when the flow tag's Good ratio is
+  below `sensor_good_ratio_threshold_pct` (80), otherwise `Production mismatch`. The table shows the Good ratio beside the
+  cause so the reader can see why. A reconciliation test checks the result against the configured fault well.
+- **Why the threshold is 80%.** 105041103902W400 FLOW_OIL (89.88%) and 102060504005W502 FLOW_GAS (90.71%) are aging flow
+  meters whose reconciliation is still within 5% (+0.47% and +0.14%). This shows the fill method still holds at about 90%, and
+  it fails at 70% in the fault well (69.76%, -11.11%). This is why the `likely_cause` threshold is set at 80%. It rests on
+  these simulated points, not on field data.
+- **Unevenly distributed injections.** Out-of-range, frozen and missing readings now use per-well ranges, and seven tags age
+  with longer frozen runs, so wells and tags differ and "worst first" means something.
+- **UTC stored, local time shown.** Storage stays in UTC because 2025-11 has a repeated local hour when daylight saving
+  time ends: UTC has 721 distinct hours and local time has 720. An engineer reads local time, so `hour_local`, `start_local`
+  and `end_local` are added in Gold. The axis is continuous, and the repeated local hour averages its two UTC hours on the
+  trend charts; the health counts and the event tables do not average anything.
+- **Latest run only.** The pages read the Gold tables, which each run overwrites, so they hold one run.
+  `sensor_reconciliation_results` keeps every run and is not in the model, and a test keeps it out. Verification finds the
+  latest run with the latest `started_at` in `pipeline_run_log`; run IDs are random, so `MAX(run_id)` means nothing.
+- **`gold_sensor_tags` instead of `sensor_asset_hierarchy`.** The hierarchy has rows with no well (facility and well levels),
+  so it cannot relate to `gold_dim_well`. The tag health table groups by `gold_sensor_hourly[tag_code]` and reads the full name
+  and unit from `gold_sensor_tags` with the measures `Tag Name` and `Tag Unit`.
+- **Well columns come from `gold_dim_well`.** Relationships filter in one direction, so a click on a well reaches the sibling
+  fact tables only if the column is on the dimension.
+- **Clicks.** A table click filters the trends and cards. A click on an event row still shows the whole well on the cards.
+  Tables highlight Top 10 rather than filter it, and the trends filter nothing. A click on a tag narrows the page 5 cards to
+  that tag and leaves the trends on the whole well. Clicks do not cross pages; the well selector is synced across both.
+- **`pl_sensor_hourly` refreshes the model.** A Refresh step (Succeeded dependency, retry 1, 300 s) follows `05_sensor_gold`.
+  DEC-034's sentence stays as written; this entry records that the refresh is now implemented.
+
+**Alternatives.**
+- A relationship from `gold_sensor_hourly` to `gold_sensor_tags` for the tag name: with `gold_dim_well` there would be two
+  filter paths to the fact, so one would have to go inactive. Columns from `gold_sensor_tags` with no relationship would
+  cross join the tags with the readings.
+- `sensor_reconciliation_results` in the model with a "latest run" measure: more to keep correct, for a table no visual needs.
+- One trend chart with flow and pressure: the units differ, and a shared axis flattens the flow line.
+- Keeping the evenly spread bad readings: the health tables would have no story to tell.
+- Connecting bad readings with the line: a frozen or filled value would look like a real reading.
+
+**Consequences.** Verified on 2026-11-04.
+- Data run `43d374ee` (job `71f757a0`): all 11 rule tests and all 5 reconciliation tests PASS (Bronze 146,843 = Silver received
+  + rejects). 58 downtime events, 668 hours. Good ratio 99.32%, with 556 frozen, 40 out-of-range and 387 missing, each equal to
+  what was injected. The first `SensorGold` attempt failed with HTTP 430 and the retry succeeded (DEC-034).
+- Flagged wells: 4 of 40. The other 36 are within 1.00% (largest -0.998%).
+- `sensor_reconciliation_results` still has 4 rows from the earlier run `68066f83`; the pages do not read them.
+- Spark against DAX (`scripts/verify/check_well_operations_measures.py`): 1,674 values, 0 differences, largest raw difference on
+  decimals 0.0. Scope: totals, 40 wells, 200 tags, 58 events, the Top 10 list. Counts must be equal; decimals must be equal after
+  rounding to 6 places.
+- Existing 57 measures before and after the model change, at 5 groupings plus 11 table row counts: 19,916 values. 18,765 are exactly
+  equal, 1,151 differ by at most 1.2e-6 (relative 3.5e-14), and no text value or group changed. Repeated queries in one model
+  state return identical values, and a refresh of the same definitions moves the last digits, so this is floating point noise
+  from the refresh, not a logic change. After the `Tag Name` and `Tag Unit` measures and one more refresh, the same 19,916 values against the pre-stage-4 baseline: 18,757 exactly equal, 1,159 differ by at most 4.5e-7 (relative 1.5e-13), and no text value or group changed.
+- Tag name change: 200 tag rows and the page cards are identical before and after in DAX, with no blank name or unit.
+- **Blank member on the dimensions (not a defect).** `VALUES(gold_dim_well[well_key])` returns 664,994 rows against 664,993 in the
+  table. No table causes it: `gold_dim_well` has no null, empty or duplicate key, and all 6 related tables have 0 null keys, 0 keys
+  missing from the dimension and 0 rows on the blank member. `gold_dim_date` (366 against 365) and `gold_dim_operator` (408 against
+  407) show the same with their relationships fully matched, while `defect_log`, which has no relationship, and the many side
+  columns checked (`gold_sensor_reconciliation`, `gold_idle_wells`) do not. So the blank comes with being the one side of a
+  relationship here, not with a row of data, and no defect was logged. This looks like Direct Lake behaviour; no Microsoft
+  documentation was found that states it, so that part is an inference.
+  - On the old model: the baseline taken on the pre-stage-4 model already has a blank `year_month` and a blank `operator_name`
+    group (`gold_dim_date` and `gold_dim_operator` have no blank in those columns), so the blank was there before the sensor tables
+    for those two dimensions. For `gold_dim_well` it was **not measured directly**: that baseline groups by `status_fluid`, which has
+    6,727 real blank rows, so it cannot tell. The same result on `well_key` is inferred from the same relationship shape.
+  - Effect: a measure that ignores a dimension returns a value on its blank member (`Latest Run ID` returns `57f84a9c`). A visual
+    that plots such a measure by that dimension could show a (Blank) row. The well selector is unaffected: its measure filter
+    returns exactly 40 wells.
+- **Known issues, not fixed in this change.**
+  - The screenshots show no red non-Good markers on the trend charts, although DAX returns 218 of them for the fault well. The
+    Good line does stop where the bad readings start. The cause is not established, and image export is disabled on the tenant, so
+    a fix could only be checked by eye in the service.
+  - In the reconciliation table, `Check sensor first` is cut off at the column edge in the screenshot.
+  - `docs/screenshots/dashboard_sensor_health.png` was taken before the tag table gained the `Tag name` column.
+- The DAX checks simulate selections with filters. No test covers actual clicks or the rendered pages.
+- Local tests check the files (`tests/test_powerbi_files.py`) and the pandas rules.
+- The changed injections replace the numbers in DEC-032 to DEC-034, which stay as the record of those runs.
