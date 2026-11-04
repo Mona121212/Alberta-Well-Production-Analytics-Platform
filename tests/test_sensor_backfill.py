@@ -18,6 +18,9 @@ CFG = load_config()
 GRID = hour_grid_utc(CFG)
 HIERARCHY = build_hierarchy(CFG)
 ANOMALIES = {a["well_key"]: a["volume_bias_pct"] for a in CFG["anomaly_wells"]["wells"]}
+FAULT = CFG["sensor_fault"]
+AGING = {(a["well_key"], a["tag_code"]): a for a in CFG["injections"]["aging_tags"]}
+WELLS = {w["well_key"]: w for w in CFG["wells"]}
 
 
 @pytest.fixture(scope="module")
@@ -117,9 +120,13 @@ def test_injection_counts_match_config(backfill):
     inj = CFG["injections"]
     per_well = Counter((i["well_key"], i["kind"]) for i in truth["injections"])
     for w in CFG["wells"]:
-        assert per_well[(w["well_key"], "out_of_range")] == inj["out_of_range_per_well"]
-        assert per_well[(w["well_key"], "frozen")] == inj["frozen_runs_per_well"]
-        assert per_well[(w["well_key"], "missing")] == inj["missing_per_well"]
+        key = w["well_key"]
+        fixed = [a for (k, _), a in AGING.items() if k == key]
+        runs = sum(a["frozen_runs"] for a in fixed) + (key == FAULT["well_key"])
+        missing = sum(a["missing"] for a in fixed) + (FAULT["missing_hours"] if key == FAULT["well_key"] else 0)
+        assert inj["out_of_range_per_well"][0] <= per_well[(key, "out_of_range")] <= inj["out_of_range_per_well"][1]
+        assert inj["frozen_runs_per_well"][0] <= per_well[(key, "frozen")] - runs <= inj["frozen_runs_per_well"][1]
+        assert inj["missing_per_well"][0] <= per_well[(key, "missing")] - missing <= inj["missing_per_well"][1]
 
 
 def test_true_volume_is_petrinex_volume_plus_bias(backfill):
@@ -212,13 +219,49 @@ def test_injected_bad_readings_are_flagged_exactly(backfill):
 
 # Reconciliation -------------------------------------------------------------------------------------------------
 
-def test_reconciliation_flags_exactly_the_configured_anomaly_wells(backfill):
+def test_reconciliation_flags_exactly_the_anomaly_wells_and_the_sensor_fault(backfill):
     rec = reconcile(backfill[2], CFG)
-    assert set(rec.loc[rec["needs_investigation"], "well_key"]) == set(ANOMALIES)
+    assert set(rec.loc[rec["needs_investigation"], "well_key"]) == set(ANOMALIES) | {FAULT["well_key"]}
     normal = rec[~rec["needs_investigation"]]
     assert normal["difference_pct"].abs().max() < CFG["reconciliation"]["threshold_pct"]
     for key, bias in ANOMALIES.items():
         assert rec.set_index("well_key").loc[key, "difference_pct"] == pytest.approx(bias, abs=1.0)
+
+
+def test_likely_cause_separates_the_sensor_fault_from_production_mismatches(backfill):
+    rec = reconcile(backfill[2], CFG).set_index("well_key")
+    causes = CFG["reconciliation"]["likely_cause"]
+    assert set(rec.index[rec["likely_cause"] == causes["sensor"]]) == {FAULT["well_key"]}
+    assert set(rec.index[rec["likely_cause"] == causes["production"]]) == set(ANOMALIES)
+    assert rec.loc[~rec["needs_investigation"], "likely_cause"].isna().all()
+
+
+def test_sensor_fault_well_has_a_normal_true_volume_and_a_biased_estimate(backfill):
+    _, truth, classified = backfill
+    true_bias = next(w["volume_bias_pct"] for w in truth["wells"] if w["well_key"] == FAULT["well_key"])
+    assert abs(true_bias) <= CFG["generator"]["normal_volume_bias_max_pct"]
+    assert FAULT["well_key"] not in ANOMALIES and FAULT["well_key"] in WELLS
+    rec = reconcile(classified, CFG).set_index("well_key").loc[FAULT["well_key"]]
+    threshold = CFG["reconciliation"]
+    assert abs(rec["difference_pct"]) > threshold["threshold_pct"]
+    assert rec["flow_good_ratio_pct"] < threshold["sensor_good_ratio_threshold_pct"]
+
+
+def test_aging_flow_tags_are_not_flagged_because_filling_covers_them(backfill):
+    rec = reconcile(backfill[2], CFG).set_index("well_key")
+    aging_flow = [k for k, c in AGING if c.startswith("FLOW_")]
+    assert aging_flow
+    assert not rec.loc[aging_flow, "needs_investigation"].any()
+
+
+def test_health_differs_between_wells_and_tags_and_aging_tags_are_worst(backfill):
+    classified = backfill[2].assign(good=lambda d: d["quality"].eq("Good"))
+    by_tag = classified.groupby("tag_name")["good"].mean()
+    names = {tag_name(CFG, WELLS[k], c) for k, c in AGING} | {tag_name(CFG, WELLS[FAULT["well_key"]], f"FLOW_{WELLS[FAULT['well_key']]['product']}")}
+    assert set(by_tag.sort_values().index[:len(names)]) == names
+    assert by_tag[list(names)].max() < by_tag.drop(list(names)).min()
+    wells = classified.merge(HIERARCHY[["tag_name", "well_key"]], on="tag_name").groupby("well_key")["good"].mean()
+    assert wells.nunique() > 10
 
 
 def test_estimate_uses_good_flow_zero_when_shut_in_and_daily_mean_otherwise():

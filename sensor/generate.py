@@ -4,6 +4,9 @@ Each well's true monthly volume is its real Petrinex volume x (1 + bias): a smal
 configured bias for the anomaly wells. Hourly volumes are noisy but rescaled so they add up to that true volume
 exactly. Deliberate bad readings (out of range, frozen, missing) replace readings only; the true volume of the hour
 is unchanged, so a correct estimate from the Good readings stays close to the true volume.
+
+The exception is the sensor fault well (DEC-035): its true rate rises while its flow meter is failing, so the estimate,
+which fills those hours from the rate before the fault, misses the rise although the month's true volume is normal.
 """
 import numpy as np
 import pandas as pd
@@ -39,12 +42,20 @@ def hours_since_shut_in(running):
     return out
 
 
-def true_values(rng, well, running, true_volume, cfg):
+def fault_start(running, hours):
+    """Latest start of a window of the given length with only running hours, the hour before it included."""
+    for start in range(len(running) - hours, 1, -1):
+        if running[start - 2:start + hours].all():
+            return start
+    raise ValueError(f"no {hours} consecutive running hours for the sensor fault")
+
+
+def true_values(rng, well, running, true_volume, cfg, rate_factor=1.0):
     """True readings of every tag of the well, before deliberate bad readings."""
     g = cfg["generator"]
     n = len(running)
     noise = np.clip(1 + rng.normal(0, g["flow_hourly_noise_pct"] / 100, n), 0.5, None)
-    hourly = np.where(running, noise, 0.0)
+    hourly = np.where(running, noise * rate_factor, 0.0)
     hourly = hourly / hourly.sum() * true_volume
     shut = hours_since_shut_in(running)
 
@@ -62,10 +73,15 @@ def true_values(rng, well, running, true_volume, cfg):
     return {code: np.round(v, g["decimals"][code]) for code, v in values.items()}, hourly
 
 
-def inject(rng, values, running, well, cfg):
+def draw(rng, bounds):
+    return int(rng.integers(bounds[0], bounds[1] + 1))
+
+
+def inject(rng, values, running, well, cfg, fault=None):
     """Replace some readings with frozen values and out-of-range values, and pick readings to drop.
 
-    Returns the list of injections and the set of (tag code, hour index) to drop as missing."""
+    `fault` is the start hour of the sensor fault, for the fault well. Returns the list of injections and the set of
+    (tag code, hour index) to drop as missing."""
     inj = cfg["injections"]
     specs = tag_specs(cfg)
     analog = [c for c in well_tag_codes(cfg, well) if specs[c]["kind"] == "analog"]
@@ -75,10 +91,9 @@ def inject(rng, values, running, well, cfg):
     def free(code, idx):
         return all(running[i] and (code, i) not in used for i in idx)
 
-    for _ in range(inj["frozen_runs_per_well"]):
-        length = inj["frozen_run_hours"]
+    def add_frozen(length, fixed_code=None):
         while True:
-            code = analog[rng.integers(len(analog))]
+            code = fixed_code or analog[rng.integers(len(analog))]
             start = int(run_idx[rng.integers(len(run_idx))])
             idx = range(start - 1, start + length)
             if not (start >= 2 and start + length < len(running) and free(code, idx)):
@@ -91,19 +106,45 @@ def inject(rng, values, running, well, cfg):
         used.update((code, i) for i in idx)
         records.append({"kind": "frozen", "tag_code": code, "start": start, "hours": length})
 
-    for kind, count in [("out_of_range", inj["out_of_range_per_well"]), ("missing", inj["missing_per_well"])]:
-        for _ in range(count):
-            while True:
-                code = analog[rng.integers(len(analog))]
-                i = int(run_idx[rng.integers(len(run_idx))])
-                if free(code, [i]):
-                    break
-            used.add((code, i))
-            if kind == "out_of_range":
-                values[code][i] = inj["out_of_range_value"]
-            else:
-                missing.add((code, i))
-            records.append({"kind": kind, "tag_code": code, "start": i, "hours": 1})
+    def add_point(kind, fixed_code=None):
+        while True:
+            code = fixed_code or analog[rng.integers(len(analog))]
+            i = int(run_idx[rng.integers(len(run_idx))])
+            if free(code, [i]):
+                break
+        used.add((code, i))
+        if kind == "out_of_range":
+            values[code][i] = inj["out_of_range_value"]
+        else:
+            missing.add((code, i))
+        records.append({"kind": kind, "tag_code": code, "start": i, "hours": 1})
+
+    if fault is not None:
+        # The flow meter fails: frozen on its last reading, then no data, up to the end of the month
+        sf = cfg["sensor_fault"]
+        code = flow_code(well)
+        frozen_end = fault + sf["frozen_hours"]
+        if values[code][fault - 2] == values[code][fault - 1]:
+            raise ValueError("the reading before the sensor fault repeats, so the frozen run would be longer")
+        values[code][fault:frozen_end] = values[code][fault - 1]
+        used.update((code, i) for i in range(fault - 1, frozen_end + sf["missing_hours"]))
+        records.append({"kind": "frozen", "tag_code": code, "start": fault, "hours": sf["frozen_hours"]})
+        for i in range(frozen_end, frozen_end + sf["missing_hours"]):
+            missing.add((code, i))
+            records.append({"kind": "missing", "tag_code": code, "start": i, "hours": 1})
+
+    for aging in inj["aging_tags"]:
+        if aging["well_key"] == well["well_key"]:
+            for _ in range(aging["frozen_runs"]):
+                add_frozen(inj["aging_frozen_run_hours"], aging["tag_code"])
+            for _ in range(aging["missing"]):
+                add_point("missing", aging["tag_code"])
+
+    for _ in range(draw(rng, inj["frozen_runs_per_well"])):
+        add_frozen(inj["frozen_run_hours"])
+    for kind, bounds in [("out_of_range", inj["out_of_range_per_well"]), ("missing", inj["missing_per_well"])]:
+        for _ in range(draw(rng, bounds)):
+            add_point(kind)
     return records, missing
 
 
@@ -113,6 +154,7 @@ def generate_backfill(cfg):
     n = len(grid)
     bias_cfg = {a["well_key"]: a["volume_bias_pct"] for a in cfg["anomaly_wells"]["wells"]}
     max_bias = cfg["generator"]["normal_volume_bias_max_pct"]
+    sf = cfg["sensor_fault"]
     frames = []
     truth = {"wells": [], "downtime_events": [], "injections": []}
 
@@ -124,8 +166,12 @@ def generate_backfill(cfg):
             running[start:start + hours] = False
         bias = bias_cfg.get(well["well_key"], float(rng.uniform(-max_bias, max_bias)))
         true_volume = well["petrinex_volume"] * (1 + bias / 100)
-        values, hourly = true_values(rng, well, running, true_volume, cfg)
-        records, missing = inject(rng, values, running, well, cfg)
+        fault, rate_factor = None, np.ones(n)
+        if well["well_key"] == sf["well_key"]:
+            fault = fault_start(running, sf["frozen_hours"] + sf["missing_hours"])
+            rate_factor[fault:fault + sf["frozen_hours"] + sf["missing_hours"]] = sf["rate_factor"]
+        values, hourly = true_values(rng, well, running, true_volume, cfg, rate_factor)
+        records, missing = inject(rng, values, running, well, cfg, fault)
 
         for code, series in values.items():
             keep = np.array([(code, h) not in missing for h in range(n)])
