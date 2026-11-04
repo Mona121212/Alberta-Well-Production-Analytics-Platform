@@ -30,12 +30,25 @@ def test_spark_jobs_run_one_after_the_other():
         assert act["dependsOn"] == [{"activity": prev["name"], "dependencyConditions": ["Succeeded"]}], act["name"]
 
 
-@pytest.mark.parametrize("step", PIPELINE["steps"], ids=lambda s: s["activity"])
+@pytest.mark.parametrize("step", [s for s in PIPELINE["steps"] if "notebook" in s], ids=lambda s: s["activity"])
 def test_notebook_activity_points_to_the_right_notebook(step):
     act = next(a for a in ACTIVITIES if a["name"] == step["activity"])
     assert act["type"] == "TridentNotebook"
     assert act["typeProperties"]["notebookId"] == ITEMS["notebooks"][step["notebook"]]
     assert act["typeProperties"]["workspaceId"] == ITEMS["workspace"]["id"]
+    assert act["policy"]["timeout"] == step["timeout"]
+    assert act["policy"]["retry"] == PIPELINE["retry"]
+    assert act["policy"]["retryIntervalInSeconds"] == PIPELINE["retry_interval_seconds"]
+
+
+def test_refresh_runs_last_on_the_configured_model_and_connection():
+    step = PIPELINE["steps"][-1]
+    act = ACTIVITIES[-1]
+    assert act["type"] == "PBISemanticModelRefresh"
+    assert act["dependsOn"] == [{"activity": "SensorGold", "dependencyConditions": ["Succeeded"]}]
+    assert act["typeProperties"]["datasetId"] == ITEMS["semantic_model"]["id"]
+    assert act["typeProperties"]["groupId"] == ITEMS["workspace"]["id"]
+    assert act["externalReferences"]["connection"] == ITEMS["connections"][step["connection"]]
     assert act["policy"]["timeout"] == step["timeout"]
     assert act["policy"]["retry"] == PIPELINE["retry"]
     assert act["policy"]["retryIntervalInSeconds"] == PIPELINE["retry_interval_seconds"]

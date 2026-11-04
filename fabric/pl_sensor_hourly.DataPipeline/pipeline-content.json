@@ -1,6 +1,6 @@
 {
     "properties": {
-        "description": "Sensor Silver and Gold: 04_sensor_silver -> 05_sensor_gold. Gold runs only if Silver succeeded, so Spark jobs never overlap.",
+        "description": "Sensor Silver and Gold, then the semantic model: 04_sensor_silver -> 05_sensor_gold -> refresh. Each step runs only if the one before succeeded, so Spark jobs never overlap.",
         "activities": [
             {
                 "name": "SensorSilver",
@@ -21,7 +21,7 @@
             },
             {
                 "name": "SensorGold",
-                "description": "05_sensor_gold: hourly values, downtime events, reconciliation with Petrinex, 4 reconciliation tests",
+                "description": "05_sensor_gold: hourly values, downtime events, reconciliation with Petrinex, 5 reconciliation tests",
                 "type": "TridentNotebook",
                 "dependsOn": [
                     {
@@ -41,6 +41,37 @@
                 "typeProperties": {
                     "notebookId": "f47a2182-5035-472b-8e3a-c61af6bf69d2",
                     "workspaceId": "18648095-dedb-4673-a167-142f5948505e"
+                }
+            },
+            {
+                "name": "Refresh",
+                "description": "Refresh the Direct Lake semantic model sm_petrinex_production",
+                "type": "PBISemanticModelRefresh",
+                "dependsOn": [
+                    {
+                        "activity": "SensorGold",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.00:30:00",
+                    "retry": 1,
+                    "retryIntervalInSeconds": 300,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "method": "post",
+                    "groupId": "18648095-dedb-4673-a167-142f5948505e",
+                    "datasetId": "3dbbbf11-62be-4c49-ac5e-e9df5a8943ea",
+                    "commitMode": "Transactional",
+                    "waitOnCompletion": true,
+                    "operationType": "SemanticModelRefresh"
+                },
+                "externalReferences": {
+                    "connection": "fb6797fd-16d2-4813-92d3-87a6b5ccbacf"
                 }
             }
         ]
