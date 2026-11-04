@@ -1,0 +1,53 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p4_card_0",
+    "position": {
+        "x": 16,
+        "y": 70,
+        "z": 4,
+        "width": 201,
+        "height": 72,
+        "tabOrder": 4
+    },
+    "visual": {
+        "visualType": "cardVisual",
+        "query": {
+            "queryState": {
+                "Data": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_downtime_events"
+                                        }
+                                    },
+                                    "Property": "Downtime Events"
+                                }
+                            },
+                            "queryRef": "gold_downtime_events.Downtime Events",
+                            "nativeQueryRef": "Downtime Events",
+                            "displayName": "Downtime events"
+                        }
+                    ]
+                }
+            }
+        },
+        "visualContainerObjects": {
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

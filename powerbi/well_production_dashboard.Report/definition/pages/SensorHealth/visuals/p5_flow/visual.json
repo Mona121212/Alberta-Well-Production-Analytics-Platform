@@ -1,0 +1,307 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p5_flow",
+    "position": {
+        "x": 16,
+        "y": 148,
+        "z": 10,
+        "width": 620,
+        "height": 190,
+        "tabOrder": 10
+    },
+    "visual": {
+        "visualType": "lineChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_hourly"
+                                        }
+                                    },
+                                    "Property": "hour_local"
+                                }
+                            },
+                            "queryRef": "gold_sensor_hourly.hour_local",
+                            "nativeQueryRef": "hour_local",
+                            "displayName": "Local time",
+                            "active": true
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_hourly"
+                                        }
+                                    },
+                                    "Property": "Flow Reading"
+                                }
+                            },
+                            "queryRef": "gold_sensor_hourly.Flow Reading",
+                            "nativeQueryRef": "Flow Reading",
+                            "displayName": "Good reading"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_hourly"
+                                        }
+                                    },
+                                    "Property": "Flow Non-Good Marker"
+                                }
+                            },
+                            "queryRef": "gold_sensor_hourly.Flow Non-Good Marker",
+                            "nativeQueryRef": "Flow Non-Good Marker",
+                            "displayName": "Non-Good reading"
+                        }
+                    ]
+                },
+                "Tooltips": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_hourly"
+                                        }
+                                    },
+                                    "Property": "Flow Non-Good Reason"
+                                }
+                            },
+                            "queryRef": "gold_sensor_hourly.Flow Non-Good Reason",
+                            "nativeQueryRef": "Flow Non-Good Reason",
+                            "displayName": "Why not Good"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Column": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "gold_sensor_hourly"
+                                    }
+                                },
+                                "Property": "hour_local"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ],
+                "isDefaultSort": true
+            }
+        },
+        "objects": {
+            "dataPoint": [
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#2E6F9E'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_sensor_hourly.Flow Reading"
+                    }
+                },
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#C62828'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_sensor_hourly.Flow Non-Good Marker"
+                    }
+                }
+            ],
+            "markers": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "markerSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "6D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_sensor_hourly.Flow Non-Good Marker"
+                    }
+                }
+            ],
+            "legend": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "position": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Top'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "lineStyles": [
+                {
+                    "properties": {
+                        "lineChartType": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'linear'"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "strokeWidth": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "0D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_sensor_hourly.Flow Non-Good Marker"
+                    }
+                }
+            ],
+            "categoryAxis": [
+                {
+                    "properties": {
+                        "axisType": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Scalar'"
+                                }
+                            }
+                        },
+                        "showAxisTitle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "valueAxis": [
+                {
+                    "properties": {
+                        "showAxisTitle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_hourly"
+                                        }
+                                    },
+                                    "Property": "Flow Trend Title"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

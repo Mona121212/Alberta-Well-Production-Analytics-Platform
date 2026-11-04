@@ -1,0 +1,284 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p5_wells",
+    "position": {
+        "x": 16,
+        "y": 344,
+        "z": 12,
+        "width": 430,
+        "height": 350,
+        "tabOrder": 12
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_dim_well"
+                                        }
+                                    },
+                                    "Property": "well_key"
+                                }
+                            },
+                            "queryRef": "gold_dim_well.well_key",
+                            "nativeQueryRef": "well_key",
+                            "displayName": "Well"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_hourly"
+                                        }
+                                    },
+                                    "Property": "Good Ratio %"
+                                }
+                            },
+                            "queryRef": "gold_sensor_hourly.Good Ratio %",
+                            "nativeQueryRef": "Good Ratio %",
+                            "displayName": "Good ratio"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_hourly"
+                                        }
+                                    },
+                                    "Property": "Frozen Readings"
+                                }
+                            },
+                            "queryRef": "gold_sensor_hourly.Frozen Readings",
+                            "nativeQueryRef": "Frozen Readings",
+                            "displayName": "Frozen"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_hourly"
+                                        }
+                                    },
+                                    "Property": "Out-of-Range Readings"
+                                }
+                            },
+                            "queryRef": "gold_sensor_hourly.Out-of-Range Readings",
+                            "nativeQueryRef": "Out-of-Range Readings",
+                            "displayName": "Out of range"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_hourly"
+                                        }
+                                    },
+                                    "Property": "Missing Readings"
+                                }
+                            },
+                            "queryRef": "gold_sensor_hourly.Missing Readings",
+                            "nativeQueryRef": "Missing Readings",
+                            "displayName": "Missing"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "gold_sensor_hourly"
+                                    }
+                                },
+                                "Property": "Good Ratio %"
+                            }
+                        },
+                        "direction": "Ascending"
+                    }
+                ]
+            }
+        },
+        "objects": {
+            "total": [
+                {
+                    "properties": {
+                        "totals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "autoSizeColumnWidth": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "wordWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "wordWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "128D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_dim_well.well_key"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "70D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_sensor_hourly.Good Ratio %"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "60D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_sensor_hourly.Frozen Readings"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "70D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_sensor_hourly.Out-of-Range Readings"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "60D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_sensor_hourly.Missing Readings"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Sensor health by well, worst first'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,260 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+    "name": "WellOperations",
+    "displayName": "Well Operations",
+    "displayOption": "FitToPage",
+    "height": 720,
+    "width": 1280,
+    "visualInteractions": [
+        {
+            "source": "p4_events",
+            "target": "p4_card_0",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_events",
+            "target": "p4_card_1",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_events",
+            "target": "p4_card_2",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_events",
+            "target": "p4_card_3",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_events",
+            "target": "p4_card_4",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_events",
+            "target": "p4_card_5",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_events",
+            "target": "p4_flow",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_events",
+            "target": "p4_pressure",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_events",
+            "target": "p4_recon",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_recon",
+            "target": "p4_card_0",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_recon",
+            "target": "p4_card_1",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_recon",
+            "target": "p4_card_2",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_recon",
+            "target": "p4_card_3",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_recon",
+            "target": "p4_card_4",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_recon",
+            "target": "p4_card_5",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_recon",
+            "target": "p4_flow",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_recon",
+            "target": "p4_pressure",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_recon",
+            "target": "p4_events",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_top10",
+            "target": "p4_card_0",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_top10",
+            "target": "p4_card_1",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_top10",
+            "target": "p4_card_2",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_top10",
+            "target": "p4_card_3",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_top10",
+            "target": "p4_card_4",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_top10",
+            "target": "p4_card_5",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_top10",
+            "target": "p4_flow",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_top10",
+            "target": "p4_pressure",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_top10",
+            "target": "p4_events",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_top10",
+            "target": "p4_recon",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p4_events",
+            "target": "p4_top10",
+            "type": "HighlightFilter"
+        },
+        {
+            "source": "p4_recon",
+            "target": "p4_top10",
+            "type": "HighlightFilter"
+        },
+        {
+            "source": "p4_flow",
+            "target": "p4_card_0",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_flow",
+            "target": "p4_card_1",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_flow",
+            "target": "p4_card_2",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_flow",
+            "target": "p4_card_3",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_flow",
+            "target": "p4_card_4",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_flow",
+            "target": "p4_card_5",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_flow",
+            "target": "p4_pressure",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_flow",
+            "target": "p4_events",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_flow",
+            "target": "p4_recon",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_flow",
+            "target": "p4_top10",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_pressure",
+            "target": "p4_card_0",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_pressure",
+            "target": "p4_card_1",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_pressure",
+            "target": "p4_card_2",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_pressure",
+            "target": "p4_card_3",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_pressure",
+            "target": "p4_card_4",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_pressure",
+            "target": "p4_card_5",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_pressure",
+            "target": "p4_flow",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_pressure",
+            "target": "p4_events",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_pressure",
+            "target": "p4_recon",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p4_pressure",
+            "target": "p4_top10",
+            "type": "NoFilter"
+        }
+    ]
+}

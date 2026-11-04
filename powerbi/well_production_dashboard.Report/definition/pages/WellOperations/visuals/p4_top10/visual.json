@@ -1,0 +1,311 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p4_top10",
+    "position": {
+        "x": 16,
+        "y": 148,
+        "z": 10,
+        "width": 300,
+        "height": 190,
+        "tabOrder": 10
+    },
+    "visual": {
+        "visualType": "clusteredBarChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_dim_well"
+                                        }
+                                    },
+                                    "Property": "well_key"
+                                }
+                            },
+                            "queryRef": "gold_dim_well.well_key",
+                            "nativeQueryRef": "well_key",
+                            "displayName": "Well",
+                            "active": true
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_downtime_events"
+                                        }
+                                    },
+                                    "Property": "Downtime Hours"
+                                }
+                            },
+                            "queryRef": "gold_downtime_events.Downtime Hours",
+                            "nativeQueryRef": "Downtime Hours",
+                            "displayName": "Downtime hours"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "gold_downtime_events"
+                                    }
+                                },
+                                "Property": "Downtime Hours"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ]
+            }
+        },
+        "objects": {
+            "dataPoint": [
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#C2762B'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_downtime_events.Downtime Hours"
+                    }
+                }
+            ],
+            "labels": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "8D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "categoryAxis": [
+                {
+                    "properties": {
+                        "maxMarginFactor": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "60L"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "8D"
+                                }
+                            }
+                        },
+                        "showAxisTitle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "valueAxis": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Top 10 wells by downtime hours'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "filterConfig": {
+        "filters": [
+            {
+                "name": "p4_top10_top10",
+                "field": {
+                    "Column": {
+                        "Expression": {
+                            "SourceRef": {
+                                "Entity": "gold_dim_well"
+                            }
+                        },
+                        "Property": "well_key"
+                    }
+                },
+                "type": "TopN",
+                "filter": {
+                    "Version": 2,
+                    "From": [
+                        {
+                            "Name": "subquery",
+                            "Type": 2,
+                            "Expression": {
+                                "Subquery": {
+                                    "Query": {
+                                        "Version": 2,
+                                        "From": [
+                                            {
+                                                "Name": "x",
+                                                "Entity": "gold_dim_well",
+                                                "Type": 0
+                                            },
+                                            {
+                                                "Name": "y",
+                                                "Entity": "gold_downtime_events",
+                                                "Type": 0
+                                            }
+                                        ],
+                                        "Select": [
+                                            {
+                                                "Column": {
+                                                    "Expression": {
+                                                        "SourceRef": {
+                                                            "Source": "x"
+                                                        }
+                                                    },
+                                                    "Property": "well_key"
+                                                },
+                                                "Name": "field"
+                                            }
+                                        ],
+                                        "OrderBy": [
+                                            {
+                                                "Direction": 2,
+                                                "Expression": {
+                                                    "Measure": {
+                                                        "Expression": {
+                                                            "SourceRef": {
+                                                                "Source": "y"
+                                                            }
+                                                        },
+                                                        "Property": "Downtime Hours"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Top": 10
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "Name": "a",
+                            "Entity": "gold_dim_well",
+                            "Type": 0
+                        }
+                    ],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "In": {
+                                    "Expressions": [
+                                        {
+                                            "Column": {
+                                                "Expression": {
+                                                    "SourceRef": {
+                                                        "Source": "a"
+                                                    }
+                                                },
+                                                "Property": "well_key"
+                                            }
+                                        }
+                                    ],
+                                    "Table": {
+                                        "SourceRef": {
+                                            "Source": "subquery"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

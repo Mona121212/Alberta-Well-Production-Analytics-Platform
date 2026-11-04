@@ -3,7 +3,9 @@
     "pageOrder": [
         "ProductionPerformance",
         "WellActivity",
-        "DataTrust"
+        "DataTrust",
+        "WellOperations",
+        "SensorHealth"
     ],
     "activePageName": "ProductionPerformance"
 }
