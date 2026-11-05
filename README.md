@@ -6,12 +6,10 @@ Public Alberta oil and gas data, turned into numbers people can trust: a Microso
 dashboard for 12 months of well production, a GIS track that checks every AER well licence, and a module with
 simulated, PI-style sensor readings.
 
-| | |
-|---|---|
-| **6,481,961** | Petrinex production rows (2025-07 to 2026-06), checked by rules before they reach the dashboard |
-| **539,890** | AER well licences checked against 23 location and attribute rules |
-| **99.7%** | of Petrinex well IDs matched to AER after normalizing two different formats |
-| **376,518.5 m3** | of November 2025 oil recovered after finding a daylight-saving bug |
+- **6,481,961** Petrinex production rows (2025-07 to 2026-06), checked by rules before they reach the dashboard
+- **539,890** AER well licences checked against 23 location and attribute rules
+- **99.7%** of Petrinex well IDs matched to the AER after normalizing two different formats
+- **376,518.5 m3** of November 2025 oil recovered after finding a daylight-saving bug
 
 ![Well screening classes across Alberta](docs/maps/liability_classes.png)
 
@@ -42,15 +40,15 @@ This is a personal portfolio project built on public data. It is designed for th
 ## What I built
 
 ```mermaid
-flowchart LR
+flowchart TD
     P["Petrinex<br/>monthly volumes"] --> B
     A["AER ST37<br/>well licences"] --> B
     S["Simulated PI-style<br/>sensor readings"] --> B
-    B["Bronze<br/>raw, as loaded"] --> SV["Silver<br/>cleaned and checked"]
-    SV --> G["Gold<br/>star schema"]
-    SV -. failed rows .-> Q["Quarantine and<br/>defect log"]
-    G --> PBI["Power BI<br/>dashboard"]
     A --> GIS["GIS track<br/>QA rules, maps,<br/>data packages"]
+    B["Bronze<br/>raw, as loaded"] --> SV["Silver<br/>cleaned and checked"]
+    SV -. failed rows .-> Q["Quarantine and<br/>defect log"]
+    SV --> G["Gold<br/>star schema"]
+    G --> PBI["Power BI<br/>dashboard"]
 ```
 
 - **Bronze** keeps every source file as loaded, so any number can be traced back to its file.
