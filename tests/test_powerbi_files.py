@@ -181,3 +181,24 @@ def test_tag_health_table_names_tags_from_the_tag_table_and_keeps_the_code_as_it
     refs = [p["queryRef"] for p in state["Values"]["projections"]]
     assert refs[:4] == ["gold_dim_well.well_key", "gold_sensor_hourly.tag_code", "gold_sensor_tags.Tag Name", "gold_sensor_tags.Tag Unit"]
     assert "gold_sensor_hourly.unit" not in refs
+
+
+@pytest.mark.parametrize("page, name, measure", [("WellOperations", "p4_flow", "Flow"), ("WellOperations", "p4_pressure", "Pressure"),
+                                                 ("SensorHealth", "p5_flow", "Flow"), ("SensorHealth", "p5_pressure", "Pressure")])
+def test_non_good_series_shows_markers_only(page, name, measure):
+    objects = page_visuals(page)[name]["visual"]["objects"]
+    ref = f"gold_sensor_hourly.{measure} Non-Good Marker"
+    style = next(s["properties"] for s in objects["lineStyles"] if s.get("selector", {}).get("metadata") == ref)
+    assert style["showMarker"]["expr"]["Literal"]["Value"] == "true"
+    assert style["strokeShow"]["expr"]["Literal"]["Value"] == "false"
+    assert style["markerColor"]["solid"]["color"]["expr"]["Literal"]["Value"] == "'#C62828'"
+    # The report theme schema has no show or markerSize in the markers object: the service ignores them there
+    assert "markers" not in objects
+
+
+def test_reconciliation_columns_fit_inside_the_visual_padding():
+    visual = page_visuals("WellOperations")["p4_recon"]
+    widths = {w["selector"]["metadata"]: float(w["properties"]["value"]["expr"]["Literal"]["Value"].rstrip("D")) for w in visual["visual"]["objects"]["columnWidth"]}
+    # Measured on the screenshot: about 43 of the visual's width goes to padding and the scroll bar is about 10 more
+    assert sum(widths.values()) <= visual["position"]["width"] - 53
+    assert widths["gold_sensor_reconciliation.likely_cause"] >= 124

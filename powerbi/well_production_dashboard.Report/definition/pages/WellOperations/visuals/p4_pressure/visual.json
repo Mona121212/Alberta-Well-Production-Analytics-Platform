@@ -178,29 +178,6 @@
                     }
                 }
             ],
-            "markers": [
-                {
-                    "properties": {
-                        "show": {
-                            "expr": {
-                                "Literal": {
-                                    "Value": "true"
-                                }
-                            }
-                        },
-                        "markerSize": {
-                            "expr": {
-                                "Literal": {
-                                    "Value": "6D"
-                                }
-                            }
-                        }
-                    },
-                    "selector": {
-                        "metadata": "gold_sensor_hourly.Pressure Non-Good Marker"
-                    }
-                }
-            ],
             "legend": [
                 {
                     "properties": {
@@ -235,10 +212,56 @@
                 },
                 {
                     "properties": {
+                        "showSeries": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "strokeShow": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
                         "strokeWidth": {
                             "expr": {
                                 "Literal": {
                                     "Value": "0D"
+                                }
+                            }
+                        },
+                        "showMarker": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "markerShape": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'circle'"
+                                }
+                            }
+                        },
+                        "markerSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "6D"
+                                }
+                            }
+                        },
+                        "markerColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#C62828'"
+                                        }
+                                    }
                                 }
                             }
                         }
