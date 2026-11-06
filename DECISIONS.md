@@ -1321,12 +1321,16 @@ Petrinex volumes are real. These pages show that the logic finds what was plante
   - Effect: a measure that ignores a dimension returns a value on its blank member (`Latest Run ID` returns `57f84a9c`). A visual
     that plots such a measure by that dimension could show a (Blank) row. The well selector is unaffected: its measure filter
     returns exactly 40 wells.
-- **Known issues, not fixed in this change.**
-  - The screenshots show no red non-Good markers on the trend charts, although DAX returns 218 of them for the fault well. The
-    Good line does stop where the bad readings start. The cause is not established, and image export is disabled on the tenant, so
-    a fix could only be checked by eye in the service.
-  - In the reconciliation table, `Check sensor first` is cut off at the column edge in the screenshot.
-  - `docs/screenshots/dashboard_sensor_health.png` was taken before the tag table gained the `Tag name` column.
+- **Two display faults found in the first screenshots, then fixed.**
+  - The red non-Good markers did not appear, although DAX returns 218 of them for the fault well. Cause: `show` and `markerSize`
+    were set in the `markers` object, which has neither property in the report theme JSON schema (2.159), so the service ignored
+    them while `strokeWidth` 0 hid the line. Marker settings belong to `lineStyles`: the non-Good series now has `showMarker` true,
+    `markerShape` circle, `markerSize` 6, `markerColor` red and `strokeShow` false, and the `markers` object is gone. Markers are
+    not turned on for all series, so the Good lines stay plain. A test checks these settings on all four trend charts.
+  - `Check sensor first` was cut off: the table's usable width is about 647 of its 690, so the last column ran past the edge.
+    The columns now total 622 with `Likely cause` at 124, and the table font is 9 pt; a test checks the total against the
+    visual's width.
+  - Both fixes were checked by eye in the service, and the screenshots were taken again afterwards.
 - The DAX checks simulate selections with filters. No test covers actual clicks or the rendered pages.
 - Local tests check the files (`tests/test_powerbi_files.py`) and the pandas rules.
 - The changed injections replace the numbers in DEC-032 to DEC-034, which stay as the record of those runs.
