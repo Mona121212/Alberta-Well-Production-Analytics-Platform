@@ -57,7 +57,7 @@ Nothing was blocked (`progress.md` has no Blocked entries). Known gaps, by desig
 ## Interview talking points by job requirement
 
 No single job posting is stored in the repo. The requirements below are the GIS analyst duties this track was built
-against (README "Goal") and the common requirements of the Data Analyst / BI Developer / Junior Data Developer roles the
+against ([technical reference](TECHNICAL.md#goal), "Goal") and the common requirements of the Data Analyst / BI Developer / Junior Data Developer roles the
 project targets. Each has the evidence in the repo and a short answer to give in an interview.
 
 ### At a glance
