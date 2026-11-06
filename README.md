@@ -74,7 +74,7 @@ flowchart TD
 
 ## Dashboard
 
-Three pages, one question each.
+Five pages, one question each.
 
 **Production Performance**: is production rising or falling, and where is the drop? It helps decide which
 operator or well to look at first.
@@ -91,8 +91,16 @@ decide whether to publish the month or hold it.
 
 ![Data Trust](docs/screenshots/dashboard_data_trust.png)
 
-Two pages for the simulated sensor data (Well Operations and Sensor Health) are in review in
-[pull request #14](https://github.com/Mona121212/Alberta-Well-Production-Analytics-Platform/pull/14).
+**Well Operations** (simulated sensor data): which wells were down, how much was lost, and do sensor volumes match
+the reported volumes? It helps a production engineer decide which well to look at first, and whether to check the
+sensor or production.
+
+![Well Operations](docs/screenshots/dashboard_well_operations.png)
+
+**Sensor Health** (simulated sensor data): which sensors need maintenance? It helps decide which well and tag to
+service first.
+
+![Sensor Health](docs/screenshots/dashboard_sensor_health.png)
 
 ## What I found
 
@@ -107,9 +115,13 @@ change showed -3.98% instead of -0.95%. The rule now uses the larger of days x 2
 **4 of 5,628 idle wells were transfers, not shut-ins.** A well that stops reporting under one operator can reappear
 under another. The idle list flags these wells, so a transfer is not mistaken for a shut-in or a production drop.
 
-**Simulated sensors: the checks catch what was planted.** Three wells were given sensor volumes 15%, 20% and 25% off
-their real reported volumes on purpose. Reconciliation flags exactly those three, and the other 37 agree within 0.99%.
-Telling a faulty sensor from a real production mismatch is the next stage, in review in pull request #14.
+**A faulty meter and a real production gap look the same until you check the sensor (simulated).** All sensor data is
+simulated, and these faults are injected on purpose. Three wells were given volumes +15%, -20% and +25% off their real
+reported volumes with healthy sensors; one well's flow meter was frozen for 120 hours and dropped out for 96 while the
+true rate ran 1.4 times higher, so its sensor volume came out -11.11%. Reconciliation flags all four, and `likely_cause`
+tells them apart: the fault well's flow tag is only 69.76% Good, below the 80% threshold, so it says "Check sensor
+first", while the other three say "Production mismatch". Two aging meters at 89.88% and 90.71% Good still reconciled
+within 0.5% (+0.47% and +0.14%), which is why the threshold sits at 80%.
 
 ## How the data is kept trustworthy
 
@@ -170,5 +182,5 @@ Every design choice is recorded with its context, alternatives and consequences 
 The [defect log](docs/defect_log.md) lists every data issue found. The [GIS final report](docs/final_report.md)
 summarizes the GIS track.
 
-**Next steps:** the sensor dashboard pages (pull request #14); a monthly schedule, once new files are downloaded
-automatically and the rule for a 13th month is decided; and the cause of the growing production string gap (D-009).
+**Next steps:** a monthly schedule, once new files are downloaded automatically and the rule for a 13th month is
+decided; and the cause of the growing production string gap (D-009).

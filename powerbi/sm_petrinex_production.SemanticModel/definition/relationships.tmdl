@@ -18,3 +18,19 @@ relationship b2e4d7f3-8c52-4f1a-8d69-3a7c2e1f9b02
 	fromColumn: gold_idle_wells.last_operator_baid
 	toColumn: gold_dim_operator.OperatorBAID
 
+relationship c3f5e8a4-9d63-4a2b-8e7a-4b8d3f2a0c13
+	fromColumn: gold_sensor_hourly.well_key
+	toColumn: gold_dim_well.well_key
+
+relationship d4a6f9b5-0e74-4b3c-9f8b-5c9e4a3b1d24
+	fromColumn: gold_downtime_events.well_key
+	toColumn: gold_dim_well.well_key
+
+relationship e5b7a0c6-1f85-4c4d-a09c-6d0f5b4c2e35
+	fromColumn: gold_sensor_reconciliation.well_key
+	toColumn: gold_dim_well.well_key
+
+relationship f6c8b1d7-2a96-4d5e-b1ad-7e1a6c5d3f46
+	fromColumn: gold_sensor_tags.well_key
+	toColumn: gold_dim_well.well_key
+

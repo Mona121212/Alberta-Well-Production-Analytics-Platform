@@ -1,0 +1,53 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p4_card_5",
+    "position": {
+        "x": 1061,
+        "y": 70,
+        "z": 9,
+        "width": 201,
+        "height": 72,
+        "tabOrder": 9
+    },
+    "visual": {
+        "visualType": "cardVisual",
+        "query": {
+            "queryState": {
+                "Data": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_hourly"
+                                        }
+                                    },
+                                    "Property": "Good Ratio %"
+                                }
+                            },
+                            "queryRef": "gold_sensor_hourly.Good Ratio %",
+                            "nativeQueryRef": "Good Ratio %",
+                            "displayName": "Good ratio"
+                        }
+                    ]
+                }
+            }
+        },
+        "visualContainerObjects": {
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

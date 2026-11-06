@@ -1,0 +1,53 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p4_card_3",
+    "position": {
+        "x": 643,
+        "y": 70,
+        "z": 7,
+        "width": 201,
+        "height": 72,
+        "tabOrder": 7
+    },
+    "visual": {
+        "visualType": "cardVisual",
+        "query": {
+            "queryState": {
+                "Data": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_downtime_events"
+                                        }
+                                    },
+                                    "Property": "Lost Gas (e3m3)"
+                                }
+                            },
+                            "queryRef": "gold_downtime_events.Lost Gas (e3m3)",
+                            "nativeQueryRef": "Lost Gas (e3m3)",
+                            "displayName": "Lost gas (e3m3)"
+                        }
+                    ]
+                }
+            }
+        },
+        "visualContainerObjects": {
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

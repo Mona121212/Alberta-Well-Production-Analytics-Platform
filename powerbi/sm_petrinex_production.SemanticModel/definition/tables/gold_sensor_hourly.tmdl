@@ -1,0 +1,222 @@
+table gold_sensor_hourly
+	sourceLineageTag: [dbo].[gold_sensor_hourly]
+
+	/// Good readings / all expected readings of the 2025-11 history, all 5 tags: good_count / reading_count. The live feed is left out, since it has no bad readings by design.
+	measure 'Good Ratio %' = DIVIDE(CALCULATE(SUM(gold_sensor_hourly[good_count]), gold_sensor_hourly[source] = "backfill"), CALCULATE(SUM(gold_sensor_hourly[reading_count]), gold_sensor_hourly[source] = "backfill"))
+		formatString: 0.00%
+		displayFolder: Well Operations\Sensor Health
+
+	/// Readings of the 2025-11 history flagged frozen, each reading of a frozen run counted once.
+	measure 'Frozen Readings' =
+			VAR readings = CALCULATE(SUM(gold_sensor_hourly[reading_count]), gold_sensor_hourly[source] = "backfill")
+			RETURN IF(NOT ISBLANK(readings), CALCULATE(COUNTROWS(gold_sensor_hourly), gold_sensor_hourly[source] = "backfill", gold_sensor_hourly[flagged_reason] = "frozen") + 0)
+		formatString: #,0
+		displayFolder: Well Operations\Sensor Health
+
+	/// Readings of the 2025-11 history outside the tag's physical range.
+	measure 'Out-of-Range Readings' =
+			VAR readings = CALCULATE(SUM(gold_sensor_hourly[reading_count]), gold_sensor_hourly[source] = "backfill")
+			RETURN IF(NOT ISBLANK(readings), CALCULATE(COUNTROWS(gold_sensor_hourly), gold_sensor_hourly[source] = "backfill", gold_sensor_hourly[flagged_reason] = "outside_physical_range") + 0)
+		formatString: #,0
+		displayFolder: Well Operations\Sensor Health
+
+	/// Expected readings of the 2025-11 history that never arrived.
+	measure 'Missing Readings' =
+			VAR readings = CALCULATE(SUM(gold_sensor_hourly[reading_count]), gold_sensor_hourly[source] = "backfill")
+			RETURN IF(NOT ISBLANK(readings), CALCULATE(COUNTROWS(gold_sensor_hourly), gold_sensor_hourly[source] = "backfill", gold_sensor_hourly[flagged_reason] = "missing") + 0)
+		formatString: #,0
+		displayFolder: Well Operations\Sensor Health
+
+	/// Good flow reading of the one selected well, by hour. Blank unless one well is selected. Averages the two readings of the local hour repeated on 2025-11-02.
+	measure 'Flow Reading' = IF(HASONEVALUE(gold_dim_well[well_key]), CALCULATE(AVERAGE(gold_sensor_hourly[avg_value]), gold_sensor_hourly[source] = "backfill", gold_sensor_hourly[tag_code] IN {"FLOW_OIL", "FLOW_GAS"}))
+		formatString: #,0.000
+		displayFolder: Well Operations\Trends
+
+	/// Marker for a non-Good flow reading of the one selected well: the frozen value, or the nearest Good value when the reading is -9999 or missing (flagged_value).
+	measure 'Flow Non-Good Marker' = IF(HASONEVALUE(gold_dim_well[well_key]), CALCULATE(AVERAGE(gold_sensor_hourly[flagged_value]), gold_sensor_hourly[source] = "backfill", gold_sensor_hourly[tag_code] IN {"FLOW_OIL", "FLOW_GAS"}))
+		formatString: #,0.000
+		displayFolder: Well Operations\Trends
+
+	/// Tooltip of the flow marker: the reason the reading is not Good, and its raw value if it has one.
+	measure 'Flow Non-Good Reason' =
+			VAR reason = CALCULATE(MAX(gold_sensor_hourly[flagged_reason]), gold_sensor_hourly[source] = "backfill", gold_sensor_hourly[tag_code] IN {"FLOW_OIL", "FLOW_GAS"})
+			VAR raw = CALCULATE(MAX(gold_sensor_hourly[raw_value]), gold_sensor_hourly[source] = "backfill", gold_sensor_hourly[tag_code] IN {"FLOW_OIL", "FLOW_GAS"})
+			RETURN IF(HASONEVALUE(gold_dim_well[well_key]) && NOT ISBLANK(reason), reason & IF(NOT ISBLANK(raw), ", raw " & FORMAT(raw, "0.000")))
+		displayFolder: Well Operations\Trends
+
+	/// Good tubing pressure reading of the one selected well in kPa, by hour. Blank unless one well is selected.
+	measure 'Tubing Pressure' = IF(HASONEVALUE(gold_dim_well[well_key]), CALCULATE(AVERAGE(gold_sensor_hourly[avg_value]), gold_sensor_hourly[source] = "backfill", gold_sensor_hourly[tag_code] = "TP"))
+		formatString: #,0.0
+		displayFolder: Well Operations\Trends
+
+	/// Good casing pressure reading of the one selected well in kPa, by hour. Blank unless one well is selected.
+	measure 'Casing Pressure' = IF(HASONEVALUE(gold_dim_well[well_key]), CALCULATE(AVERAGE(gold_sensor_hourly[avg_value]), gold_sensor_hourly[source] = "backfill", gold_sensor_hourly[tag_code] = "CP"))
+		formatString: #,0.0
+		displayFolder: Well Operations\Trends
+
+	/// Marker for a non-Good tubing or casing pressure reading of the one selected well: the frozen value, or the nearest Good value when the reading is -9999 or missing.
+	measure 'Pressure Non-Good Marker' = IF(HASONEVALUE(gold_dim_well[well_key]), CALCULATE(AVERAGE(gold_sensor_hourly[flagged_value]), gold_sensor_hourly[source] = "backfill", gold_sensor_hourly[tag_code] IN {"TP", "CP"}))
+		formatString: #,0.0
+		displayFolder: Well Operations\Trends
+
+	/// Tooltip of the pressure marker: the reason the reading is not Good, and its raw value if it has one.
+	measure 'Pressure Non-Good Reason' =
+			VAR reason = CALCULATE(MAX(gold_sensor_hourly[flagged_reason]), gold_sensor_hourly[source] = "backfill", gold_sensor_hourly[tag_code] IN {"TP", "CP"})
+			VAR raw = CALCULATE(MAX(gold_sensor_hourly[raw_value]), gold_sensor_hourly[source] = "backfill", gold_sensor_hourly[tag_code] IN {"TP", "CP"})
+			RETURN IF(HASONEVALUE(gold_dim_well[well_key]) && NOT ISBLANK(reason), reason & IF(NOT ISBLANK(raw), ", raw " & FORMAT(raw, "0.0")))
+		displayFolder: Well Operations\Trends
+
+	/// Title of the flow chart: the well and unit, or a prompt to select one well.
+	measure 'Flow Trend Title' = IF(HASONEVALUE(gold_dim_well[well_key]), "Flow, " & SELECTEDVALUE(gold_dim_well[well_key]) & " (" & CALCULATE(SELECTEDVALUE(gold_sensor_hourly[unit]), gold_sensor_hourly[source] = "backfill", gold_sensor_hourly[tag_code] IN {"FLOW_OIL", "FLOW_GAS"}) & ", local time)", "Flow: select one well to see its readings")
+		isHidden
+		displayFolder: Formatting
+
+	/// Title of the pressure chart: the well and unit, or a prompt to select one well.
+	measure 'Pressure Trend Title' = IF(HASONEVALUE(gold_dim_well[well_key]), "Tubing and casing pressure, " & SELECTEDVALUE(gold_dim_well[well_key]) & " (kPa, local time)", "Pressure: select one well to see its readings")
+		isHidden
+		displayFolder: Formatting
+
+	column tag_name
+		dataType: string
+		sourceLineageTag: tag_name
+		summarizeBy: none
+		sourceColumn: tag_name
+
+	column hour_utc
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn
+		sourceLineageTag: hour_utc
+		summarizeBy: none
+		sourceColumn: hour_utc
+
+	column source
+		dataType: string
+		sourceLineageTag: source
+		summarizeBy: none
+		sourceColumn: source
+
+	column well_key
+		dataType: string
+		isHidden
+		sourceLineageTag: well_key
+		summarizeBy: none
+		sourceColumn: well_key
+
+	column facility_id
+		dataType: string
+		sourceLineageTag: facility_id
+		summarizeBy: none
+		sourceColumn: facility_id
+
+	column product
+		dataType: string
+		sourceLineageTag: product
+		summarizeBy: none
+		sourceColumn: product
+
+	column tag_code
+		dataType: string
+		sourceLineageTag: tag_code
+		summarizeBy: none
+		sourceColumn: tag_code
+
+	column unit
+		dataType: string
+		sourceLineageTag: unit
+		summarizeBy: none
+		sourceColumn: unit
+
+	column avg_value
+		dataType: double
+		sourceLineageTag: avg_value
+		summarizeBy: none
+		sourceColumn: avg_value
+
+	column min_value
+		dataType: double
+		sourceLineageTag: min_value
+		summarizeBy: none
+		sourceColumn: min_value
+
+	column max_value
+		dataType: double
+		sourceLineageTag: max_value
+		summarizeBy: none
+		sourceColumn: max_value
+
+	column sum_good_value
+		dataType: double
+		sourceLineageTag: sum_good_value
+		summarizeBy: none
+		sourceColumn: sum_good_value
+
+	column good_count
+		dataType: int64
+		sourceLineageTag: good_count
+		summarizeBy: none
+		sourceColumn: good_count
+
+	column questionable_count
+		dataType: int64
+		sourceLineageTag: questionable_count
+		summarizeBy: none
+		sourceColumn: questionable_count
+
+	column bad_count
+		dataType: int64
+		sourceLineageTag: bad_count
+		summarizeBy: none
+		sourceColumn: bad_count
+
+	column reading_count
+		dataType: int64
+		sourceLineageTag: reading_count
+		summarizeBy: none
+		sourceColumn: reading_count
+
+	column raw_value
+		dataType: double
+		sourceLineageTag: raw_value
+		summarizeBy: none
+		sourceColumn: raw_value
+
+	column flagged_reason
+		dataType: string
+		sourceLineageTag: flagged_reason
+		summarizeBy: none
+		sourceColumn: flagged_reason
+
+	column hour_local
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn
+		sourceLineageTag: hour_local
+		summarizeBy: none
+		sourceColumn: hour_local
+
+	column local_day
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		sourceLineageTag: local_day
+		summarizeBy: none
+		sourceColumn: local_day
+
+	column flagged_value
+		dataType: double
+		sourceLineageTag: flagged_value
+		summarizeBy: none
+		sourceColumn: flagged_value
+
+	column _run_id
+		dataType: string
+		isHidden
+		sourceLineageTag: _run_id
+		summarizeBy: none
+		sourceColumn: _run_id
+
+	partition gold_sensor_hourly = entity
+		mode: directLake
+		source
+			entityName: gold_sensor_hourly
+			schemaName: dbo
+			expressionSource: 'DirectLake - alberta_wells'
+

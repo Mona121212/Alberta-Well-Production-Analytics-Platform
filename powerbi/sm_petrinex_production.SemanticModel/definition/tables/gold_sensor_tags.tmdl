@@ -1,0 +1,80 @@
+table gold_sensor_tags
+	sourceLineageTag: [dbo].[gold_sensor_tags]
+
+	/// Full name of the tag code in the current row, such as Tubing Pressure, from gold_sensor_tags. Blank unless one tag code is in context.
+	measure 'Tag Name' = IF(HASONEVALUE(gold_sensor_hourly[tag_code]), CALCULATE(MAX(gold_sensor_tags[attribute]), TREATAS(VALUES(gold_sensor_hourly[tag_code]), gold_sensor_tags[tag_code])))
+		displayFolder: Well Operations\Sensor Health
+
+	/// Engineering unit of the tag code in the current row, from gold_sensor_tags. Blank unless one tag code is in context.
+	measure 'Tag Unit' = IF(HASONEVALUE(gold_sensor_hourly[tag_code]), CALCULATE(MAX(gold_sensor_tags[unit]), TREATAS(VALUES(gold_sensor_hourly[tag_code]), gold_sensor_tags[tag_code])))
+		displayFolder: Well Operations\Sensor Health
+
+	column tag_name
+		dataType: string
+		sourceLineageTag: tag_name
+		summarizeBy: none
+		sourceColumn: tag_name
+
+	column well_key
+		dataType: string
+		isHidden
+		sourceLineageTag: well_key
+		summarizeBy: none
+		sourceColumn: well_key
+
+	column facility_id
+		dataType: string
+		sourceLineageTag: facility_id
+		summarizeBy: none
+		sourceColumn: facility_id
+
+	column product
+		dataType: string
+		sourceLineageTag: product
+		summarizeBy: none
+		sourceColumn: product
+
+	column tag_code
+		dataType: string
+		sourceLineageTag: tag_code
+		summarizeBy: none
+		sourceColumn: tag_code
+
+	column attribute
+		dataType: string
+		sourceLineageTag: attribute
+		summarizeBy: none
+		sourceColumn: attribute
+
+	column unit
+		dataType: string
+		sourceLineageTag: unit
+		summarizeBy: none
+		sourceColumn: unit
+
+	column kind
+		dataType: string
+		sourceLineageTag: kind
+		summarizeBy: none
+		sourceColumn: kind
+
+	column af_path
+		dataType: string
+		sourceLineageTag: af_path
+		summarizeBy: none
+		sourceColumn: af_path
+
+	column _run_id
+		dataType: string
+		isHidden
+		sourceLineageTag: _run_id
+		summarizeBy: none
+		sourceColumn: _run_id
+
+	partition gold_sensor_tags = entity
+		mode: directLake
+		source
+			entityName: gold_sensor_tags
+			schemaName: dbo
+			expressionSource: 'DirectLake - alberta_wells'
+

@@ -194,6 +194,22 @@ the reconciliation tests and the defect log. Supports the decision to publish th
 
 ![Data Trust](screenshots/dashboard_data_trust.png)
 
+**Well Operations** (simulated sensors) - which wells were down, how much was lost, and do sensor volumes match the
+reported volumes? For a production engineer: downtime and lost volume cards, the 10 wells with the most downtime, flow and
+pressure trends in local time with non-Good readings as red markers, downtime events, and sensor against reported volume
+with a likely cause. Supports the decision which well to look at first, and whether to check the sensor or production. In
+the fault well the flow tag is only 69.76% Good, so the -11.11% difference says "Check sensor first"; the three anomaly
+wells have healthy sensors, so their differences say "Production mismatch". All of this is injected on purpose to test the
+logic (DEC-035).
+
+![Well Operations](screenshots/dashboard_well_operations.png)
+
+**Sensor Health** (simulated sensors) - which sensors need maintenance? Good ratio, frozen, out-of-range and missing readings,
+the trends, and health by well and by tag (with the tag's full name and unit), worst first. Supports the decision which well
+and tag to service first.
+
+![Sensor Health](screenshots/dashboard_sensor_health.png)
+
 Every measure has a description and a display folder (a test checks this). Each new measure was computed a second
 time with Spark SQL on the Lakehouse and compared value by value with DAX (38,396 values); `gold_idle_wells` matches
 an independent Spark result in all 28,140 values. Not in the dashboard on purpose: revenue (no prices in the data),
@@ -224,13 +240,15 @@ deliberate bad readings and the random seed, are in `config/sensor.json`.
 
 **What is real and what is not.** The monthly volumes the sensors are reconciled against are the real Petrinex
 volumes of these wells. The hourly readings are simulated so that each well's sensor volume equals its Petrinex
-volume within 1%, except for **3 anomaly wells that are set on purpose in `config/sensor.json`** (+15%, -20%, +25%).
-Reconciliation flags exactly those three; the tests check that the detection logic catches them. It is not a
-finding about the real data.
+volume within 1%, except for **3 anomaly wells (+15%, -20%, +25%) and 1 flow meter fault well (-11.11%), all set on
+purpose in `config/sensor.json`**. Reconciliation flags exactly those four; the tests check that the detection logic
+catches them. It is not a finding about the real data.
+
+The table maps the PI System concepts to this project. All the data is simulated; this is not AVEVA PI System.
 
 | PI concept | This project |
 |---|---|
-| PI Point (tag) and its engineering units | `tag_name` (`<facility>.<well>.<code>`), `unit` in `sensor_asset_hierarchy` |
+| PI Point (tag) and its engineering units | `tag_name` (`<facility>.<well>.<code>`), `unit` in `sensor_asset_hierarchy`; `gold_sensor_tags` in the report |
 | AF element hierarchy and attributes | `sensor_asset_hierarchy`: facility -> well -> tag, AF style paths such as `\PI-style\Alberta\ABBT0053340\100011203902W400\|Casing Pressure` |
 | PI Data Archive | `bronze_sensor_backfill` (2025-11 hourly history), `bronze_sensor_readings` (stream), merged in `silver_sensor_readings` |
 | Value quality and digital states (No Data, bad input) | Quality flag Good / Questionable / Bad: missing or outside the physical range is Bad, outside the normal range or frozen is Questionable; flagged, never deleted |
@@ -239,7 +257,7 @@ finding about the real data.
 | PI interface / connector | `scripts/sensor_simulator.py` via Fabric Eventstream (stage 2) |
 
 Stage 1 (this part) builds the configuration, the well selection, the asset hierarchy and the 2025-11 hourly
-history (143,960 readings: 40 wells x 5 tags x 721 hours, minus 240 deliberately missing):
+history (143,813 readings: 40 wells x 5 tags x 721 hours, minus 387 deliberately missing):
 
 ```text
 fab job run "well-production-mvp.Workspace/sensor_select_wells.Notebook"     # only when the selection changes
@@ -285,15 +303,18 @@ fab job run "well-production-mvp.Workspace/pl_sensor_hourly.DataPipeline"     # 
 
 | Reconciliation test (`sensor_reconciliation_results`) | Expected | Actual |
 |---|---|---|
-| Bronze rows = rows received in Silver + rejects | 146,990 | 146,990 |
+| Bronze rows = rows received in Silver + rejects | 146,843 | 146,843 |
 | Tags whose Good count or sum of Good values differs between Silver and `gold_sensor_hourly` | 0 | 0 |
 | Downtime events differing from the simulation's truth file | 0 | 0 |
 | Wells flagged or configured as anomalies, but not both | 0 | 0 |
+| Flagged wells whose likely cause differs from the configured sensor fault | 0 | 0 |
 
-The 3 wells flagged for investigation are the 3 set on purpose in `config/sensor.json` (+15%, -20%, +25%); the other 37
-are within 0.99%. This tests the detection logic; it is not a finding about the real data. The results stay out of
-`reconciliation_results`, which the Data Trust page reads for the Petrinex pipeline (DEC-034). Stage 4 (a Power BI page)
-follows.
+The 4 wells flagged for investigation are the 4 set on purpose in `config/sensor.json`; the other 36 are within 1.00%. This
+tests the detection logic; it is not a finding about the real data. The results stay out of `reconciliation_results`, which
+the Data Trust page reads for the Petrinex pipeline (DEC-034).
+
+Stage 4 adds the Well Operations and Sensor Health report pages, described under [Power BI dashboard](#power-bi-dashboard),
+and a model refresh at the end of `pl_sensor_hourly` (DEC-035).
 
 ## Outputs
 
@@ -409,5 +430,7 @@ packages and maps never run on bad data.
   `tests/test_fabric_pipeline.py` - pipeline order, Succeeded-only dependencies, target items, no credentials;
   `tests/test_silver_config.py` - month hour limit of `hours_above_month_max` (D-010);
   `tests/test_sensor_backfill.py` - sensor config, 721 hours, hierarchy, generator, quality flags, reconciliation
+- `scripts/verify/` - one-off Spark checks to paste into a notebook; `check_well_operations_measures.py` recomputes the
+  sensor pages' measures for the comparison with DAX (DEC-035)
 - `docs/` - `progress.md`, `final_report.md`, `st37_gis_exploration.md`, `defect_log.md`, maps, dashboard screenshots
-- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-032)
+- `DECISIONS.md` - Context / Decision / Alternatives / Consequences for every design choice (DEC-001 to DEC-035)

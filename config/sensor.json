@@ -132,12 +132,29 @@
     "lost_volume_lookback_hours": 24
   },
   "injections": {
-    "_note": "Deliberate bad readings on analog tags in running hours. They replace the reading only; the true volume of the hour is unchanged.",
-    "out_of_range_per_well": 2,
+    "_note": "Deliberate bad readings on analog tags in running hours. They replace the reading only; the true volume of the hour is unchanged. Each well draws its counts from the ranges, so most tags have few bad readings. The aging tags have many on purpose (DEC-035).",
+    "out_of_range_per_well": [0, 2],
     "out_of_range_value": -9999.0,
-    "frozen_runs_per_well": 1,
+    "frozen_runs_per_well": [0, 1],
     "frozen_run_hours": 8,
-    "missing_per_well": 6
+    "missing_per_well": [0, 4],
+    "aging_frozen_run_hours": 12,
+    "aging_tags": [
+      {"well_key": "100051404716W502", "tag_code": "TP", "frozen_runs": 3, "missing": 30},
+      {"well_key": "100102706403W600", "tag_code": "CP", "frozen_runs": 4, "missing": 24},
+      {"well_key": "100163606217W500", "tag_code": "TEMP", "frozen_runs": 2, "missing": 40},
+      {"well_key": "102060504005W502", "tag_code": "FLOW_GAS", "frozen_runs": 3, "missing": 28},
+      {"well_key": "105041103902W400", "tag_code": "FLOW_OIL", "frozen_runs": 2, "missing": 36},
+      {"well_key": "100082506503W602", "tag_code": "TP", "frozen_runs": 4, "missing": 20},
+      {"well_key": "114021207606W400", "tag_code": "CP", "frozen_runs": 3, "missing": 32}
+    ]
+  },
+  "sensor_fault": {
+    "_note": "One well's flow meter fails on purpose (DEC-035): frozen, then missing, up to the end of the month. The true rate rises by rate_factor during the fault while the monthly true volume stays within the normal bias. The estimate fills the fault hours from the rate before it, so it misses the rise and reconciliation flags the well. This tests telling a sensor fault from a production mismatch; it is not a finding about the real data.",
+    "well_key": "100140807605W503",
+    "frozen_hours": 120,
+    "missing_hours": 96,
+    "rate_factor": 1.4
   },
   "quality": {
     "states": [
@@ -160,7 +177,9 @@
   },
   "reconciliation": {
     "hourly_volume": "rate / 24 for a Good flow reading; 0 for an hour with a Good RUN = 0 reading; otherwise the mean Good flow rate of the running hours of the same local day / 24 (the month mean if that day has none)",
-    "threshold_pct": 5.0
+    "threshold_pct": 5.0,
+    "sensor_good_ratio_threshold_pct": 80.0,
+    "likely_cause": {"sensor": "Check sensor first", "production": "Production mismatch"}
   },
   "anomaly_wells": {
     "_note": "Deliberately simulated differences between the sensor volume and the real Petrinex volume. Reconciliation is expected to flag exactly these wells: this tests the detection logic, it is not a finding about the real data.",
@@ -194,6 +213,7 @@
     "downtime_table": "gold_downtime_events",
     "reconciliation_table": "gold_sensor_reconciliation",
     "reconciliation_results_table": "sensor_reconciliation_results",
+    "tags_table": "gold_sensor_tags",
     "production_fact_table": "gold_fact_production",
     "truth_file": "/lakehouse/default/Files/raw/sensor/backfill_2025-11_truth.json",
     "stream_manifests": "/lakehouse/default/Files/raw/sensor/stream_runs/stream_run_*.json"

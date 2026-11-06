@@ -14,7 +14,8 @@
     "retry_interval_seconds": 300,
     "steps": [
       {"activity": "SensorSilver", "notebook": "04_sensor_silver", "timeout": "0.01:00:00"},
-      {"activity": "SensorGold", "notebook": "05_sensor_gold", "timeout": "0.01:00:00"}
+      {"activity": "SensorGold", "notebook": "05_sensor_gold", "timeout": "0.01:00:00"},
+      {"activity": "Refresh", "semantic_model": "sm_petrinex_production", "connection": "pbi_semantic_model_refresh", "timeout": "0.00:30:00"}
     ]
   },
   "semantic_model": {"name": "sm_petrinex_production", "id": "3dbbbf11-62be-4c49-ac5e-e9df5a8943ea"},

@@ -1,0 +1,53 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p4_card_4",
+    "position": {
+        "x": 852,
+        "y": 70,
+        "z": 8,
+        "width": 201,
+        "height": 72,
+        "tabOrder": 8
+    },
+    "visual": {
+        "visualType": "cardVisual",
+        "query": {
+            "queryState": {
+                "Data": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_reconciliation"
+                                        }
+                                    },
+                                    "Property": "Wells to Investigate"
+                                }
+                            },
+                            "queryRef": "gold_sensor_reconciliation.Wells to Investigate",
+                            "nativeQueryRef": "Wells to Investigate",
+                            "displayName": "Wells to investigate"
+                        }
+                    ]
+                }
+            }
+        },
+        "visualContainerObjects": {
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,684 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p4_recon",
+    "position": {
+        "x": 574,
+        "y": 344,
+        "z": 14,
+        "width": 690,
+        "height": 350,
+        "tabOrder": 14
+    },
+    "visual": {
+        "visualType": "tableEx",
+        "query": {
+            "queryState": {
+                "Values": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_dim_well"
+                                        }
+                                    },
+                                    "Property": "well_key"
+                                }
+                            },
+                            "queryRef": "gold_dim_well.well_key",
+                            "nativeQueryRef": "well_key",
+                            "displayName": "Well"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_reconciliation"
+                                        }
+                                    },
+                                    "Property": "product"
+                                }
+                            },
+                            "queryRef": "gold_sensor_reconciliation.product",
+                            "nativeQueryRef": "product",
+                            "displayName": "Product"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_reconciliation"
+                                        }
+                                    },
+                                    "Property": "Sensor Volume"
+                                }
+                            },
+                            "queryRef": "gold_sensor_reconciliation.Sensor Volume",
+                            "nativeQueryRef": "Sensor Volume",
+                            "displayName": "Sensor"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_reconciliation"
+                                        }
+                                    },
+                                    "Property": "Reported Volume"
+                                }
+                            },
+                            "queryRef": "gold_sensor_reconciliation.Reported Volume",
+                            "nativeQueryRef": "Reported Volume",
+                            "displayName": "Reported"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_reconciliation"
+                                        }
+                                    },
+                                    "Property": "Volume Unit"
+                                }
+                            },
+                            "queryRef": "gold_sensor_reconciliation.Volume Unit",
+                            "nativeQueryRef": "Volume Unit",
+                            "displayName": "Unit"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_reconciliation"
+                                        }
+                                    },
+                                    "Property": "Reported vs Sensor Diff %"
+                                }
+                            },
+                            "queryRef": "gold_sensor_reconciliation.Reported vs Sensor Diff %",
+                            "nativeQueryRef": "Reported vs Sensor Diff %",
+                            "displayName": "Diff %"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_reconciliation"
+                                        }
+                                    },
+                                    "Property": "Abs Diff %"
+                                }
+                            },
+                            "queryRef": "gold_sensor_reconciliation.Abs Diff %",
+                            "nativeQueryRef": "Abs Diff %",
+                            "displayName": "Abs diff %"
+                        },
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_reconciliation"
+                                        }
+                                    },
+                                    "Property": "Flow Good Ratio %"
+                                }
+                            },
+                            "queryRef": "gold_sensor_reconciliation.Flow Good Ratio %",
+                            "nativeQueryRef": "Flow Good Ratio %",
+                            "displayName": "Flow tag Good %"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_reconciliation"
+                                        }
+                                    },
+                                    "Property": "likely_cause"
+                                }
+                            },
+                            "queryRef": "gold_sensor_reconciliation.likely_cause",
+                            "nativeQueryRef": "likely_cause",
+                            "displayName": "Likely cause"
+                        }
+                    ]
+                }
+            },
+            "sortDefinition": {
+                "sort": [
+                    {
+                        "field": {
+                            "Measure": {
+                                "Expression": {
+                                    "SourceRef": {
+                                        "Entity": "gold_sensor_reconciliation"
+                                    }
+                                },
+                                "Property": "Abs Diff %"
+                            }
+                        },
+                        "direction": "Descending"
+                    }
+                ]
+            }
+        },
+        "objects": {
+            "total": [
+                {
+                    "properties": {
+                        "totals": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "columnHeaders": [
+                {
+                    "properties": {
+                        "autoSizeColumnWidth": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "wordWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "properties": {
+                        "wordWrap": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "9D"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "gold_sensor_reconciliation"
+                                                }
+                                            },
+                                            "Property": "Recon Row Color"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "gold_dim_well.well_key"
+                    }
+                },
+                {
+                    "properties": {
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "gold_sensor_reconciliation"
+                                                }
+                                            },
+                                            "Property": "Recon Row Color"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "gold_sensor_reconciliation.product"
+                    }
+                },
+                {
+                    "properties": {
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "gold_sensor_reconciliation"
+                                                }
+                                            },
+                                            "Property": "Recon Row Color"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "gold_sensor_reconciliation.Sensor Volume"
+                    }
+                },
+                {
+                    "properties": {
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "gold_sensor_reconciliation"
+                                                }
+                                            },
+                                            "Property": "Recon Row Color"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "gold_sensor_reconciliation.Reported Volume"
+                    }
+                },
+                {
+                    "properties": {
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "gold_sensor_reconciliation"
+                                                }
+                                            },
+                                            "Property": "Recon Row Color"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "gold_sensor_reconciliation.Volume Unit"
+                    }
+                },
+                {
+                    "properties": {
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "gold_sensor_reconciliation"
+                                                }
+                                            },
+                                            "Property": "Recon Row Color"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "gold_sensor_reconciliation.Reported vs Sensor Diff %"
+                    }
+                },
+                {
+                    "properties": {
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "gold_sensor_reconciliation"
+                                                }
+                                            },
+                                            "Property": "Recon Row Color"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "gold_sensor_reconciliation.Abs Diff %"
+                    }
+                },
+                {
+                    "properties": {
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "gold_sensor_reconciliation"
+                                                }
+                                            },
+                                            "Property": "Recon Row Color"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "gold_sensor_reconciliation.Flow Good Ratio %"
+                    }
+                },
+                {
+                    "properties": {
+                        "fontColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Entity": "gold_sensor_reconciliation"
+                                                }
+                                            },
+                                            "Property": "Recon Row Color"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ],
+                        "metadata": "gold_sensor_reconciliation.likely_cause"
+                    }
+                }
+            ],
+            "columnWidth": [
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "116D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_dim_well.well_key"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "52D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_sensor_reconciliation.product"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "58D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_sensor_reconciliation.Sensor Volume"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "62D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_sensor_reconciliation.Reported Volume"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "42D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_sensor_reconciliation.Volume Unit"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "54D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_sensor_reconciliation.Reported vs Sensor Diff %"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "54D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_sensor_reconciliation.Abs Diff %"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "60D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_sensor_reconciliation.Flow Good Ratio %"
+                    }
+                },
+                {
+                    "properties": {
+                        "value": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "124D"
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "metadata": "gold_sensor_reconciliation.likely_cause"
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "fontSize": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "11D"
+                                }
+                            }
+                        },
+                        "bold": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Sensor against reported volume, largest difference first'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

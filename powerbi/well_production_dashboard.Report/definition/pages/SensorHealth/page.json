@@ -1,0 +1,150 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+    "name": "SensorHealth",
+    "displayName": "Sensor Health",
+    "displayOption": "FitToPage",
+    "height": 720,
+    "width": 1280,
+    "visualInteractions": [
+        {
+            "source": "p5_wells",
+            "target": "p5_card_0",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p5_wells",
+            "target": "p5_card_1",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p5_wells",
+            "target": "p5_card_2",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p5_wells",
+            "target": "p5_card_3",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p5_wells",
+            "target": "p5_flow",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p5_wells",
+            "target": "p5_pressure",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p5_wells",
+            "target": "p5_tags",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p5_tags",
+            "target": "p5_card_0",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p5_tags",
+            "target": "p5_card_1",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p5_tags",
+            "target": "p5_card_2",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p5_tags",
+            "target": "p5_card_3",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p5_tags",
+            "target": "p5_flow",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p5_tags",
+            "target": "p5_pressure",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p5_tags",
+            "target": "p5_wells",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p5_flow",
+            "target": "p5_card_0",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p5_flow",
+            "target": "p5_card_1",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p5_flow",
+            "target": "p5_card_2",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p5_flow",
+            "target": "p5_card_3",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p5_flow",
+            "target": "p5_pressure",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p5_flow",
+            "target": "p5_wells",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p5_flow",
+            "target": "p5_tags",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p5_pressure",
+            "target": "p5_card_0",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p5_pressure",
+            "target": "p5_card_1",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p5_pressure",
+            "target": "p5_card_2",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p5_pressure",
+            "target": "p5_card_3",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p5_pressure",
+            "target": "p5_flow",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p5_pressure",
+            "target": "p5_wells",
+            "type": "NoFilter"
+        },
+        {
+            "source": "p5_pressure",
+            "target": "p5_tags",
+            "type": "NoFilter"
+        }
+    ]
+}

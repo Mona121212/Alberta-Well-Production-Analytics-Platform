@@ -25,7 +25,8 @@ START = datetime(2026, 11, 2, 12, 0, tzinfo=timezone.utc)
 NOTEBOOKS = {name: json.loads((ROOT / "notebooks" / f"{name}.ipynb").read_text(encoding="utf-8"))
              for name in ("04_sensor_silver", "05_sensor_gold")}
 RECONCILIATION_TESTS = ["bronze_equals_silver_received_plus_rejects", "gold_hourly_good_count_and_sum_match_silver",
-                        "downtime_events_match_simulation_truth", "flagged_wells_match_configured_anomalies"]
+                        "downtime_events_match_simulation_truth", "flagged_wells_match_configured_anomalies",
+                        "likely_cause_matches_configured_sensor_fault"]
 
 
 def source(name):
@@ -110,9 +111,9 @@ def test_backfill_quality_counts_follow_from_the_injections(backfill):
     kinds = Counter(i["kind"] for i in truth["injections"])
     frozen = sum(i["hours"] + 1 for i in truth["injections"] if i["kind"] == "frozen")
     reasons = Counter(classified["quality_reason"])
-    assert reasons["missing"] == kinds["missing"] == 240
-    assert reasons["outside_physical_range"] == kinds["out_of_range"] == 80
-    assert reasons["frozen"] == frozen == 360
+    assert reasons["missing"] == kinds["missing"]
+    assert reasons["outside_physical_range"] == kinds["out_of_range"]
+    assert reasons["frozen"] == frozen
     assert reasons["outside_normal_range"] == 0
 
 
@@ -144,7 +145,7 @@ def test_notebook_has_no_hard_coded_layer_tables_or_non_english_text(name):
     assert not re.search(r"[一-鿿]", source(name))
 
 
-def test_gold_runs_exactly_the_four_reconciliation_tests():
+def test_gold_runs_exactly_the_five_reconciliation_tests():
     code = source("05_sensor_gold")
     assert re.findall(r'\("([a-z_]+)", (?:bronze_rows|0)', code) == RECONCILIATION_TESTS
 

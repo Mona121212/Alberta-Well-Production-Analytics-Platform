@@ -1,0 +1,36 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p4_note",
+    "position": {
+        "x": 16,
+        "y": 696,
+        "z": 15,
+        "width": 1248,
+        "height": 20,
+        "tabOrder": 15
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Readings are simulated (PI-style), not AVEVA PI System. The production anomalies, the sensor fault and the aging tags are set on purpose.",
+                                        "textStyle": {
+                                            "fontSize": "9pt",
+                                            "color": "#605E5C"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+}

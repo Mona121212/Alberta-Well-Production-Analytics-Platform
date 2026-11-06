@@ -1,0 +1,53 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+    "name": "p5_card_2",
+    "position": {
+        "x": 644,
+        "y": 70,
+        "z": 6,
+        "width": 306,
+        "height": 72,
+        "tabOrder": 6
+    },
+    "visual": {
+        "visualType": "cardVisual",
+        "query": {
+            "queryState": {
+                "Data": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "gold_sensor_hourly"
+                                        }
+                                    },
+                                    "Property": "Out-of-Range Readings"
+                                }
+                            },
+                            "queryRef": "gold_sensor_hourly.Out-of-Range Readings",
+                            "nativeQueryRef": "Out-of-Range Readings",
+                            "displayName": "Out-of-range readings"
+                        }
+                    ]
+                }
+            }
+        },
+        "visualContainerObjects": {
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}
